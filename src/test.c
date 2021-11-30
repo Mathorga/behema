@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 // Translate an id wrapping it to the provided size (pacman effect).
+// WARNING: Only works with signed types.
 // [i] is the given index.
 // [n] is the size over which to wrap.
-#define WRAP(i, n) (i < 0 ? (i % n) : (n + (i % n)))
+#define WRAP(i, n) (i >= 0 ? (i % n) : (n + (i % n)))
 
 // Translates bidimensional indexes to a monodimensional one.
 // |i| is the row index.
@@ -21,10 +23,10 @@
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) ((m * n * k) + (m * j) + i)
 
-typedef uint16_t neighbors_count_t;
+typedef int16_t neighbors_count_t;
 typedef int16_t neuron_value_t;
 
-typedef uint32_t field_size_t;
+typedef int32_t field_size_t;
 
 typedef struct {
     neighbors_count_t connected_neighbors;
@@ -32,43 +34,47 @@ typedef struct {
 } neuron_t;
 
 void init(neuron_t* field, field_size_t field_width, field_size_t field_height) {
-    for (field_size_t i = 0; i < field_width; i++) {
-        for (field_size_t j = 0; j < field_height; j++) {
+    for (field_size_t i = 0; i < field_height; i++) {
+        for (field_size_t j = 0; j < field_width; j++) {
             // double random = (double)rand() / (double)RAND_MAX;
             // field[IDX2D(i, j, field_width)].value = random > 0.5 ? 1 : 0;
-            field[IDX2D(i, j, field_width)].value = 0;
+            field[IDX2D(j, i, field_width)].value = 0;
         }
     }
 
-    field[IDX2D(1, 0, field_width)].value = 1;
-    field[IDX2D(2, 1, field_width)].value = 1;
-    field[IDX2D(0, 2, field_width)].value = 1;
+    field[IDX2D(0, 1, field_width)].value = 1;
     field[IDX2D(1, 2, field_width)].value = 1;
+    field[IDX2D(2, 0, field_width)].value = 1;
+    field[IDX2D(2, 1, field_width)].value = 1;
     field[IDX2D(2, 2, field_width)].value = 1;
 }
 
+int32_t wrap(int32_t i, int32_t n) {
+    return i >= 0 ? (i % n) : (n + (i % n));
+}
+
 void tick(neuron_t* prev_field, neuron_t* next_field, field_size_t field_width, field_size_t field_height) {
-    for (field_size_t i = 0; i < field_width; i++) {
-        for (field_size_t j = 0; j < field_height; j++) {
-            neuron_value_t res = prev_field[IDX2D(WRAP(i - 1, field_width), WRAP(j - 1, field_height), field_width)].value +
-                                 prev_field[IDX2D(WRAP(i - 1, field_width), j, field_width)].value +
-                                 prev_field[IDX2D(WRAP(i - 1, field_width), WRAP(j + 1, field_height), field_width)].value +
-                                 prev_field[IDX2D(i, WRAP(j - 1, field_height), field_width)].value +
-                                 prev_field[IDX2D(i, WRAP(j + 1, field_height), field_width)].value +
-                                 prev_field[IDX2D(WRAP(i + 1, field_width), WRAP(j - 1, field_height), field_width)].value +
-                                 prev_field[IDX2D(WRAP(i + 1, field_width), j, field_width)].value +
-                                 prev_field[IDX2D(WRAP(i + 1, field_width), WRAP(j + 1, field_height), field_width)].value;
-            neuron_value_t prev = prev_field[IDX2D(i, j, field_width)].value;
-            printf("CINO %d %d\n", prev, res);
-            next_field[IDX2D(i, j, field_width)].value = (prev && (res == 2 || res == 3)) || (!prev && res == 3);
+    for (field_size_t i = 0; i < field_height; i++) {
+        for (field_size_t j = 0; j < field_width; j++) {
+            neuron_value_t res = prev_field[IDX2D(wrap(j - 1, field_width), wrap(i - 1, field_height), field_width)].value +
+                                 prev_field[IDX2D(wrap(j - 1, field_width), i,                         field_width)].value +
+                                 prev_field[IDX2D(wrap(j - 1, field_width), wrap(i + 1, field_height), field_width)].value +
+                                 prev_field[IDX2D(j,                        wrap(i - 1, field_height), field_width)].value +
+                                 prev_field[IDX2D(j,                        wrap(i + 1, field_height), field_width)].value +
+                                 prev_field[IDX2D(wrap(j + 1, field_width), wrap(i - 1, field_height), field_width)].value +
+                                 prev_field[IDX2D(wrap(j + 1, field_width), i,                         field_width)].value +
+                                 prev_field[IDX2D(wrap(j + 1, field_width), wrap(i + 1, field_height), field_width)].value;
+            neuron_value_t prev = prev_field[IDX2D(j, i, field_width)].value;
+            next_field[IDX2D(j, i, field_width)].value = (prev && (res == 2 || res == 3)) || (!prev && res == 3);
         }
     }
 }
 
 void print(neuron_t* field, field_size_t field_width, field_size_t field_height) {
-    for (field_size_t i = 0; i < field_width; i++) {
-        for (field_size_t j = 0; j < field_height; j++) {
-            printf("%c", field[IDX2D(i, j, field_width)].value ? '@' : '.');
+    system("clear");
+    for (field_size_t i = 0; i < field_height; i++) {
+        for (field_size_t j = 0; j < field_width; j++) {
+            printf("%c", field[IDX2D(j, i, field_width)].value == 1 ? '@' : '.');
         }
         printf("\n");
     }
@@ -79,8 +85,8 @@ int main(int argc, char **argv) {
     neuron_t* even_field;
     neuron_t* odd_field;
 
-    field_size_t field_width = 10;
-    field_size_t field_height = 100;
+    field_size_t field_width = 100;
+    field_size_t field_height = 30;
 
     even_field = (neuron_t*) malloc(field_width * field_height * sizeof(neuron_t));
     odd_field = (neuron_t*) malloc(field_width * field_height * sizeof(neuron_t));
@@ -88,13 +94,17 @@ int main(int argc, char **argv) {
     init(even_field, field_width, field_height);
     print(even_field, field_width, field_height);
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0;; i++) {
         tick(even_field, odd_field, field_width, field_height);
 
         print(odd_field, field_width, field_height);
 
-        // tick(odd_field, even_field, field_width, field_height);
+        usleep(100000);
 
-        // print(even_field, field_width, field_height);
+        tick(odd_field, even_field, field_width, field_height);
+
+        print(even_field, field_width, field_height);
+
+        usleep(100000);
     }
 }
