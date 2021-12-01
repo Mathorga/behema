@@ -33,9 +33,9 @@ Copyright (C) 2021 Luka Micheletti
 
 #define NEURON_DEFAULT_THRESHOLD 0xCCu
 #define NEURON_STARTING_VALUE 0x00u
-#define NEURON_CHARGE_RATE 0x01u
+#define NEURON_CHARGE_RATE 0x02u
+#define NEURON_DECAY_RATE 0x01u
 #define NEURON_DEFAULT_NB_MASK 0x00000000
-#define NEURON_DISCHARGE_RATE 0x01u
 #define NEURON_RECOVERY_VALUE -0x77
 
 typedef int16_t neuron_value_t;
@@ -54,6 +54,7 @@ typedef struct {
     nb_mask_t input_neighbors;
     neuron_threshold_t threshold;
     neuron_value_t value;
+    uint8_t fired;
 } neuron_t;
 
 /// 2D Field of neurons.
