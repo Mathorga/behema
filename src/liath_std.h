@@ -1,13 +1,13 @@
 /*
 *****************************************************************
-kuiper_std.h
+liath_std.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __KUIPER_STD__
-#define __KUIPER_STD__
+#ifndef __LIATH_STD__
+#define __LIATH_STD__
 
 #include <stdint.h>
 #include <stdlib.h>
