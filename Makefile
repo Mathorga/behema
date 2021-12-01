@@ -58,14 +58,14 @@ uninstall: clean
 
 
 # Builds all library files.
-stdlib: liath_std.o utils.o
+stdlib: liath_std.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
 
-cudalib: liath_cuda.o utils.o
+cudalib: liath_cuda.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libliath.so
 #	g++ -Wall -g -shared -Wl,--export-dynamic $(patsubst %.o, $(BLD_DIR)/%.o, $^) $(STD_LIBS) -o $(BLD_DIR)/libliath.so -lcudart
 
-lib: liath_std.o liath_cuda.o utils.o
+lib: liath_std.o liath_cuda.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
 
 

@@ -1,13 +1,13 @@
 /*
 *****************************************************************
-neuron.h
+field.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __NEURON__
-#define __NEURON__
+#ifndef __FIELD__
+#define __FIELD__
 
 #include <stdint.h>
 
@@ -35,16 +35,25 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_STARTING_VALUE 0x00u
 #define NEURON_DECAY_RATE 0x01u
 #define NEURON_RECOVERY_VALUE -0x77
+#define MAX_NEIGHBORS_COUNT 0xFF
 
 typedef uint8_t neighbors_count_t;
 typedef int16_t neuron_value_t;
+typedef uint8_t neighborhood_radius_t;
+typedef uint64_t neighbors_mask_t;
 
 typedef int32_t field_size_t;
 
 typedef struct {
-    neighbors_count_t input_neighbors_count;
-    uint8_t* input_neighbors;
+    neighbors_mask_t input_neighbors;
     neuron_value_t value;
 } neuron_t;
+
+typedef struct {
+    field_size_t width;
+    field_size_t height;
+    neighborhood_radius_t neighborhood_radius;
+    neuron_t* neurons;
+} field2d_t;
 
 #endif

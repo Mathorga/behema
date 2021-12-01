@@ -14,7 +14,7 @@ Copyright (C) 2021 Luka Micheletti
 // TODO Remove in release.
 #include <stdio.h>
 #include <time.h>
-#include "neuron.h"
+#include "field.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,43 +23,43 @@ extern "C" {
 // Initialization functions:
 
 /// Initializes the given field with default values.
-void field_init(neuron_t* field);
+void field2d_init(field2d_t* field);
 
 
 // Execution functions:
 
 /// Feeds external spikes to the specified neurons.
-void field_feed(neuron_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);
+void field2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);
 
 /// Propagates synapse spikes according to their progress.
-void field_propagate(neuron_t* field);
+// void field2d_propagate(field2d_t* field);
 
 /// Increments neuron values with spikes from input synapses.
-void field_increment(neuron_t* field);
+// void field2d_increment(field2d_t* field);
 
 /// Decrements all neurons values by decay.
-void field_decay(neuron_t* field);
+// void field2d_decay(field2d_t* field);
 
 /// Triggers neuron firing if values exceeds threshold.
-void field_fire(neuron_t* field);
+// void field2d_fire(field2d_t* field);
 
 /// Relaxes value to neurons that exceeded their threshold.
-void field_relax(neuron_t* field);
+// void field2d_relax(field2d_t* field);
 
 /// Performs a full run cycle over the network braph.
-void field_tick(neuron_t* field);
+void field2d_tick(field2d_t* prev_field, field2d_t* next_field);
 
 
 // Learning functions:
 
 /// Deletes all unused synapses.
-void field_syndel(neuron_t* field);
+void field2d_syndel(field2d_t* field);
 
 /// Adds synapses to busy neurons (those that fire frequently).
-void field_syngen(neuron_t* field);
+void field2d_syngen(field2d_t* field);
 
 /// Performs a full evolution cycle over the network braph.
-void field_evolve(neuron_t* field);
+void field2d_evolve(field2d_t* field);
 
 
 #ifdef __cplusplus
