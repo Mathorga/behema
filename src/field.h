@@ -33,26 +33,34 @@ Copyright (C) 2021 Luka Micheletti
 
 #define NEURON_DEFAULT_THRESHOLD 0xCCu
 #define NEURON_STARTING_VALUE 0x00u
-#define NEURON_DECAY_RATE 0x01u
+#define NEURON_CHARGE_RATE 0x01u
+#define NEURON_DEFAULT_NB_MASK 0x00000000
+#define NEURON_DISCHARGE_RATE 0x01u
 #define NEURON_RECOVERY_VALUE -0x77
-#define MAX_NEIGHBORS_COUNT 0xFF
 
-typedef uint8_t neighbors_count_t;
 typedef int16_t neuron_value_t;
-typedef uint8_t neighborhood_radius_t;
-typedef uint64_t neighbors_mask_t;
+typedef uint8_t neuron_threshold_t;
+typedef uint8_t nb_count_t;
+
+// A mask made of 8 bytes can hold up to 48 neighbors (i.e. radius = 3).
+// Using 16 bytes the radius can be up to 5 (120 neighbors).
+typedef uint64_t nb_mask_t;
+typedef uint8_t nh_radius_t;
 
 typedef int32_t field_size_t;
 
+/// Neuron.
 typedef struct {
-    neighbors_mask_t input_neighbors;
+    nb_mask_t input_neighbors;
+    neuron_threshold_t threshold;
     neuron_value_t value;
 } neuron_t;
 
+/// 2D Field of neurons.
 typedef struct {
     field_size_t width;
     field_size_t height;
-    neighborhood_radius_t neighborhood_radius;
+    nh_radius_t neighborhood_radius;
     neuron_t* neurons;
 } field2d_t;
 

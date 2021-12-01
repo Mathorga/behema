@@ -24,13 +24,13 @@
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
-typedef int16_t neighbors_count_t;
+typedef int16_t nb_count_t;
 typedef int16_t neuron_value_t;
 
 typedef int32_t field_size_t;
 
 typedef struct {
-    neighbors_count_t connected_neighbors;
+    nb_count_t connected_neighbors;
     neuron_value_t value;
 } neuron_t;
 
