@@ -33,46 +33,40 @@ RM=rm -rf
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
 all: create lib
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(BLD_DIR)/libimago.so $(SYSTEM_LIB_DIR)
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(BLD_DIR)/libkuiper.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 standard: create stdlib
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(BLD_DIR)/libimago.so $(SYSTEM_LIB_DIR)
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(BLD_DIR)/libkuiper.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 cuda: create cudalib
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/imago
-	sudo cp $(BLD_DIR)/libimago.so $(SYSTEM_LIB_DIR)
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo cp $(BLD_DIR)/libkuiper.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 uninstall: clean
-	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/imago
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libimago.so
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libimago.a
+	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/kuiper
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libkuiper.so
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libkuiper.a
 	@printf "\nSuccessfully uninstalled.\n\n"
 
 
-
-# Unused static lib.
-static: imago_std.o utils.o
-	ar -cvq $(BLD_DIR)/libimago.a $(OBJS)
-
-
 # Builds all library files.
-stdlib: imago_std.o utils.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libimago.so
+stdlib: kuiper_std.o utils.o
+	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libkuiper.so
 
-cudalib: imago_cuda.o utils.o
-	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libimago.so
-#	g++ -Wall -g -shared -Wl,--export-dynamic $(patsubst %.o, $(BLD_DIR)/%.o, $^) $(STD_LIBS) -o $(BLD_DIR)/libimago.so -lcudart
+cudalib: kuiper_cuda.o utils.o
+	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libkuiper.so
+#	g++ -Wall -g -shared -Wl,--export-dynamic $(patsubst %.o, $(BLD_DIR)/%.o, $^) $(STD_LIBS) -o $(BLD_DIR)/libkuiper.so -lcudart
 
-lib: imago_std.o imago_cuda.o utils.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libimago.so
+lib: kuiper_std.o kuiper_cuda.o utils.o
+	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libkuiper.so
 
 
 
