@@ -1,4 +1,7 @@
 # Liath
+<p align="center" width="100%">
+    <img width="33%" src="/liath.png"> 
+</p>
 Spiking neural network implementation through cellular automata.
 
 ## Shared library installation (Linux)
