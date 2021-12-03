@@ -3,8 +3,8 @@
 void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
     field->width = width;
     field->height = height;
-    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
     field->nh_radius = nh_radius;
+    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
@@ -15,6 +15,22 @@ void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_
             field->neurons[IDX2D(j, i, field->width)].fired = 0x00;
         }
     }
+}
+
+field2d_t* field2d_copy(field2d_t* other) {
+    field2d_t* field = (field2d_t*) malloc(sizeof(field2d_t));
+    field->width = other->width;
+    field->height = other->height;
+    field->nh_radius = other->nh_radius;
+    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
+
+    for (field_size_t i = 0; i < other->height; i++) {
+        for (field_size_t j = 0; j < other->width; j++) {
+            field->neurons[IDX2D(j, i, other->width)] = other->neurons[IDX2D(j, i, other->width)];
+        }
+    }
+
+    return field;
 }
 
 void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
@@ -79,7 +95,7 @@ void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             if (prev_neuron.fired) {
                 next_neuron->fired = 0x00;
                 next_neuron->value = NEURON_RECOVERY_VALUE;
-            } else if (prev_neuron.value > prev_neuron.threshold) {
+            } else if (next_neuron->value > prev_neuron.threshold) {
                 next_neuron->fired = 0x01;
             }
         }

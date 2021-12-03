@@ -26,6 +26,8 @@ extern "C" {
 /// Initializes the given field with default values.
 void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
 
+field2d_t* field2d_copy(field2d_t* other);
+
 
 // Execution functions:
 
