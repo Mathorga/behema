@@ -1,12 +1,16 @@
 #include "liath_std.h"
 
-void field2d_init(field2d_t* field) {
+void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
+    field->width = width;
+    field->height = height;
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
+    field->nh_radius = nh_radius;
 
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             field->neurons[IDX2D(j, i, field->width)].input_neighbors = NEURON_DEFAULT_NB_MASK;
-            field->neurons[IDX2D(j, i, field->width)].value = NEURON_STARTING_VALUE;
+            // field->neurons[IDX2D(j, i, field->width)].value = NEURON_STARTING_VALUE;
+            field->neurons[IDX2D(j, i, field->width)].value = rand() % 0xFF;
             field->neurons[IDX2D(j, i, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(j, i, field->width)].fired = 0x00;
         }
@@ -19,6 +23,9 @@ void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             // Retrieve the involved neurons.
             neuron_t prev_neuron = prev_field->neurons[IDX2D(j, i, prev_field->width)];
             neuron_t* next_neuron = &(next_field->neurons[IDX2D(j, i, prev_field->width)]);
+
+            // Copy prev neuron values to the new one.
+            *next_neuron = prev_neuron;
 
             /* Compute the neighborhood diameter:
                    d = 7
@@ -33,43 +40,48 @@ void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
               |             |
               +-|-|-|-|-|-|-+
             */
-            field_size_t nh_diameter = 2 * prev_field->neighborhood_radius + 1;
+            field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
-            nb_mask_t neighbor_mask = prev_neuron.input_neighbors;
+            nb_mask_t nb_mask = prev_neuron.input_neighbors;
 
             // Increment the current neuron value by reading its connected neighbors.
-            for (nb_count_t k = 0; k < nh_diameter; k++) {
-                for (nb_count_t l = 0; l < nh_diameter; l++) {
-                    // Fetch the current neighbor.
-                    neuron_t neighbor = prev_field->neurons[IDX2D(j - (l - prev_field->neighborhood_radius),
-                                                                  i - (k - prev_field->neighborhood_radius),
-                                                                  prev_field->width)];
+            for (nh_radius_t k = 0; k < nh_diameter; k++) {
+                for (nh_radius_t l = 0; l < nh_diameter; l++) {
+                    // Exclude the actual neuron from the list of neighbors.
+                    if (!(k == prev_field->nh_radius && l == prev_field->nh_radius)) {
+                        // Fetch the current neighbor.
+                        neuron_t neighbor = prev_field->neurons[IDX2D(WRAP(j + (l - prev_field->nh_radius), prev_field->width),
+                                                                      WRAP(i + (k - prev_field->nh_radius), prev_field->height),
+                                                                      prev_field->width)];
 
-                    // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                    if (neighbor_mask & 0x01 && neighbor.fired) {
-                        next_neuron->value += NEURON_CHARGE_RATE;
+                        // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
+                        if (nb_mask & 0x01 && neighbor.fired) {
+                            next_neuron->value += NEURON_CHARGE_RATE;
+                        }
+
+                        // Shift the mask to check for the next neighbor.
+                        nb_mask = nb_mask >> 1;
                     }
-
-                    // Shift the mask to check for the next neighbor.
-                    neighbor_mask = neighbor_mask >> 1;
                 }
             }
 
             // Push to equilibrium by decaying to zero, both from above and below.
-            if (prev_neuron.value > 0) {
+            if (prev_neuron.value > 0x00) {
                 next_neuron->value -= NEURON_DECAY_RATE;
-            } else if (prev_neuron.value < 0) {
+            } else if (prev_neuron.value < 0x00) {
                 next_neuron->value += NEURON_DECAY_RATE;
             }
 
-            // Fire if the neuron value went over its threashold, otherwise bring it back to recovery value, but only if it just fired.
-            if (prev_neuron.value > prev_neuron.threshold) {
-                next_neuron->fired = 0x01;
-            } else if (prev_neuron.fired) {
+            // printf("NEURON_VALUE %d %d %d %d\n", j, i, prev_neuron.value, next_neuron->value);
+            // printf("FIRED %s\n", prev_neuron.fired ? "yes" : "no");
+
+            // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
+            if (prev_neuron.fired) {
                 next_neuron->fired = 0x00;
                 next_neuron->value = NEURON_RECOVERY_VALUE;
+            } else if (prev_neuron.value > prev_neuron.threshold) {
+                next_neuron->fired = 0x01;
             }
-
         }
     }
 }

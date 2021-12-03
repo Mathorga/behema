@@ -24,7 +24,7 @@ extern "C" {
 // Initialization functions:
 
 /// Initializes the given field with default values.
-void field2d_init(field2d_t* field);
+void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
 
 
 // Execution functions:
