@@ -23,14 +23,14 @@ RM=rm -rf
 all: clean create test test_brain
 
 test: create
-	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated test!\n\n"
-
-test_brain: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(LIATH_LIBS)
 	@printf "\nCreated test!\n\n"
+
+graphics: create
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(GRAPHICS_LIBS) $(LIATH_LIBS)
+	@printf "\nCreated graphics!\n\n"
 
 create:
 	$(MKDIR) $(BLD_DIR)

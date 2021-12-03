@@ -19,8 +19,8 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
 
-    field_size_t field_width = 250;
-    field_size_t field_height = 50;
+    field_size_t field_width = 300;
+    field_size_t field_height = 80;
     nh_radius_t nh_radius = 1;
 
     srand(time(NULL));
@@ -33,12 +33,12 @@ int main(int argc, char **argv) {
 
         print(&odd_field);
 
-        usleep(50000);
+        usleep(40000);
 
         field2d_tick(&odd_field, &even_field);
 
         print(&even_field);
 
-        usleep(50000);
+        usleep(40000);
     }
 }
