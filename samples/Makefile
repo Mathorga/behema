@@ -20,7 +20,7 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
-all: clean create test test_brain
+all: clean create test graphics
 
 test: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o

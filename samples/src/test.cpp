@@ -29,15 +29,16 @@ int main(int argc, char **argv) {
     odd_field = *field2d_copy(&even_field);
 
     for (int i = 0;; i++) {
-        field2d_tick(&even_field, &odd_field);
+        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
+        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
-        print(&odd_field);
+        if (!(i % 5)) {
+            field2d_feed(prev_field, 0, 1000, NEURON_CHARGE_RATE);
+        }
 
-        usleep(40000);
+        field2d_tick(prev_field, next_field);
 
-        field2d_tick(&odd_field, &even_field);
-
-        print(&even_field);
+        print(next_field);
 
         usleep(40000);
     }

@@ -26,28 +26,17 @@ extern "C" {
 /// Initializes the given field with default values.
 void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
 
+/// Returns a field with the same properties as the given one.
 field2d_t* field2d_copy(field2d_t* other);
+
+/// Sets the neighborhood radius for all neurons in the field.
+void field2d_set_nh_radius(field2d_t* field, nh_radius_t radius);
 
 
 // Execution functions:
 
 /// Feeds external spikes to the specified neurons.
 void field2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);
-
-/// Propagates synapse spikes according to their progress.
-// void field2d_propagate(field2d_t* field);
-
-/// Increments neuron values with spikes from input synapses.
-// void field2d_increment(field2d_t* field);
-
-/// Decrements all neurons values by decay.
-// void field2d_decay(field2d_t* field);
-
-/// Triggers neuron firing if values exceeds threshold.
-// void field2d_fire(field2d_t* field);
-
-/// Relaxes value to neurons that exceeded their threshold.
-// void field2d_relax(field2d_t* field);
 
 /// Performs a full run cycle over the network braph.
 void field2d_tick(field2d_t* prev_field, field2d_t* next_field);

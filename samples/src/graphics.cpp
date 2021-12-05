@@ -20,7 +20,14 @@ void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPosi
     }
 }
 
-void drawNeurons(field2d_t* field, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+void drawNeurons(field2d_t* field,
+                 sf::RenderWindow* window,
+                 sf::VideoMode videoMode,
+                 float* xNeuronPositions,
+                 float* yNeuronPositions,
+                 bool drawInfo,
+                 sf::VideoMode desktopMode,
+                 sf::Font font) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             sf::CircleShape neuronSpot;
@@ -33,7 +40,9 @@ void drawNeurons(field2d_t* field, sf::RenderWindow* window, sf::VideoMode video
 
             neuronSpot.setRadius(radius);
 
-            if (currentNeuron->fired) {
+            if (neuronValue < 0) {
+                neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
+            } else if (currentNeuron->fired) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
@@ -43,6 +52,16 @@ void drawNeurons(field2d_t* field, sf::RenderWindow* window, sf::VideoMode video
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
+
+            if (drawInfo) {
+                sf::Text infoText;
+                infoText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
+                infoText.setString(std::to_string(currentNeuron->value));
+                infoText.setFont(font);
+                infoText.setCharacterSize(10);
+                infoText.setFillColor(sf::Color::White);
+                window->draw(infoText);
+            }
 
             window->draw(neuronSpot);
         }
@@ -93,12 +112,15 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 30;
-    field_size_t field_height = 8;
+    field_size_t field_width = 10;
+    field_size_t field_height = 10;
     nh_radius_t nh_radius = 1;
+    field_size_t inputs_count = 80;
 
     // Input handling.
     switch (argc) {
+        case 1:
+            break;
         case 2:
             field_width = atoi(argv[1]);
             break;
@@ -106,7 +128,20 @@ int main(int argc, char **argv) {
             field_width = atoi(argv[1]);
             field_height = atoi(argv[2]);
             break;
+        case 4:
+            field_width = atoi(argv[1]);
+            field_height = atoi(argv[2]);
+            nh_radius = atoi(argv[3]);
+            break;
+        case 5:
+            field_width = atoi(argv[1]);
+            field_height = atoi(argv[2]);
+            nh_radius = atoi(argv[3]);
+            inputs_count = atoi(argv[4]);
+            break;
         default:
+            printf("USAGE: graphics <width> <height> <nh_radius> <inputs_count>\n");
+            exit(0);
             break;
     }
 
@@ -131,21 +166,23 @@ int main(int argc, char **argv) {
     // create the window
     sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
     
-    bool showInfo = true;
+    bool showInfo = false;
 
     int counter = 0;
-    int evolutionInterval = 1;
     int renderingInterval = 1;
 
-    // sf::Font font;
-    // if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
-    //     printf("Font not loaded\n");
-    // }
+    sf::Font font;
+    if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
+        printf("Font not loaded\n");
+    }
 
     // Run the program as long as the window is open.
     for (int i = 0; window.isOpen(); i++) {
-        usleep(1000);
+        usleep(50000);
         counter++;
+        
+        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
+        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
@@ -176,19 +213,18 @@ int main(int argc, char **argv) {
             }
         }
 
-        if (counter % evolutionInterval == 0) {
-            field2d_tick(i % 2 ? &odd_field : &even_field, i % 2 ? &even_field : &odd_field);
-        }
-
         // Feed the column and tick it.
-        // TODO.
+        if (!(i % 5)) {
+            field2d_feed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE);
+        }
+        field2d_tick(prev_field, next_field);
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            for (uint32_t i = 0; i < 4; i++) {
+            for (field_size_t i = 0; i < inputs_count; i++) {
                 sf::CircleShape neuronCircle;
 
                 float radius = 10.0f;
@@ -206,44 +242,13 @@ int main(int argc, char **argv) {
             }
 
             // Draw neurons.
-            drawNeurons(i % 2 ? &even_field : &odd_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
 
             // Draw synapses.
-            drawSynapses(i % 2 ? &even_field : &odd_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
-
-            // Draw spikes.
-            // drawSpikes(column, &window, desktopMode, xNeuronPositions, yNeuronPositions);
-
-            // if (showInfo) {
-            //     // Draw info.
-            //     sf::Text infoText;
-            //     infoText.setPosition(20.0f, 20.0f);
-            //     infoText.setString(
-            //         "Spikes count: " + std::to_string(column.spikes_count) + "\n" +
-            //         "Synapses count: " + std::to_string(column.synapses_count) + "\n" +
-            //         "Feeding: " + (feeding ? "true" : "false") + "\n" +
-            //         "Iterations: " + std::to_string(counter) + "\n");
-            //     infoText.setFont(font);
-            //     infoText.setCharacterSize(24);
-            //     infoText.setFillColor(sf::Color::White);
-            //     window.draw(infoText);
-
-            //     // Draw input neurons' contextual infos.
-            //     for (neurons_count_t i = 0; i < inputNeuronsCount; i++) {
-            //         sf::Text infoText;
-            //         infoText.setPosition(xNeuronPositions[i] * desktopMode.width + 6.0f, yNeuronPositions[i] * desktopMode.height + 6.0f);
-            //         infoText.setString(std::to_string(column.neurons[startingInputIndex + i].activity));
-            //         infoText.setFont(font);
-            //         infoText.setCharacterSize(10);
-            //         infoText.setFillColor(sf::Color::White);
-            //         window.draw(infoText);
-            //     }
-            // }
+            drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
             window.display();
-
-            usleep(100000);
         }
     }
     return 0;

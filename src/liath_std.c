@@ -8,7 +8,8 @@ void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_
 
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
-            field->neurons[IDX2D(j, i, field->width)].input_neighbors = NEURON_DEFAULT_NB_MASK;
+            // field->neurons[IDX2D(j, i, field->width)].input_neighbors = NEURON_DEFAULT_NB_MASK;
+            field->neurons[IDX2D(j, i, field->width)].input_neighbors = rand() % 0xFFFFFFFFFFFFFFFF;
             // field->neurons[IDX2D(j, i, field->width)].value = NEURON_STARTING_VALUE;
             field->neurons[IDX2D(j, i, field->width)].value = rand() % 0xFF;
             field->neurons[IDX2D(j, i, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
@@ -31,6 +32,22 @@ field2d_t* field2d_copy(field2d_t* other) {
     }
 
     return field;
+}
+
+void field2d_set_nh_radius(field2d_t* field, nh_radius_t radius) {
+    // Only set radius if greater than zero.
+    if (radius > 0) {
+        field->nh_radius = radius;
+    }
+}
+
+void field2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
+    if (starting_index + count < field->width * field->height) {
+        // Loop through count.
+        for (field_size_t i = 0; i < count; i++) {
+            field->neurons[i].value += value;
+        }
+    }
 }
 
 void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
