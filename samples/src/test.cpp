@@ -19,9 +19,10 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
 
-    field_size_t field_width = 300;
-    field_size_t field_height = 80;
+    field_size_t field_width = 10;
+    field_size_t field_height = 10;
     nh_radius_t nh_radius = 1;
+    field_size_t inputs_count = 20;
 
     srand(time(NULL));
 
@@ -32,8 +33,8 @@ int main(int argc, char **argv) {
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
-        if (!(i % 5)) {
-            field2d_feed(prev_field, 0, 1000, NEURON_CHARGE_RATE);
+        if (rand() % 100 > 10) {
+            field2d_feed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE);
         }
 
         field2d_tick(prev_field, next_field);

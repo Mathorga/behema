@@ -31,13 +31,13 @@ Copyright (C) 2021 Luka Micheletti
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
-#define NEURON_DEFAULT_THRESHOLD 0xCCu
+#define NEURON_DEFAULT_THRESHOLD 0x88u
 #define NEURON_STARTING_VALUE 0x00u
-#define NEURON_CHARGE_RATE 0x35u
-#define NEURON_DECAY_RATE 0x02u
+#define NEURON_CHARGE_RATE 0x30u
+#define NEURON_DECAY_RATE 0x01u
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
-#define NEURON_DEFAULT_NB_MASK 0xFFFFFFFFFFFFFFFFu
+#define NEURON_DEFAULT_NB_MASK 0xAAAAAAAAAAAAAAAAu
 #define NEURON_RECOVERY_VALUE -0x77
 
 typedef int16_t neuron_value_t;
@@ -45,14 +45,14 @@ typedef uint8_t neuron_threshold_t;
 
 // A mask made of 8 bytes can hold up to 48 neighbors (i.e. radius = 3).
 // Using 16 bytes the radius can be up to 5 (120 neighbors).
-typedef uint64_t nb_mask_t;
+typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
 
 typedef int32_t field_size_t;
 
 /// Neuron.
 typedef struct {
-    nb_mask_t input_neighbors;
+    nh_mask_t nh_mask;
     neuron_threshold_t threshold;
     neuron_value_t value;
     uint8_t fired;

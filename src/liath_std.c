@@ -8,10 +8,10 @@ void field2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_
 
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
-            // field->neurons[IDX2D(j, i, field->width)].input_neighbors = NEURON_DEFAULT_NB_MASK;
-            field->neurons[IDX2D(j, i, field->width)].input_neighbors = rand() % 0xFFFFFFFFFFFFFFFF;
-            // field->neurons[IDX2D(j, i, field->width)].value = NEURON_STARTING_VALUE;
-            field->neurons[IDX2D(j, i, field->width)].value = rand() % 0xFF;
+            // field->neurons[IDX2D(j, i, field->width)].nh_mask = NEURON_DEFAULT_NB_MASK;
+            field->neurons[IDX2D(j, i, field->width)].nh_mask = rand() % 0xFFFFFFFFFFFFFFFF;
+            field->neurons[IDX2D(j, i, field->width)].value = NEURON_STARTING_VALUE;
+            // field->neurons[IDX2D(j, i, field->width)].value = rand() % 0xFF;
             field->neurons[IDX2D(j, i, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(j, i, field->width)].fired = 0x00;
         }
@@ -75,7 +75,7 @@ void field2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             */
             field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
-            nb_mask_t nb_mask = prev_neuron.input_neighbors;
+            nh_mask_t nb_mask = prev_neuron.nh_mask;
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t k = 0; k < nh_diameter; k++) {

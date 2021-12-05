@@ -76,7 +76,7 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 
             field_size_t nh_diameter = 2 * field->nh_radius + 1;
 
-            nb_mask_t nb_mask = currentNeuron->input_neighbors;
+            nh_mask_t nb_mask = currentNeuron->nh_mask;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
@@ -112,8 +112,8 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 10;
-    field_size_t field_height = 10;
+    field_size_t field_width = 200;
+    field_size_t field_height = 200;
     nh_radius_t nh_radius = 1;
     field_size_t inputs_count = 80;
 
@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
 
     // Run the program as long as the window is open.
     for (int i = 0; window.isOpen(); i++) {
-        usleep(50000);
+        usleep(10000);
         counter++;
         
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
         }
 
         // Feed the column and tick it.
-        if (!(i % 5)) {
+        if (rand() % 100 > 20) {
             field2d_feed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE);
         }
         field2d_tick(prev_field, next_field);
