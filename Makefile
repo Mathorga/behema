@@ -32,11 +32,7 @@ MKDIR=mkdir -p
 RM=rm -rf
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
-all: create lib
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(BLD_DIR)/libliath.so $(SYSTEM_LIB_DIR)
-	@printf "\nInstallation complete!\n\n"
+all: standard
 
 standard: create stdlib
 	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
@@ -63,9 +59,6 @@ stdlib: liath_std.o
 
 cudalib: liath_cuda.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libliath.so
-
-lib: liath_std.o liath_cuda.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
 
 
 
