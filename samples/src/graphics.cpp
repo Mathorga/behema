@@ -35,8 +35,9 @@ void drawNeurons(field2d_t* field,
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) currentNeuron->threshold);
+            float neuronBusyness = ((float) currentNeuron->influence) / ((float) 0xFFFFu);
 
-            float radius = 5.0f;
+            float radius = 2.0f + neuronBusyness * 3.0f;
 
             neuronSpot.setRadius(radius);
 
@@ -56,7 +57,7 @@ void drawNeurons(field2d_t* field,
             if (drawInfo) {
                 sf::Text infoText;
                 infoText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                infoText.setString(std::to_string(currentNeuron->value));
+                infoText.setString(std::to_string(currentNeuron->influence));
                 infoText.setFont(font);
                 infoText.setCharacterSize(10);
                 infoText.setFillColor(sf::Color::White);
@@ -152,8 +153,8 @@ int main(int argc, char **argv) {
     // Create network model.
     field2d_t even_field;
     field2d_t odd_field;
-    field2d_init(&even_field, field_width, field_height, nh_radius);
-    odd_field = *field2d_copy(&even_field);
+    f2d_rinit(&even_field, field_width, field_height, nh_radius);
+    odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -166,6 +167,7 @@ int main(int argc, char **argv) {
     // create the window
     sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
     
+    bool feeding = false;
     bool showInfo = false;
 
     int counter = 0;
@@ -201,6 +203,9 @@ int main(int argc, char **argv) {
                         case sf::Keyboard::Q:
                             window.close();
                             break;
+                        case sf::Keyboard::Space:
+                            feeding = !feeding;
+                            break;
                         case sf::Keyboard::I:
                             showInfo = !showInfo;
                             break;
@@ -214,10 +219,10 @@ int main(int argc, char **argv) {
         }
 
         // Feed the column and tick it.
-        if (rand() % 100 > 20) {
-            field2d_feed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE);
+        if (feeding && rand() % 100 > 50) {
+            f2d_rsfeed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE, 2);
         }
-        field2d_tick(prev_field, next_field);
+        f2d_tick(prev_field, next_field);
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.

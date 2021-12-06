@@ -20,12 +20,12 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
-all: clean create test graphics
+all: clean create terminal graphics
 
-test: create
+terminal: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated test!\n\n"
+	@printf "\nCreated terminal!\n\n"
 
 graphics: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
