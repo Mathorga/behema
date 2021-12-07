@@ -99,7 +99,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
     }
 }
 
-void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
+void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_step) {
     for (field_size_t y = 0; y < prev_field->height; y++) {
         for (field_size_t x = 0; x < prev_field->width; x++) {
             // Retrieve the involved neurons.

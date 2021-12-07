@@ -222,7 +222,7 @@ int main(int argc, char **argv) {
         if (feeding && rand() % 100 > 50) {
             f2d_rsfeed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE, 2);
         }
-        f2d_tick(prev_field, next_field);
+        f2d_tick(prev_field, next_field, 0xFFFFu);
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.

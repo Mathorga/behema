@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
             f2d_rsfeed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE, 2);
         }
 
-        f2d_tick(prev_field, next_field);
+        f2d_tick(prev_field, next_field, 0xFFFFu);
 
         print(next_field);
 

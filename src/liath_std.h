@@ -54,7 +54,7 @@ void f2d_sfeed(field2d_t* field, field_size_t starting_index, field_size_t count
 void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t max_value, field_size_t spread);
 
 /// Performs a full run cycle over the network field.
-void f2d_tick(field2d_t* prev_field, field2d_t* next_field);
+void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_step);
 
 
 // Learning functions:
