@@ -8,10 +8,10 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
 
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].nh_mask = NEURON_DEFAULT_NB_MASK;
+            field->neurons[IDX2D(x, y, field->width)].nh_mask = NEURON_DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = NEURON_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
-            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_BUSYNESS;
+            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_INFLUENCE;
         }
     }
 }
@@ -27,7 +27,7 @@ void f2d_rinit(field2d_t* field, field_size_t width, field_size_t height, nh_rad
             field->neurons[IDX2D(x, y, field->width)].nh_mask = rand() % 0xFFFFFFFFFFFFFFFF;
             field->neurons[IDX2D(x, y, field->width)].value = rand() % NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(x, y, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
-            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_BUSYNESS;
+            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_INFLUENCE;
         }
     }
 }
