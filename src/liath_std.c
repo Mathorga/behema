@@ -140,6 +140,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         if (nb_mask & 0x01 && neighbor.value > neighbor.threshold) {
                             next_neuron->value += NEURON_CHARGE_RATE;
                         }
+                        
+                        // Perform evolution phase if allowed.
+                        // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+                        // 0x0000 -> 0 + 1 = 1, so the networks evolves at every tick, it means that there are no free ticks between evolutions.
+                        // 0xFFFF -> 65535 + 1 = 0
+                        //if (prev_field->ticks_count % (evol_step + 1) == 0) {
+                        //    
+                        //}
 
                         // Shift the mask to check for the next neighbor.
                         nb_mask = nb_mask >> 1;
