@@ -8,7 +8,8 @@ void print(field2d_t* field) {
     system("clear");
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
-            printf("%c ", field->neurons[IDX2D(j, i, field->width)].fired ? '@' : '.');
+            neuron_t currentNeuron = field->neurons[IDX2D(j, i, field->width)];
+            printf("%c ", currentNeuron.value > currentNeuron.threshold ? '@' : '.');
         }
         printf("\n");
     }

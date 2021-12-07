@@ -41,6 +41,7 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_DEFAULT_NB_MASK 0xAAAAAAAAAAAAAAAAu
 #define NEURON_RECOVERY_VALUE -0x22
 
+#define NEURON_INFLUENCE_GAIN 0x0032u
 #define NEURON_SYNDEL_THRESHOLD 0x0022u
 #define NEURON_SYNGEN_THRESHOLD 0xAA00u
 
@@ -61,7 +62,6 @@ typedef struct {
     nh_mask_t nh_mask;
     neuron_threshold_t threshold;
     neuron_value_t value;
-    uint8_t fired;
     neuron_influence_t influence;
 } neuron_t;
 

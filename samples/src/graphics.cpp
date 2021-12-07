@@ -43,7 +43,7 @@ void drawNeurons(field2d_t* field,
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            } else if (currentNeuron->fired) {
+            } else if (currentNeuron->value > currentNeuron->threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));

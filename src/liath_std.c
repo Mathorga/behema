@@ -12,7 +12,6 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
             field->neurons[IDX2D(x, y, field->width)].value = NEURON_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_BUSYNESS;
-            field->neurons[IDX2D(x, y, field->width)].fired = 0x00;
         }
     }
 }
@@ -29,7 +28,6 @@ void f2d_rinit(field2d_t* field, field_size_t width, field_size_t height, nh_rad
             field->neurons[IDX2D(x, y, field->width)].value = rand() % NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(x, y, field->width)].threshold = NEURON_DEFAULT_THRESHOLD;
             field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_BUSYNESS;
-            field->neurons[IDX2D(x, y, field->width)].fired = 0x00;
         }
     }
 }
@@ -139,7 +137,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                                                       prev_field->width)];
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (nb_mask & 0x01 && neighbor.fired) {
+                        if (nb_mask & 0x01 && neighbor.value > neighbor.threshold) {
                             next_neuron->value += NEURON_CHARGE_RATE;
                         }
 
@@ -157,13 +155,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             }
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-            if (prev_neuron.fired) {
-                next_neuron->fired = 0x00;
+            if (prev_neuron.value > prev_neuron.threshold) {
+                // Fired at the previous step.
                 next_neuron->value = NEURON_RECOVERY_VALUE;
             } else if (next_neuron->value > prev_neuron.threshold) {
-                next_neuron->fired = 0x01;
-                next_neuron->influence += 50;
+                // Fired, increase influence.
+                next_neuron->influence += NEURON_INFLUENCE_GAIN;
             } else if (prev_neuron.influence > 0) {
+                // Not fired, decrease influence.
                 next_neuron->influence--;
             }
         }
