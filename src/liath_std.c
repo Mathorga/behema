@@ -143,11 +143,15 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-                        // 0x0000 -> 0 + 1 = 1, so the networks evolves at every tick, it means that there are no free ticks between evolutions.
-                        // 0xFFFF -> 65535 + 1 = 0
-                        //if (prev_field->ticks_count % (evol_step + 1) == 0) {
-                        //    
-                        //}
+                        // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
+                        // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
+                        if (prev_field->ticks_count % (evol_step_t) (evol_step + 1) == 0) {
+                            if (nb_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
+                                // TODO Delete synapse.
+                            } else if (nb_mask & 0x01 && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
+                                // TODO Add synapse.
+                            }
+                        }
 
                         // Shift the mask to check for the next neighbor.
                         nb_mask = nb_mask >> 1;

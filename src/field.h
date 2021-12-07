@@ -54,6 +54,7 @@ typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
 typedef uint16_t neuron_influence_t;
 typedef uint16_t ticks_count_t;
+typedef uint32_t evol_step_t;
 
 typedef int32_t field_size_t;
 
