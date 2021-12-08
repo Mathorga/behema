@@ -186,6 +186,6 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
         }
     }
 
-    // next_field->ticks_count += rand() % 0x00FF;
+    // next_field->ticks_count += rand() % 0xFFFF;
     next_field->ticks_count ++;
 }
