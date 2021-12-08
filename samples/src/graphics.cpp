@@ -125,7 +125,7 @@ int main(int argc, char **argv) {
     field_size_t field_height = 200;
     nh_radius_t nh_radius = 1;
     field_size_t inputs_count = 80;
-    field_size_t inputs_spread = 4;
+    field_size_t inputs_spread = 9;
 
     // Input handling.
     switch (argc) {

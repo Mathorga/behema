@@ -44,7 +44,8 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_SYNGEN_THRESHOLD 0x0200u
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
-#define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
+// #define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
+#define NEURON_DEFAULT_NH_MASK 0x0000000000000000u
 
 typedef int16_t neuron_value_t;
 typedef uint8_t neuron_threshold_t;
