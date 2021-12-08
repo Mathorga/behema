@@ -147,9 +147,13 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if (prev_field->ticks_count % (evol_step_t) (evol_step + 1) == 0) {
                             if (nb_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
-                                // TODO Delete synapse.
-                            } else if (nb_mask & 0x01 && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
-                                // TODO Add synapse.
+                                // Delete synapse.
+                                nh_mask_t mask = !next_neuron->nh_mask;
+                                mask |= (0x01 << (j * i));
+                                next_neuron->nh_mask = !mask;
+                            } else if (!(nb_mask & 0x01) && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
+                                // Add synapse.
+                                next_neuron->nh_mask |= (0x01 << (j * i));
                             }
                         }
 
@@ -170,19 +174,17 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
             if (prev_neuron.value > prev_neuron.threshold) {
                 // Fired at the previous step.
                 next_neuron->value = NEURON_RECOVERY_VALUE;
-            } else if (next_neuron->value > prev_neuron.threshold) {
                 // Fired, increase influence.
-                next_neuron->influence += NEURON_INFLUENCE_GAIN;
+                if (next_neuron->influence + NEURON_INFLUENCE_GAIN <= NEURON_MAX_INFLUENCE) {
+                    next_neuron->influence += NEURON_INFLUENCE_GAIN;
+                }
+            } else if (next_neuron->value > prev_neuron.threshold) {
             } else if (prev_neuron.influence > 0) {
                 // Not fired, decrease influence.
                 next_neuron->influence--;
             }
         }
     }
+
+    next_field->ticks_count += rand() % 0xFFFF;
 }
-
-void f2d_syndel(field2d_t* field) {}
-
-void f2d_syngen(field2d_t* field) {}
-
-void f2d_evolve(field2d_t* field) {}

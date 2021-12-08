@@ -57,18 +57,6 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_step);
 
 
-// Learning functions:
-
-/// Deletes all unused synapses.
-void f2d_syndel(field2d_t* field);
-
-/// Adds synapses to busy neurons (those that fire frequently).
-void f2d_syngen(field2d_t* field);
-
-/// Performs a full evolution cycle over the network braph.
-void f2d_evolve(field2d_t* field);
-
-
 #ifdef __cplusplus
 }
 #endif

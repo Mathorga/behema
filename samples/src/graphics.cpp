@@ -12,10 +12,10 @@ float randomFloat(float min, float max) {
 }
 
 void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions) {
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            xNeuronPositions[IDX2D(j, i, field->width)] = randomFloat(0, 1);
-            yNeuronPositions[IDX2D(j, i, field->width)] = randomFloat(0, 1);
+    for (field_size_t y = 0; y < field->height; y++) {
+        for (field_size_t x = 0; x < field->width; x++) {
+            xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
+            yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
         }
     }
 }
@@ -37,7 +37,7 @@ void drawNeurons(field2d_t* field,
             float neuronValue = ((float) currentNeuron->value) / ((float) currentNeuron->threshold);
             float neuronBusyness = ((float) currentNeuron->influence) / ((float) 0xFFFFu);
 
-            float radius = 2.0f + neuronBusyness * 3.0f;
+            float radius = 3.0f + neuronBusyness * 2.0f;
 
             neuronSpot.setRadius(radius);
 
@@ -55,13 +55,21 @@ void drawNeurons(field2d_t* field,
             neuronSpot.setOrigin(radius, radius);
 
             if (drawInfo) {
-                sf::Text infoText;
-                infoText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                infoText.setString(std::to_string(currentNeuron->influence));
-                infoText.setFont(font);
-                infoText.setCharacterSize(10);
-                infoText.setFillColor(sf::Color::White);
-                window->draw(infoText);
+                sf::Text valueText;
+                valueText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
+                valueText.setString(std::to_string(currentNeuron->value));
+                valueText.setFont(font);
+                valueText.setCharacterSize(8);
+                valueText.setFillColor(sf::Color::White);
+                window->draw(valueText);
+
+                sf::Text influenceText;
+                influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height - 6.0f);
+                influenceText.setString(std::to_string(currentNeuron->influence));
+                influenceText.setFont(font);
+                influenceText.setCharacterSize(8);
+                influenceText.setFillColor(sf::Color::White);
+                window->draw(influenceText);
             }
 
             window->draw(neuronSpot);
@@ -117,6 +125,7 @@ int main(int argc, char **argv) {
     field_size_t field_height = 200;
     nh_radius_t nh_radius = 1;
     field_size_t inputs_count = 80;
+    field_size_t inputs_spread = 4;
 
     // Input handling.
     switch (argc) {
@@ -153,7 +162,7 @@ int main(int argc, char **argv) {
     // Create network model.
     field2d_t even_field;
     field2d_t odd_field;
-    f2d_rinit(&even_field, field_width, field_height, nh_radius);
+    f2d_init(&even_field, field_width, field_height, nh_radius);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -218,11 +227,10 @@ int main(int argc, char **argv) {
             }
         }
 
-        // Feed the column and tick it.
-        if (feeding && rand() % 100 > 50) {
-            f2d_rsfeed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE, 2);
+        // Feed the field.
+        if (feeding && rand() % 100 > 20) {
+            f2d_rsfeed(prev_field, 0, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
         }
-        f2d_tick(prev_field, next_field, 0xFFFFu);
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.
@@ -239,7 +247,7 @@ int main(int argc, char **argv) {
 
                 neuronCircle.setFillColor(sf::Color::Transparent);
                 
-                neuronCircle.setPosition(xNeuronPositions[i] * desktopMode.width, yNeuronPositions[i] * desktopMode.height);
+                neuronCircle.setPosition(xNeuronPositions[i * inputs_spread] * desktopMode.width, yNeuronPositions[i * inputs_spread] * desktopMode.height);
 
                 // Center the spot.
                 neuronCircle.setOrigin(radius, radius);
@@ -255,6 +263,9 @@ int main(int argc, char **argv) {
             // End the current frame.
             window.display();
         }
+
+        // Tick the field.
+        f2d_tick(prev_field, next_field, 0x0000u);
     }
     return 0;
 }
