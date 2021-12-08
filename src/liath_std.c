@@ -140,7 +140,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         if (prev_mask & 0x01 && neighbor.value > neighbor.threshold) {
                             next_neuron->value += NEURON_CHARGE_RATE;
                         }
-                        
+
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
@@ -156,10 +156,10 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                                 next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
                             }
                         }
-
-                        // Shift the mask to check for the next neighbor.
-                        prev_mask = prev_mask >> 1;
                     }
+
+                    // Shift the mask to check for the next neighbor.
+                    prev_mask >>= 1;
                 }
             }
 

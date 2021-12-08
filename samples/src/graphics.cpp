@@ -57,19 +57,19 @@ void drawNeurons(field2d_t* field,
             if (drawInfo) {
                 sf::Text valueText;
                 valueText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                valueText.setString(std::to_string(currentNeuron->value));
+                valueText.setString(std::to_string(currentNeuron->nh_mask));
                 valueText.setFont(font);
                 valueText.setCharacterSize(8);
                 valueText.setFillColor(sf::Color::White);
                 window->draw(valueText);
 
-                sf::Text influenceText;
-                influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height - 6.0f);
-                influenceText.setString(std::to_string(currentNeuron->influence));
-                influenceText.setFont(font);
-                influenceText.setCharacterSize(8);
-                influenceText.setFillColor(sf::Color::White);
-                window->draw(influenceText);
+                // sf::Text influenceText;
+                // influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height - 6.0f);
+                // influenceText.setString(std::to_string(currentNeuron->influence));
+                // influenceText.setFont(font);
+                // influenceText.setCharacterSize(8);
+                // influenceText.setFillColor(sf::Color::White);
+                // window->draw(influenceText);
             }
 
             window->draw(neuronSpot);
@@ -101,19 +101,18 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
-                                    sf::Color(255, 127, 31, 10)),
+                                    sf::Color(255, 127, 31, 30)),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    sf::Color(31, 127, 255, 10))
+                                    sf::Color(31, 127, 255, 30))
                             };
 
                             window->draw(line, 2, sf::Lines);
                         }
-                        
-
-                        // Shift the mask to check for the next neighbor.
-                        nb_mask = nb_mask >> 1;
                     }
+
+                    // Shift the mask to check for the next neighbor.
+                    nb_mask >>= 1;
                 }
             }
         }
@@ -121,11 +120,11 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 200;
-    field_size_t field_height = 200;
+    field_size_t field_width = 50;
+    field_size_t field_height = 30;
     nh_radius_t nh_radius = 1;
-    field_size_t inputs_count = 80;
-    field_size_t inputs_spread = 9;
+    field_size_t inputs_count = 10;
+    field_size_t inputs_spread = 80;
 
     // Input handling.
     switch (argc) {
