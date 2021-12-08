@@ -124,7 +124,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
             */
             field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
-            nh_mask_t nb_mask = prev_neuron.nh_mask;
+            nh_mask_t prev_mask = prev_neuron.nh_mask;
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -137,7 +137,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                                                                       prev_field->width)];
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (nb_mask & 0x01 && neighbor.value > neighbor.threshold) {
+                        if (prev_mask & 0x01 && neighbor.value > neighbor.threshold) {
                             next_neuron->value += NEURON_CHARGE_RATE;
                         }
                         
@@ -146,19 +146,19 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (evol_step_t) (evol_step + 1)) == 0) {
-                            if (nb_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
+                            if (prev_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
                                 // Delete synapse.
-                                nh_mask_t mask = !next_neuron->nh_mask;
-                                mask |= (0x01 << (j * i));
+                                nh_mask_t mask = ~(next_neuron->nh_mask);
+                                mask |= (0x01 << IDX2D(i, j, nh_diameter));
                                 next_neuron->nh_mask = ~mask;
-                            } else if (!(nb_mask & 0x01) && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
+                            } else if (!(prev_mask & 0x01) && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
                                 // Add synapse.
-                                next_neuron->nh_mask |= (0x01 << (j * i));
+                                next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
                             }
                         }
 
                         // Shift the mask to check for the next neighbor.
-                        nb_mask = nb_mask >> 1;
+                        prev_mask = prev_mask >> 1;
                     }
                 }
             }
@@ -186,5 +186,6 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
         }
     }
 
-    next_field->ticks_count += rand() % 0xFFFF;
+    // next_field->ticks_count += rand() % 0x00FF;
+    next_field->ticks_count ++;
 }
