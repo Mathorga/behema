@@ -151,7 +151,10 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                                 nh_mask_t mask = ~(next_neuron->nh_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
                                 next_neuron->nh_mask = ~mask;
-                            } else if (!(prev_mask & 0x01) && neighbor.influence > NEURON_SYNGEN_THRESHOLD) {
+                            } else if (!(prev_mask & 0x01) &&
+                                       neighbor.influence > NEURON_SYNGEN_THRESHOLD &&
+                                       // Make sure the neuron does not have too much influence as a way to limit syngen.
+                                       next_neuron->influence < NEURON_SYNGEN_THRESHOLD) {
                                 // Add synapse.
                                 next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
                             }
