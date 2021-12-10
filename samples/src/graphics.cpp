@@ -11,13 +11,16 @@ float randomFloat(float min, float max) {
     return (random * range) + min;
 }
 
-void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions) {
+void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions, bool random) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
-            yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
-            // xNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
-            // yNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
+            if (random) {
+                xNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
+                yNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
+            } else {
+                xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
+                yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
+            }
         }
     }
 }
@@ -122,11 +125,11 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 50;
-    field_size_t field_height = 30;
-    nh_radius_t nh_radius = 1;
-    field_size_t inputs_count = 10;
-    field_size_t inputs_spread = 14;
+    field_size_t field_width = 100;
+    field_size_t field_height = 60;
+    nh_radius_t nh_radius = 2;
+    field_size_t inputs_count = 30;
+    field_size_t inputs_spread = 4;
 
     // Input handling.
     switch (argc) {
@@ -169,7 +172,7 @@ int main(int argc, char **argv) {
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
 
-    initPositions(&even_field, xNeuronPositions, yNeuronPositions);
+    initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
     
     sf::ContextSettings settings;
     // settings.antialiasingLevel = 16;
@@ -179,6 +182,7 @@ int main(int argc, char **argv) {
     
     bool feeding = false;
     bool showInfo = false;
+    bool randomPositions = false;
 
     int counter = 0;
     int renderingInterval = 1;
@@ -207,7 +211,8 @@ int main(int argc, char **argv) {
                 case sf::Event::KeyReleased:
                     switch (event.key.code) {
                         case sf::Keyboard::R:
-                            initPositions(i % 2 ? &odd_field : &even_field, xNeuronPositions, yNeuronPositions);
+                            randomPositions = !randomPositions;
+                            initPositions(prev_field, xNeuronPositions, yNeuronPositions, randomPositions);
                             break;
                         case sf::Keyboard::Escape:
                         case sf::Keyboard::Q:
@@ -232,6 +237,9 @@ int main(int argc, char **argv) {
         if (feeding && rand() % 100 > 10) {
             f2d_rsfeed(prev_field, 0, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
         }
+        // if (feeding && rand() % 100 > 10) {
+        //     f2d_rsfeed(prev_field, 100, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
+        // }
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.

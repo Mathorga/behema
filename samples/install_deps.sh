@@ -7,6 +7,7 @@ sudo apt install g++
 sudo apt install libsfml-dev
 
 # Install OpenCV for camera access.
-#sudo apt install libopencv-dev
 sudo apt install libopencv-core-dev
 sudo apt install libopencv-videoio-dev
+
+printf "\nDependencies installed!\n"

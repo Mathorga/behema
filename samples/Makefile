@@ -25,12 +25,12 @@ all: clean create terminal graphics
 terminal: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated terminal!\n\n"
+	@printf "\nCreated terminal!\n"
 
 graphics: create
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(GRAPHICS_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated graphics!\n\n"
+	@printf "\nCreated graphics!\n"
 
 create:
 	$(MKDIR) $(BLD_DIR)

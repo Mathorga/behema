@@ -32,32 +32,32 @@ MKDIR=mkdir -p
 RM=rm -rf
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
-all: standard
+all: std-install
 
-standard: create stdlib
+std-install: create std
 	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
 	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/liath
 	sudo cp $(BLD_DIR)/libliath.so $(SYSTEM_LIB_DIR)
-	@printf "\nInstallation complete!\n\n"
+	@printf "\nInstallation complete!\n"
 
-cuda: create cudalib
+cuda-install: create cuda
 	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
 	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/liath
 	sudo cp $(BLD_DIR)/libliath.so $(SYSTEM_LIB_DIR)
-	@printf "\nInstallation complete!\n\n"
+	@printf "\nInstallation complete!\n"
 
 uninstall: clean
 	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/liath
 	sudo $(RM) $(SYSTEM_LIB_DIR)/libliath.so
 	sudo $(RM) $(SYSTEM_LIB_DIR)/libliath.a
-	@printf "\nSuccessfully uninstalled.\n\n"
+	@printf "\nSuccessfully uninstalled.\n"
 
 
 # Builds all library files.
-stdlib: liath_std.o
+std: liath_std.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
 
-cudalib: liath_cuda.o
+cuda: liath_cuda.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libliath.so
 
 
