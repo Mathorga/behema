@@ -42,7 +42,10 @@ void f2d_set_nhmask(field2d_t* field, nh_mask_t mask);
 // Execution functions:
 
 /// Feeds external spikes to the specified neurons.
-void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);
+void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t* values);
+
+/// Default feed.
+void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);
 
 /// Random feed.
 void f2d_rfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t max_value);

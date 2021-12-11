@@ -63,7 +63,16 @@ void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
     }
 }
 
-void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
+void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t* values) {
+    if (starting_index + count < field->width * field->height) {
+        // Loop through count.
+        for (field_size_t i = starting_index; i < starting_index + count; i++) {
+            field->neurons[i].value += values[i];
+        }
+    }
+}
+
+void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
     if (starting_index + count < field->width * field->height) {
         // Loop through count.
         for (field_size_t i = starting_index; i < starting_index + count; i++) {

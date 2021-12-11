@@ -237,9 +237,6 @@ int main(int argc, char **argv) {
         if (feeding && rand() % 100 > 10) {
             f2d_rsfeed(prev_field, 0, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
         }
-        // if (feeding && rand() % 100 > 10) {
-        //     f2d_rsfeed(prev_field, 100, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
-        // }
 
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.
