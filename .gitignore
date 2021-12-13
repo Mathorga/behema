@@ -9,9 +9,9 @@
 bin/*
 bld/*
 **/bin/**
-*/bld/*
-*/sav/*
-*/img/*
+**/bld/**
+**/sav/**
+**/img/**
 
 # Compiled Object files
 *.slo
@@ -27,10 +27,6 @@ bld/*
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
 
 # Compiled Static libraries
 *.lai
