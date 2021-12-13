@@ -6,9 +6,9 @@
 *.out
 *.app
 *.jpg
-*/bin/*
 bin/*
 bld/*
+**/bin/**
 */bld/*
 */sav/*
 */img/*

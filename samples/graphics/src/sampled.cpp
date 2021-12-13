@@ -95,7 +95,12 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
                     // Exclude the actual neuron from the list of neighbors.
-                    if (!(k == field->nh_radius && l == field->nh_radius)) {
+                    // Also exclude wrapping.
+                    if (!(k == field->nh_radius && l == field->nh_radius) &&
+                        (j + (l - field->nh_radius)) >= 0 &&
+                        (j + (l - field->nh_radius)) < field->width &&
+                        (i + (k - field->nh_radius)) >= 0 &&
+                        (i + (k - field->nh_radius)) < field->height) {
                         // Fetch the current neighbor.
                         field_size_t neighborIndex = IDX2D(WRAP(j + (l - field->nh_radius), field->width),
                                                            WRAP(i + (k - field->nh_radius), field->height),
@@ -109,7 +114,7 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                                     sf::Color(255, 127, 31, 10)),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    sf::Color(31, 127, 255, 10))
+                                    sf::Color(31, 127, 255, 50))
                             };
 
                             window->draw(line, 2, sf::Lines);
@@ -129,7 +134,6 @@ int main(int argc, char **argv) {
     field_size_t field_height = 60;
     nh_radius_t nh_radius = 2;
     field_size_t inputs_count = 30;
-    field_size_t inputs_spread = 4;
 
     // Input handling.
     switch (argc) {
@@ -154,7 +158,7 @@ int main(int argc, char **argv) {
             inputs_count = atoi(argv[4]);
             break;
         default:
-            printf("USAGE: graphics <width> <height> <nh_radius> <inputs_count>\n");
+            printf("USAGE: sampled <width> <height> <nh_radius> <inputs_count>\n");
             exit(0);
             break;
     }
@@ -186,6 +190,11 @@ int main(int argc, char **argv) {
 
     int counter = 0;
     int renderingInterval = 1;
+
+    ticks_count_t sample_rate = 10;
+
+    ticks_count_t* inputs = (ticks_count_t*) malloc(inputs_count * sizeof(ticks_count_t));
+    ticks_count_t samples_count = 0;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -233,9 +242,23 @@ int main(int argc, char **argv) {
             }
         }
 
+        // Only get new inputs according to the sample rate.
+        if (i % sample_rate == 0) {
+            // Fetch input.
+            for (field_size_t j = 0; j < inputs_count; j++) {
+                inputs[j] = 1 + (rand() % (sample_rate - 1));
+            }
+            samples_count = 0;
+        }
+
         // Feed the field.
-        if (feeding && rand() % 100 > 10) {
-            f2d_rsfeed(prev_field, 0, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
+        if (feeding) {
+            for (field_size_t k = 0; k < inputs_count; k++) {
+                if (samples_count % inputs[k]) {
+                    prev_field->neurons[k].value += NEURON_CHARGE_RATE;
+                    // printf("input neuron %d: %d\n", k, prev_field->neurons[k].value);
+                }
+            }
         }
 
         if (counter % renderingInterval == 0) {
@@ -243,22 +266,22 @@ int main(int argc, char **argv) {
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            for (field_size_t i = 0; i < inputs_count; i++) {
-                sf::CircleShape neuronCircle;
+            // for (field_size_t i = 0; i < inputs_count; i++) {
+            //     sf::CircleShape neuronCircle;
 
-                float radius = 10.0f;
-                neuronCircle.setRadius(radius);
-                neuronCircle.setOutlineThickness(2);
-                neuronCircle.setOutlineColor(sf::Color::White);
+            //     float radius = 10.0f;
+            //     neuronCircle.setRadius(radius);
+            //     neuronCircle.setOutlineThickness(2);
+            //     neuronCircle.setOutlineColor(sf::Color::White);
 
-                neuronCircle.setFillColor(sf::Color::Transparent);
+            //     neuronCircle.setFillColor(sf::Color::Transparent);
                 
-                neuronCircle.setPosition(xNeuronPositions[i * inputs_spread] * desktopMode.width, yNeuronPositions[i * inputs_spread] * desktopMode.height);
+            //     neuronCircle.setPosition(xNeuronPositions[i * inputs_spread] * desktopMode.width, yNeuronPositions[i * inputs_spread] * desktopMode.height);
 
-                // Center the spot.
-                neuronCircle.setOrigin(radius, radius);
-                window.draw(neuronCircle);
-            }
+            //     // Center the spot.
+            //     neuronCircle.setOrigin(radius, radius);
+            //     window.draw(neuronCircle);
+            // }
 
             // Draw neurons.
             drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
@@ -272,6 +295,8 @@ int main(int argc, char **argv) {
 
         // Tick the field.
         f2d_tick(prev_field, next_field, 0x0000u);
+
+        samples_count ++;
     }
     return 0;
 }
