@@ -39,6 +39,9 @@ void f2d_set_nhradius(field2d_t* field, nh_radius_t radius);
 /// Sets the neighborhood mask for all neurons in the field.
 void f2d_set_nhmask(field2d_t* field, nh_mask_t mask);
 
+/// Sets the fire threshold for all neurons in the field.
+void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold);
+
 
 // Execution functions:
 

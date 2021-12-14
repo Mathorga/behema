@@ -39,7 +39,7 @@ void drawNeurons(field2d_t* field,
 
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) currentNeuron->threshold);
+            float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
             float neuronBusyness = ((float) currentNeuron->influence) / ((float) 0xFFFFu);
 
             float radius = 3.0f + neuronBusyness * 2.0f;
@@ -48,7 +48,7 @@ void drawNeurons(field2d_t* field,
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            } else if (currentNeuron->value > currentNeuron->threshold) {
+            } else if (currentNeuron->value > field->fire_threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));

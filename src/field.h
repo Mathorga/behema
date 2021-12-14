@@ -44,8 +44,6 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_SYNDEL_THRESHOLD 0x0100u
 #define NEURON_SYNGEN_THRESHOLD 0x0100u
 
-#define SPACER 0x000Eu
-
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
 // #define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
 #define NEURON_DEFAULT_NH_MASK 0x0000000000000000u
@@ -66,7 +64,6 @@ typedef int32_t field_size_t;
 /// Neuron.
 typedef struct {
     nh_mask_t nh_mask;
-    neuron_threshold_t threshold;
     neuron_value_t value;
     neuron_influence_t influence;
 } neuron_t;
@@ -77,6 +74,7 @@ typedef struct {
     field_size_t width;
     field_size_t height;
     nh_radius_t nh_radius;
+    neuron_threshold_t fire_threshold;
     neuron_t* neurons;
 } field2d_t;
 

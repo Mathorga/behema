@@ -39,7 +39,7 @@ void drawNeurons(field2d_t* field,
 
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) currentNeuron->threshold);
+            float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
             float neuronInfluence = ((float) currentNeuron->influence) / ((float) NEURON_MAX_INFLUENCE);
 
             float radius = 2.0f + neuronInfluence * 3.0f;
@@ -48,7 +48,7 @@ void drawNeurons(field2d_t* field,
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            } else if (currentNeuron->value > currentNeuron->threshold) {
+            } else if (currentNeuron->value > field->fire_threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
@@ -62,7 +62,7 @@ void drawNeurons(field2d_t* field,
             if (drawInfo) {
                 sf::Text influenceText;
                 influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                influenceText.setString(std::to_string(currentNeuron->influence));
+                influenceText.setString(std::to_string(currentNeuron->value));
                 influenceText.setFont(font);
                 influenceText.setCharacterSize(8);
                 influenceText.setFillColor(sf::Color::White);
@@ -177,6 +177,7 @@ int main(int argc, char **argv) {
 
     // create the window
     sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
+    window.setMouseCursorVisible(false);
     
     bool feeding = false;
     bool showInfo = false;
@@ -197,7 +198,6 @@ int main(int argc, char **argv) {
 
     // Run the program as long as the window is open.
     for (int i = 0; window.isOpen(); i++) {
-        usleep(5000);
         counter++;
         
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
@@ -284,10 +284,12 @@ int main(int argc, char **argv) {
 
             // End the current frame.
             window.display();
+            
+            usleep(5000);
         }
 
         // Tick the field.
-        f2d_tick(prev_field, next_field, 0x0010u);
+        f2d_tick(prev_field, next_field, 0x0040u);
 
         samples_count ++;
     }
