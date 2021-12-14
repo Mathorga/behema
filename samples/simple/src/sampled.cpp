@@ -17,10 +17,10 @@ void print(field2d_t* field) {
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 100;
-    field_size_t field_height = 60;
+    field_size_t field_width = 150;
+    field_size_t field_height = 80;
     nh_radius_t nh_radius = 2;
-    field_size_t inputs_count = 30;
+    field_size_t inputs_count = 151;
 
     // Input handling.
     switch (argc) {
@@ -89,6 +89,6 @@ int main(int argc, char **argv) {
 
         samples_count++;
 
-        usleep(40000);
+        usleep(20000);
     }
 }

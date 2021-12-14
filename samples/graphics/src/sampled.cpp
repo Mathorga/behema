@@ -40,9 +40,9 @@ void drawNeurons(field2d_t* field,
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) currentNeuron->threshold);
-            float neuronBusyness = ((float) currentNeuron->influence) / ((float) 0xFFFFu);
+            float neuronInfluence = ((float) currentNeuron->influence) / ((float) NEURON_MAX_INFLUENCE);
 
-            float radius = 3.0f + neuronBusyness * 2.0f;
+            float radius = 2.0f + neuronInfluence * 3.0f;
 
             neuronSpot.setRadius(radius);
 
@@ -60,21 +60,15 @@ void drawNeurons(field2d_t* field,
             neuronSpot.setOrigin(radius, radius);
 
             if (drawInfo) {
-                sf::Text valueText;
-                valueText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                valueText.setString(std::to_string(currentNeuron->value));
-                valueText.setFont(font);
-                valueText.setCharacterSize(8);
-                valueText.setFillColor(sf::Color::White);
-                window->draw(valueText);
-
                 sf::Text influenceText;
-                influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height - 6.0f);
+                influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
                 influenceText.setString(std::to_string(currentNeuron->influence));
                 influenceText.setFont(font);
                 influenceText.setCharacterSize(8);
                 influenceText.setFillColor(sf::Color::White);
-                window->draw(influenceText);
+                if (currentNeuron->influence != 0) {
+                    window->draw(influenceText);
+                }
             }
 
             window->draw(neuronSpot);
@@ -256,7 +250,6 @@ int main(int argc, char **argv) {
             for (field_size_t k = 0; k < inputs_count; k++) {
                 if (samples_count % inputs[k]) {
                     prev_field->neurons[k].value += NEURON_CHARGE_RATE;
-                    // printf("input neuron %d: %d\n", k, prev_field->neurons[k].value);
                 }
             }
         }
@@ -266,22 +259,22 @@ int main(int argc, char **argv) {
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            // for (field_size_t i = 0; i < inputs_count; i++) {
-            //     sf::CircleShape neuronCircle;
+            for (field_size_t i = 0; i < inputs_count; i++) {
+                sf::CircleShape neuronCircle;
 
-            //     float radius = 10.0f;
-            //     neuronCircle.setRadius(radius);
-            //     neuronCircle.setOutlineThickness(2);
-            //     neuronCircle.setOutlineColor(sf::Color::White);
+                float radius = 6.0f;
+                neuronCircle.setRadius(radius);
+                neuronCircle.setOutlineThickness(1);
+                neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
 
-            //     neuronCircle.setFillColor(sf::Color::Transparent);
+                neuronCircle.setFillColor(sf::Color::Transparent);
                 
-            //     neuronCircle.setPosition(xNeuronPositions[i * inputs_spread] * desktopMode.width, yNeuronPositions[i * inputs_spread] * desktopMode.height);
+                neuronCircle.setPosition(xNeuronPositions[i] * desktopMode.width, yNeuronPositions[i] * desktopMode.height);
 
-            //     // Center the spot.
-            //     neuronCircle.setOrigin(radius, radius);
-            //     window.draw(neuronCircle);
-            // }
+                // Center the spot.
+                neuronCircle.setOrigin(radius, radius);
+                window.draw(neuronCircle);
+            }
 
             // Draw neurons.
             drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);

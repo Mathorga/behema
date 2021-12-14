@@ -154,7 +154,9 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
-                        if ((prev_field->ticks_count % (evol_step_t) (evol_step + 1)) == 0) {
+                        if ((prev_field->ticks_count % (evol_step + 1)) == 0 &&
+                            // The SPACER, together with the random step of the field introduces a bit of low cost randomization for syngen/syndel.
+                            (prev_field->ticks_count % (ticks_count_t) ((IDX2D(i, j, nh_diameter) + SPACER)) == 0)) {
                             if (prev_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(next_neuron->nh_mask);
@@ -198,6 +200,6 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
         }
     }
 
-    // next_field->ticks_count += rand() % 0xFFFF;
-    next_field->ticks_count ++;
+    next_field->ticks_count += rand() % 0xFFFF;
+    // next_field->ticks_count ++;
 }

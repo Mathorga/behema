@@ -35,13 +35,16 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_STARTING_VALUE 0x00u
 #define NEURON_RECOVERY_VALUE -0x22
 #define NEURON_STARTING_INFLUENCE 0x0000u
-#define NEURON_MAX_INFLUENCE 0xFFFFu
+#define NEURON_MAX_INFLUENCE 0xFFFFFFFFu
 #define NEURON_CHARGE_RATE 0x20u
 #define NEURON_DECAY_RATE 0x01u
 #define NEURON_INFLUENCE_GAIN 0x0010u
 
+// Should these two be merged?
 #define NEURON_SYNDEL_THRESHOLD 0x0100u
 #define NEURON_SYNGEN_THRESHOLD 0x0100u
+
+#define SPACER 0x0010u
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
 // #define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
@@ -54,7 +57,7 @@ typedef uint8_t neuron_threshold_t;
 // Using 16 bytes the radius can be up to 5 (120 neighbors).
 typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
-typedef uint16_t neuron_influence_t;
+typedef uint32_t neuron_influence_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 
