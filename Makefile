@@ -56,7 +56,7 @@ uninstall: clean
 
 
 # Builds all library files.
-std: liath_std.o
+std: liath_std.o utils.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
 	@printf "\nCompiled $@!\n\n"
 

@@ -24,4 +24,5 @@ Once the installation is complete you can include the library by `#include <liat
 During linking you can specify `-lliath` in order to link the compiled functions.
 
 ## TODO
+Neurons competition for synapses
 CUDA support

@@ -109,6 +109,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 }
 
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_step) {
+    ticks_count_t rand;
     for (field_size_t y = 0; y < prev_field->height; y++) {
         for (field_size_t x = 0; x < prev_field->width; x++) {
             // Retrieve the involved neurons.
@@ -135,6 +136,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
 
             nh_mask_t prev_mask = prev_neuron.nh_mask;
 
+            rand = xorshf96();
+
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
                 for (nh_radius_t i = 0; i < nh_diameter; i++) {
@@ -156,7 +159,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (evol_step + 1)) == 0 &&
                             // The SPACER, together with the random step of the field introduces a bit of low cost randomization for syngen/syndel.
-                            (prev_field->ticks_count % (ticks_count_t) ((IDX2D(i, j, nh_diameter) + SPACER)) == 0)) {
+                            // (prev_field->ticks_count + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
+                            (rand + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
                             if (prev_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(next_neuron->nh_mask);
@@ -200,6 +204,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
         }
     }
 
-    next_field->ticks_count += rand() % 0xFFFF;
-    // next_field->ticks_count ++;
+    // next_field->ticks_count += rand() % 0xEEEE;
+    // next_field->ticks_count = rand();
+    // next_field->ticks_count = xorshf96();
+    next_field->ticks_count++;
 }

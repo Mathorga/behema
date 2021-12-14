@@ -287,7 +287,7 @@ int main(int argc, char **argv) {
         }
 
         // Tick the field.
-        f2d_tick(prev_field, next_field, 0x0000u);
+        f2d_tick(prev_field, next_field, 0x0010u);
 
         samples_count ++;
     }
