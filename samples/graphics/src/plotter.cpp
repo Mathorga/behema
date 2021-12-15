@@ -27,10 +27,10 @@ void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPosi
 
 void drawNeurons(field2d_t* field,
                  sf::RenderTexture* texture,
-                 sf::VideoMode videoMode,
+                 uint32_t textureWidth,
+                 uint32_t textureHeight,
                  float* xNeuronPositions,
                  float* yNeuronPositions,
-                 sf::VideoMode desktopMode,
                  sf::Font font) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
@@ -53,7 +53,7 @@ void drawNeurons(field2d_t* field,
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
             }
             
-            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, field->width)] * videoMode.height);
+            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * textureWidth, yNeuronPositions[IDX2D(j, i, field->width)] * textureHeight);
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
@@ -63,7 +63,7 @@ void drawNeurons(field2d_t* field,
     }
 }
 
-void drawSynapses(field2d_t* field, sf::RenderTexture* texture, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+void drawSynapses(field2d_t* field, sf::RenderTexture* texture, uint32_t textureWidth, uint32_t textureHeight, float* xNeuronPositions, float* yNeuronPositions) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             field_size_t neuronIndex = IDX2D(j, i, field->width);
@@ -91,10 +91,10 @@ void drawSynapses(field2d_t* field, sf::RenderTexture* texture, sf::VideoMode vi
                         if (nb_mask & 0x01) {
                             sf::Vertex line[] = {
                                 sf::Vertex(
-                                    {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
+                                    {xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight},
                                     sf::Color(255, 127, 31, 10)),
                                 sf::Vertex(
-                                    {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
+                                    {xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight},
                                     sf::Color(31, 127, 255, 50))
                             };
 
@@ -122,6 +122,9 @@ int main(int argc, char **argv) {
     nh_radius_t nh_radius = 2;
     field_size_t inputs_count = 131;
     ticks_count_t plotInterval = 5000;
+
+    uint32_t textureWidth = 1366;
+    uint32_t textureHeight = 768;
 
     // Input handling.
     switch (argc) {
@@ -160,8 +163,6 @@ int main(int argc, char **argv) {
 
     srand(time(0));
 
-    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
-
     // Create network model.
     field2d_t even_field;
     field2d_t odd_field;
@@ -173,14 +174,9 @@ int main(int argc, char **argv) {
 
     initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
     
-    // create the window
-    // sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen);
+    // Create the texture to render.
     sf::RenderTexture* tex = new sf::RenderTexture();
-    tex->create(1366, 768);
-    // window.setMouseCursorVisible(false);
-    // window.setActive(false);
-    // sf::Texture texture;
-    // texture.create(window.getSize().x, window.getSize().y);
+    tex->create(textureWidth, textureHeight);
     
     bool feeding = true;
 
@@ -230,26 +226,24 @@ int main(int argc, char **argv) {
             // Highlight input neurons.
             for (field_size_t i = 0; i < inputs_count; i++) {
                 sf::CircleShape neuronCircle;
-
+                
                 float radius = 6.0f;
+
                 neuronCircle.setRadius(radius);
                 neuronCircle.setOutlineThickness(1);
-                neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
-
                 neuronCircle.setFillColor(sf::Color::Transparent);
-                
-                neuronCircle.setPosition(xNeuronPositions[i] * desktopMode.width, yNeuronPositions[i] * desktopMode.height);
-
-                // Center the spot.
+                neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
+                neuronCircle.setPosition(xNeuronPositions[i] * textureWidth, yNeuronPositions[i] * textureHeight);
                 neuronCircle.setOrigin(radius, radius);
+
                 tex->draw(neuronCircle);
             }
 
             // Draw neurons.
-            drawNeurons(next_field, tex, desktopMode, xNeuronPositions, yNeuronPositions, desktopMode, font);
+            drawNeurons(next_field, tex, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions, font);
 
             // Draw synapses.
-            drawSynapses(next_field, tex, desktopMode, xNeuronPositions, yNeuronPositions);
+            drawSynapses(next_field, tex, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
             plot(tex);

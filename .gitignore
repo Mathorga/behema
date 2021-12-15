@@ -6,10 +6,11 @@
 *.out
 *.app
 *.jpg
-bin/*
 bld/*
-**/bin/**
+bin/*
 **/bld/**
+**/bin/**
+**/out/**
 **/sav/**
 **/img/**
 
