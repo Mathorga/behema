@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
             // Highlight input neurons.
             for (field_size_t i = 0; i < inputs_count; i++) {
                 sf::CircleShape neuronCircle;
-                
+
                 float radius = 6.0f;
 
                 neuronCircle.setRadius(radius);
