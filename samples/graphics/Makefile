@@ -13,6 +13,7 @@ LIATH_LIBS=-lliath
 SRC_DIR=./src
 BLD_DIR=./bld
 BIN_DIR=./bin
+OUT_DIR=./out
 
 # Adds BLD_DIR to object parameter names.
 OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
@@ -20,23 +21,30 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
-all: clean graphics sampled
+all: clean graphics sampled plotter
 
 graphics: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(GRAPHICS_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated graphics!\n"
+	@printf "\nCreated $@!\n"
 
 sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(GRAPHICS_LIBS) $(LIATH_LIBS)
-	@printf "\nCreated sampled!\n"
+	@printf "\nCreated $@!\n"
+
+plotter: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(GRAPHICS_LIBS) $(LIATH_LIBS)
+	@printf "\nCreated $@!\n"
 
 create:
 	$(MKDIR) $(BLD_DIR)
 	$(MKDIR) $(BIN_DIR)
+	$(MKDIR) $(OUT_DIR)
 
 clean:
 	$(RM) $(BLD_DIR)
