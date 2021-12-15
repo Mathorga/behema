@@ -49,3 +49,4 @@ create:
 clean:
 	$(RM) $(BLD_DIR)
 	$(RM) $(BIN_DIR)
+	$(RM) $(OUT_DIR)

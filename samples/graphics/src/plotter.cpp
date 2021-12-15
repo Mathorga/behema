@@ -26,7 +26,7 @@ void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPosi
 }
 
 void drawNeurons(field2d_t* field,
-                 sf::RenderWindow* window,
+                 sf::RenderTexture* texture,
                  sf::VideoMode videoMode,
                  float* xNeuronPositions,
                  float* yNeuronPositions,
@@ -58,12 +58,12 @@ void drawNeurons(field2d_t* field,
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
 
-            window->draw(neuronSpot);
+            texture->draw(neuronSpot);
         }
     }
 }
 
-void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+void drawSynapses(field2d_t* field, sf::RenderTexture* texture, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             field_size_t neuronIndex = IDX2D(j, i, field->width);
@@ -98,7 +98,7 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                                     sf::Color(31, 127, 255, 50))
                             };
 
-                            window->draw(line, 2, sf::Lines);
+                            texture->draw(line, 2, sf::Lines);
                         }
                     }
 
@@ -110,11 +110,10 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
     }
 }
 
-void plot(sf::Texture* texture, sf::RenderWindow* window) {
-    texture->update(*window);
+void plot(sf::RenderTexture* texture) {
     char fileName[100];
     snprintf(fileName, 100, "out/%lu.bmp", (unsigned long) time(NULL));
-    texture->copyToImage().saveToFile(fileName);
+    texture->getTexture().copyToImage().saveToFile(fileName);
 }
 
 int main(int argc, char **argv) {
@@ -174,19 +173,16 @@ int main(int argc, char **argv) {
 
     initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
     
-    sf::ContextSettings settings;
-    // settings.antialiasingLevel = 16;
-
     // create the window
-    sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
-    window.setMouseCursorVisible(false);
-    window.setActive(false);
-    sf::Texture texture;
-    texture.create(window.getSize().x, window.getSize().y);
+    // sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen);
+    sf::RenderTexture* tex = new sf::RenderTexture();
+    tex->create(1366, 768);
+    // window.setMouseCursorVisible(false);
+    // window.setActive(false);
+    // sf::Texture texture;
+    // texture.create(window.getSize().x, window.getSize().y);
     
     bool feeding = true;
-    bool showInfo = false;
-    bool randomPositions = false;
 
     int counter = 0;
 
@@ -200,45 +196,14 @@ int main(int argc, char **argv) {
         printf("Font not loaded\n");
     }
 
+    bool running = true;
+
     // Run the program as long as the window is open.
-    for (int i = 0; window.isOpen(); i++) {
+    for (int i = 0; running; i++) {
         counter++;
         
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
-
-        // Check all the window's events that were triggered since the last iteration of the loop.
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            switch (event.type) {
-                case sf::Event::Closed:
-                    // Close requested event: close the window.
-                    window.close();
-                    break;
-                case sf::Event::KeyReleased:
-                    switch (event.key.code) {
-                        case sf::Keyboard::R:
-                            randomPositions = !randomPositions;
-                            initPositions(prev_field, xNeuronPositions, yNeuronPositions, randomPositions);
-                            break;
-                        case sf::Keyboard::Escape:
-                        case sf::Keyboard::Q:
-                            window.close();
-                            break;
-                        case sf::Keyboard::Space:
-                            feeding = !feeding;
-                            break;
-                        case sf::Keyboard::I:
-                            showInfo = !showInfo;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
 
         // Only get new inputs according to the sample rate.
         if (i % sample_rate == 0) {
@@ -260,7 +225,7 @@ int main(int argc, char **argv) {
 
         if (counter % plotInterval == 0) {
             // Clear the window with black color.
-            window.clear(sf::Color(31, 31, 31, 255));
+            tex->clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
             for (field_size_t i = 0; i < inputs_count; i++) {
@@ -277,17 +242,17 @@ int main(int argc, char **argv) {
 
                 // Center the spot.
                 neuronCircle.setOrigin(radius, radius);
-                window.draw(neuronCircle);
+                tex->draw(neuronCircle);
             }
 
             // Draw neurons.
-            drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, desktopMode, font);
+            drawNeurons(next_field, tex, desktopMode, xNeuronPositions, yNeuronPositions, desktopMode, font);
 
             // Draw synapses.
-            drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            drawSynapses(next_field, tex, desktopMode, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
-            plot(&texture, &window);
+            plot(tex);
             
             usleep(5000);
         }
