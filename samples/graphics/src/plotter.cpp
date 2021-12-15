@@ -1,5 +1,8 @@
 #include <liath/liath.h>
-#include <SFML/Graphics.hpp>
+#include <opencv2/core.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -26,44 +29,44 @@ void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPosi
 }
 
 void drawNeurons(field2d_t* field,
-                 sf::RenderTexture* texture,
+                 cv::Mat* image,
                  uint32_t textureWidth,
                  uint32_t textureHeight,
                  float* xNeuronPositions,
-                 float* yNeuronPositions,
-                 sf::Font font) {
+                 float* yNeuronPositions) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
-            sf::CircleShape neuronSpot;
-
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
             float neuronInfluence = ((float) currentNeuron->influence) / ((float) NEURON_MAX_INFLUENCE);
 
             float radius = 2.0f + neuronInfluence * 3.0f;
-
-            neuronSpot.setRadius(radius);
+            cv::Scalar* color;
 
             if (neuronValue < 0) {
-                neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
+                color = new cv::Scalar(0, 127, 255, 31 - 31 * neuronValue);
             } else if (currentNeuron->value > field->fire_threshold) {
-                neuronSpot.setFillColor(sf::Color::White);
+                color = new cv::Scalar(255, 255, 255, 255);
             } else {
-                neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
+                color = new cv::Scalar(0, 127, 255, 31 + 224 * neuronValue);
             }
-            
-            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * textureWidth, yNeuronPositions[IDX2D(j, i, field->width)] * textureHeight);
 
-            // Center the spot.
-            neuronSpot.setOrigin(radius, radius);
-
-            texture->draw(neuronSpot);
+            cv::circle(*image,
+                       cv::Point(xNeuronPositions[IDX2D(j, i, field->width)] * textureWidth, yNeuronPositions[IDX2D(j, i, field->width)] * textureHeight),
+                       radius,
+                       *color,
+                       cv::FILLED);
         }
     }
 }
 
-void drawSynapses(field2d_t* field, sf::RenderTexture* texture, uint32_t textureWidth, uint32_t textureHeight, float* xNeuronPositions, float* yNeuronPositions) {
+void drawSynapses(field2d_t* field,
+                  cv::Mat* image,
+                  uint32_t textureWidth,
+                  uint32_t textureHeight,
+                  float* xNeuronPositions,
+                  float* yNeuronPositions) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             field_size_t neuronIndex = IDX2D(j, i, field->width);
@@ -89,16 +92,12 @@ void drawSynapses(field2d_t* field, sf::RenderTexture* texture, uint32_t texture
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
                         if (nb_mask & 0x01) {
-                            sf::Vertex line[] = {
-                                sf::Vertex(
-                                    {xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight},
-                                    sf::Color(255, 127, 31, 10)),
-                                sf::Vertex(
-                                    {xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight},
-                                    sf::Color(31, 127, 255, 50))
-                            };
-
-                            texture->draw(line, 2, sf::Lines);
+                            cv::line(*image,
+                                     cv::Point(xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight),
+                                     cv::Point(xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight),
+                                     cv::Scalar(255, 127, 31, 50),
+                                     1,
+                                     cv::LINE_8);
                         }
                     }
 
@@ -108,12 +107,6 @@ void drawSynapses(field2d_t* field, sf::RenderTexture* texture, uint32_t texture
             }
         }
     }
-}
-
-void plot(sf::RenderTexture* texture) {
-    char fileName[100];
-    snprintf(fileName, 100, "out/%lu.bmp", (unsigned long) time(NULL));
-    texture->getTexture().copyToImage().saveToFile(fileName);
 }
 
 int main(int argc, char **argv) {
@@ -175,8 +168,7 @@ int main(int argc, char **argv) {
     initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
     
     // Create the texture to render.
-    sf::RenderTexture* tex = new sf::RenderTexture();
-    tex->create(textureWidth, textureHeight);
+    cv::Mat image = cv::Mat::zeros(textureHeight, textureWidth, CV_8UC3);
     
     bool feeding = true;
 
@@ -186,11 +178,6 @@ int main(int argc, char **argv) {
 
     ticks_count_t* inputs = (ticks_count_t*) malloc(inputs_count * sizeof(ticks_count_t));
     ticks_count_t samples_count = 0;
-
-    sf::Font font;
-    if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
-        printf("Font not loaded\n");
-    }
 
     bool running = true;
 
@@ -221,32 +208,27 @@ int main(int argc, char **argv) {
 
         if (counter % plotInterval == 0) {
             // Clear the window with black color.
-            tex->clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
             for (field_size_t i = 0; i < inputs_count; i++) {
-                sf::CircleShape neuronCircle;
-
-                float radius = 6.0f;
-
-                neuronCircle.setRadius(radius);
-                neuronCircle.setOutlineThickness(1);
-                neuronCircle.setFillColor(sf::Color::Transparent);
-                neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
-                neuronCircle.setPosition(xNeuronPositions[i] * textureWidth, yNeuronPositions[i] * textureHeight);
-                neuronCircle.setOrigin(radius, radius);
-
-                tex->draw(neuronCircle);
+                cv::circle(image,
+                           cv::Point(xNeuronPositions[i] * textureWidth, yNeuronPositions[i] * textureHeight),
+                           6.0f,
+                           cv::Scalar(255, 255, 255, 64),
+                           1);
             }
 
-            // Draw neurons.
-            drawNeurons(next_field, tex, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions, font);
-
             // Draw synapses.
-            drawSynapses(next_field, tex, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+            drawSynapses(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+
+            // Draw neurons.
+            drawNeurons(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
-            plot(tex);
+            char fileName[100];
+            snprintf(fileName, 100, "out/%lu.bmp", (unsigned long) time(NULL));
+            cv::imwrite(fileName, image);
+            cv::waitKey(5);
             
             usleep(5000);
         }
