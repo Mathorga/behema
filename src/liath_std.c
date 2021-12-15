@@ -12,22 +12,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
             field->neurons[IDX2D(x, y, field->width)].nh_mask = NEURON_DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = NEURON_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_INFLUENCE;
-        }
-    }
-}
-
-void f2d_rinit(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
-    field->width = width;
-    field->height = height;
-    field->nh_radius = nh_radius;
-    field->fire_threshold = NEURON_DEFAULT_THRESHOLD;
-    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
-
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].nh_mask = rand() % 0xFFFFFFFFFFFFFFFF;
-            field->neurons[IDX2D(x, y, field->width)].value = rand() % NEURON_DEFAULT_THRESHOLD;
-            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_INFLUENCE;
+            field->neurons[IDX2D(x, y, field->width)].nh_count = 0x00u;
         }
     }
 }
@@ -124,6 +109,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
 
+            next_neuron->nh_count = 0x00u;
+
             /* Compute the neighborhood diameter:
                    d = 7
               <------------->
@@ -140,6 +127,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
             field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
             nh_mask_t prev_mask = prev_neuron.nh_mask;
+            float prev_touch = ((float) prev_neuron.nh_count) / ((float) ((2 * nh_diameter) - 1));
 
             rand = xorshf96();
 
@@ -154,8 +142,11 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                                                                       prev_field->width)];
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (prev_mask & 0x01 && neighbor.value > prev_field->fire_threshold) {
-                            next_neuron->value += NEURON_CHARGE_RATE;
+                        if (prev_mask & 0x01) {
+                            if (neighbor.value > prev_field->fire_threshold) {
+                                next_neuron->value += NEURON_CHARGE_RATE;
+                            }
+                            next_neuron->nh_count++;
                         }
 
                         // Perform evolution phase if allowed.
@@ -173,7 +164,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                             } else if (!(prev_mask & 0x01) &&
                                        neighbor.influence > NEURON_SYNGEN_THRESHOLD &&
                                        // Make sure the neuron does not have too much influence as a way to limit syngen.
-                                       next_neuron->influence < NEURON_SYNGEN_THRESHOLD) {
+                                    //    next_neuron->influence < NEURON_SYNGEN_THRESHOLD) {
+                                       prev_touch < NEURON_MAX_TOUCH) {
                                 // Add synapse.
                                 next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
                             }

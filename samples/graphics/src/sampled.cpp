@@ -62,7 +62,7 @@ void drawNeurons(field2d_t* field,
             if (drawInfo) {
                 sf::Text influenceText;
                 influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                influenceText.setString(std::to_string(currentNeuron->value));
+                influenceText.setString(std::to_string(currentNeuron->influence));
                 influenceText.setFont(font);
                 influenceText.setCharacterSize(8);
                 influenceText.setFillColor(sf::Color::White);

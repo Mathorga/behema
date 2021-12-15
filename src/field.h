@@ -36,9 +36,10 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_RECOVERY_VALUE -0x22
 #define NEURON_STARTING_INFLUENCE 0x0000u
 #define NEURON_MAX_INFLUENCE 0xFFFFFFFFu
+#define NEURON_MAX_TOUCH 0.2f
 #define NEURON_CHARGE_RATE 0x20u
 #define NEURON_DECAY_RATE 0x01u
-#define NEURON_INFLUENCE_GAIN 0x0010u
+#define NEURON_INFLUENCE_GAIN 0x0020u
 
 // Should these two be merged?
 #define NEURON_SYNDEL_THRESHOLD 0x0100u
@@ -56,6 +57,7 @@ typedef uint8_t neuron_threshold_t;
 typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
 typedef uint32_t neuron_influence_t;
+typedef uint8_t nh_count_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 
@@ -66,6 +68,7 @@ typedef struct {
     nh_mask_t nh_mask;
     neuron_value_t value;
     neuron_influence_t influence;
+    nh_count_t nh_count;
 } neuron_t;
 
 /// 2D Field of neurons.

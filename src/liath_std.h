@@ -27,9 +27,6 @@ extern "C" {
 /// Initializes the given field with default values.
 void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
 
-/// Random init.
-void f2d_rinit(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
-
 /// Returns a field with the same properties as the given one.
 field2d_t* f2d_copy(field2d_t* other);
 
