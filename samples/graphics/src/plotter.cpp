@@ -45,11 +45,11 @@ void drawNeurons(field2d_t* field,
             cv::Scalar* color;
 
             if (neuronValue < 0) {
-                color = new cv::Scalar(0, 127, 255, 31 - 31 * neuronValue);
+                color = new cv::Scalar(31 - 31 * neuronValue, 15 - 15 * neuronValue, 0);
             } else if (currentNeuron->value > field->fire_threshold) {
                 color = new cv::Scalar(255, 255, 255, 255);
             } else {
-                color = new cv::Scalar(0, 127, 255, 31 + 224 * neuronValue);
+                color = new cv::Scalar(31 + 224 * neuronValue, 15 + 112 * neuronValue, 0);
             }
 
             cv::circle(*image,
@@ -95,7 +95,7 @@ void drawSynapses(field2d_t* field,
                             cv::line(*image,
                                      cv::Point(xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight),
                                      cv::Point(xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight),
-                                     cv::Scalar(255, 127, 31, 50),
+                                     cv::Scalar(127, 63, 15),
                                      1,
                                      cv::LINE_8);
                         }
