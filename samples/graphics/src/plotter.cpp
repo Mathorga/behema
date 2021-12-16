@@ -95,7 +95,7 @@ void drawSynapses(field2d_t* field,
                             cv::line(*image,
                                      cv::Point(xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight),
                                      cv::Point(xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight),
-                                     cv::Scalar(127, 63, 15),
+                                     cv::Scalar(63, 31, 7),
                                      1,
                                      cv::LINE_8);
                         }
@@ -118,6 +118,8 @@ int main(int argc, char **argv) {
 
     uint32_t textureWidth = 1366;
     uint32_t textureHeight = 768;
+
+    uint32_t feedingPeriod = (rand() % 1000) * 100;
 
     // Input handling.
     switch (argc) {
@@ -184,6 +186,12 @@ int main(int argc, char **argv) {
     // Run the program as long as the window is open.
     for (int i = 0; running; i++) {
         counter++;
+
+        // Toggle feeding at feeding period.
+        if (counter % feedingPeriod == 0) {
+            feeding = !feeding;
+            feedingPeriod = (rand() % 1000) * 100;
+        }
         
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
@@ -213,8 +221,8 @@ int main(int argc, char **argv) {
             for (field_size_t i = 0; i < inputs_count; i++) {
                 cv::circle(image,
                            cv::Point(xNeuronPositions[i] * textureWidth, yNeuronPositions[i] * textureHeight),
-                           6.0f,
-                           cv::Scalar(255, 255, 255, 64),
+                           2.0f,
+                           cv::Scalar(64, 64, 64),
                            1);
             }
 
@@ -222,7 +230,7 @@ int main(int argc, char **argv) {
             drawSynapses(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // Draw neurons.
-            drawNeurons(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+            // drawNeurons(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
             char fileName[100];
