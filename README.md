@@ -6,7 +6,7 @@ Spiking neural network implementation through cellular automata.
 
 ## Shared library installation (Linux)
 ### Standard
-Run `make` or `make standard` to install the default (CPU) package in a system-wide dynamic library.<br/>
+Run `make install` or `make std` to install the default (CPU) package in a system-wide dynamic library.<br/>
 
 ### CUDA
 TODO
