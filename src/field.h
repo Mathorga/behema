@@ -44,10 +44,14 @@ Copyright (C) 2021 Luka Micheletti
 // Should these two be merged?
 #define NEURON_SYNDEL_THRESHOLD 0x0100u
 #define NEURON_SYNGEN_THRESHOLD 0x0100u
+#define NEURON_SYNGEN_PULSE 0.4f
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
 // #define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
 #define NEURON_DEFAULT_NH_MASK 0x0000000000000000u
+#define NEURON_DEFAULT_PULSE_MASK 0x0000u
+
+#define F2D_DEFAULT_PULSE_WINDOW 0x10;
 
 typedef int16_t neuron_value_t;
 typedef uint8_t neuron_threshold_t;
@@ -60,12 +64,29 @@ typedef uint32_t neuron_influence_t;
 typedef uint8_t nh_count_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
+typedef uint16_t pulse_mask_t;
+typedef int8_t pulse_width_t;
 
 typedef int32_t field_size_t;
 
 /// Neuron.
 typedef struct {
+    // Neighborhood connections pattern:
+    // 1|1|0
+    // 0|x|1 => 0011x0011
+    // 1|0|0
     nh_mask_t nh_mask;
+
+    // Activation history pattern:
+    //           |<--pulse_window-->|
+    // xxxxxxxxxx01001010001010001001--------> t
+    //                              ^
+    pulse_mask_t pulse_mask;
+
+    // Amount of activations in the current pulse window.
+    pulse_width_t pulse;
+
+    // Current internal value.
     neuron_value_t value;
     neuron_influence_t influence;
     nh_count_t nh_count;
@@ -73,11 +94,12 @@ typedef struct {
 
 /// 2D Field of neurons.
 typedef struct {
-    ticks_count_t ticks_count;
     field_size_t width;
     field_size_t height;
     nh_radius_t nh_radius;
     neuron_threshold_t fire_threshold;
+    ticks_count_t ticks_count;
+    pulse_width_t pulse_window;
     neuron_t* neurons;
 } field2d_t;
 
