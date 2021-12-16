@@ -191,6 +191,7 @@ int main(int argc, char **argv) {
         if (counter % feedingPeriod == 0) {
             feeding = !feeding;
             feedingPeriod = (rand() % 1000) * 100;
+            counter = 0;
         }
         
         field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
@@ -231,6 +232,17 @@ int main(int argc, char **argv) {
 
             // Draw neurons.
             // drawNeurons(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+
+            // Draw input period.
+            char periodString[100];
+            snprintf(periodString, 100, "Feeding %d - %d", feeding, feedingPeriod);
+            cv::putText(image,
+                        periodString,
+                        cv::Point(30, 30),
+                        cv::FONT_HERSHEY_DUPLEX,
+                        1.0,
+                        CV_RGB(255, 255, 255),
+                        1);
 
             // End the current frame.
             char fileName[100];
