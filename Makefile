@@ -36,32 +36,34 @@ all: std
 install: std-install
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
-std-install: create std
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(BLD_DIR)/libliath.so $(SYSTEM_LIB_DIR)
+std-install: std
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/hal
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/hal
+	sudo cp $(BLD_DIR)/libhal.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
-cuda-install: create cuda
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/liath
-	sudo cp $(BLD_DIR)/libliath.so $(SYSTEM_LIB_DIR)
+cuda-install: cuda
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/hal
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/hal
+	sudo cp $(BLD_DIR)/hal.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 uninstall: clean
-	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/liath
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libliath.so
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libliath.a
+	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/hal
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libhal.so
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libhal.a
 	@printf "\nSuccessfully uninstalled.\n\n"
 
+std: create std-build
+cuda: create cuda-build
 
 # Builds all library files.
-std: liath_std.o utils.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libliath.so
+std-build: hal_std.o utils.o
+	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libhal.so
 	@printf "\nCompiled $@!\n\n"
 
-cuda: liath_cuda.o
-	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libliath.so
+cuda-build: hal_cuda.o utils.o
+	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libhal.so
 	@printf "\nCompiled $@!\n\n"
 
 

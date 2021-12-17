@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <liath/liath.h>
+#include <hal/hal.h>
 
 void print(field2d_t* field) {
     system("clear");

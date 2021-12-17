@@ -1,4 +1,4 @@
-#include <liath/liath.h>
+#include <hal/hal.h>
 #include <SFML/Graphics.hpp>
 #include <stdio.h>
 #include <time.h>
