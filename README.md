@@ -2,7 +2,8 @@
 <p align="center" width="100%">
     <img width="33%" src="/liath.png"> 
 </p>
-Spiking neural network implementation through cellular automata.
+Spiking neural network implementation through cellular automata.<br/>
+Hal stands for "Heuristically programmed ALgorithmic computer" (did you get it?).
 
 ## Shared library installation (Linux)
 ### Standard
