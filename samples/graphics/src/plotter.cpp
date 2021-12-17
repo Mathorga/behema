@@ -39,9 +39,8 @@ void drawNeurons(field2d_t* field,
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
-            float neuronInfluence = ((float) currentNeuron->influence) / ((float) NEURON_MAX_INFLUENCE);
 
-            float radius = 2.0f + neuronInfluence * 3.0f;
+            float radius = 3.0f;
             cv::Scalar* color;
 
             if (neuronValue < 0) {
@@ -217,6 +216,7 @@ int main(int argc, char **argv) {
 
         if (counter % plotInterval == 0) {
             // Clear the window with black color.
+            image.setTo(cv::Scalar(0, 0, 0));
 
             // Highlight input neurons.
             for (field_size_t i = 0; i < inputs_count; i++) {

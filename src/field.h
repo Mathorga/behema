@@ -34,8 +34,6 @@ Copyright (C) 2021 Luka Micheletti
 #define NEURON_DEFAULT_THRESHOLD 0x88u
 #define NEURON_STARTING_VALUE 0x00u
 #define NEURON_RECOVERY_VALUE -0x22
-#define NEURON_STARTING_INFLUENCE 0x0000u
-#define NEURON_MAX_INFLUENCE 0xFFFFFFFFu
 #define NEURON_MAX_TOUCH 0.5f
 #define NEURON_CHARGE_RATE 0x20u
 #define NEURON_DECAY_RATE 0x01u
@@ -44,14 +42,14 @@ Copyright (C) 2021 Luka Micheletti
 // Should these two be merged?
 #define NEURON_SYNDEL_THRESHOLD 0x0100u
 #define NEURON_SYNGEN_THRESHOLD 0x0100u
-#define NEURON_SYNGEN_PULSE 0.4f
+#define NEURON_SYNGEN_PULSE 0.1f
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
 // #define NEURON_DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
 #define NEURON_DEFAULT_NH_MASK 0x0000000000000000u
-#define NEURON_DEFAULT_PULSE_MASK 0x0000u
+#define NEURON_DEFAULT_PULSE_MASK 0x00000000u
 
-#define F2D_DEFAULT_PULSE_WINDOW 0x10;
+#define F2D_DEFAULT_PULSE_WINDOW 0x1F;
 
 typedef int16_t neuron_value_t;
 typedef uint8_t neuron_threshold_t;
@@ -64,7 +62,7 @@ typedef uint32_t neuron_influence_t;
 typedef uint8_t nh_count_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
-typedef uint16_t pulse_mask_t;
+typedef uint32_t pulse_mask_t;
 typedef int8_t pulse_width_t;
 
 typedef int32_t field_size_t;
@@ -88,7 +86,6 @@ typedef struct {
 
     // Current internal value.
     neuron_value_t value;
-    neuron_influence_t influence;
     nh_count_t nh_count;
 } neuron_t;
 

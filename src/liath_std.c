@@ -12,7 +12,6 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
         for (field_size_t x = 0; x < field->width; x++) {
             field->neurons[IDX2D(x, y, field->width)].nh_mask = NEURON_DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = NEURON_STARTING_VALUE;
-            field->neurons[IDX2D(x, y, field->width)].influence = NEURON_STARTING_INFLUENCE;
             field->neurons[IDX2D(x, y, field->width)].nh_count = 0x00u;
             field->neurons[IDX2D(x, y, field->width)].pulse_mask = NEURON_DEFAULT_PULSE_MASK;
             field->neurons[IDX2D(x, y, field->width)].pulse = 0x00u;
@@ -132,7 +131,6 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
 
             nh_mask_t prev_mask = prev_neuron.nh_mask;
             float prev_touch = ((float) prev_neuron.nh_count) / ((float) ((2 * nh_diameter) - 1));
-            // float prev_pulse = ((float) prev_neuron.pulse) / ((float) (prev_field->pulse_window));
 
             rand = xorshf96();
 
@@ -154,6 +152,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                             next_neuron->nh_count++;
                         }
 
+                        float nb_pulse = ((float) neighbor.pulse) / ((float) (prev_field->pulse_window));
+
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
@@ -161,16 +161,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                         if ((prev_field->ticks_count % (evol_step + 1)) == 0 &&
                             // (prev_field->ticks_count + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
                             (rand + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
-                            if (prev_mask & 0x01 && neighbor.influence < NEURON_SYNDEL_THRESHOLD) {
+                            if (prev_mask & 0x01 &&
+                                nb_pulse < NEURON_SYNGEN_PULSE) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(next_neuron->nh_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
                                 next_neuron->nh_mask = ~mask;
                             } else if (!(prev_mask & 0x01) &&
-                                       neighbor.influence > NEURON_SYNGEN_THRESHOLD &&
-                                    //    prev_pulse > NEURON_SYNGEN_PULSE &&
-                                       // Make sure the neuron does not have too much influence as a way to limit syngen.
-                                    //    next_neuron->influence < NEURON_SYNGEN_THRESHOLD) {
+                                       nb_pulse > NEURON_SYNGEN_PULSE &&
                                        prev_touch < NEURON_MAX_TOUCH) {
                                 // Add synapse.
                                 next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
@@ -195,22 +193,13 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
                 // Fired at the previous step.
                 next_neuron->value = NEURON_RECOVERY_VALUE;
 
-                // Increase influence.
-                if (next_neuron->influence + NEURON_INFLUENCE_GAIN <= NEURON_MAX_INFLUENCE) {
-                    next_neuron->influence += NEURON_INFLUENCE_GAIN;
-                }
-
                 // Store pulse.
                 next_neuron->pulse_mask |= 0x01;
                 next_neuron->pulse++;
-            } else if (next_neuron->value > prev_field->fire_threshold) {
-            } else if (prev_neuron.influence > 0) {
-                // Not fired, decrease influence.
-                next_neuron->influence--;
             }
 
-            // Decrease pulse if the oldest recorded pulse is active.
-            if ((prev_neuron.pulse_mask << prev_field->pulse_window) & 0x01) {
+            if ((prev_neuron.pulse_mask >> prev_field->pulse_window) & 0x01) {
+                // Decrease pulse if the oldest recorded pulse is active.
                 next_neuron->pulse--;
             }
 
@@ -218,8 +207,5 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_s
         }
     }
 
-    // next_field->ticks_count += rand() % 0xEEEE;
-    // next_field->ticks_count = rand();
-    // next_field->ticks_count = xorshf96();
     next_field->ticks_count++;
 }

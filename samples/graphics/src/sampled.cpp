@@ -40,9 +40,8 @@ void drawNeurons(field2d_t* field,
             neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
-            float neuronInfluence = ((float) currentNeuron->influence) / ((float) NEURON_MAX_INFLUENCE);
 
-            float radius = 2.0f + neuronInfluence * 3.0f;
+            float radius = 3.0f;
 
             neuronSpot.setRadius(radius);
 
@@ -60,14 +59,14 @@ void drawNeurons(field2d_t* field,
             neuronSpot.setOrigin(radius, radius);
 
             if (drawInfo) {
-                sf::Text influenceText;
-                influenceText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
-                influenceText.setString(std::to_string(currentNeuron->influence));
-                influenceText.setFont(font);
-                influenceText.setCharacterSize(8);
-                influenceText.setFillColor(sf::Color::White);
-                if (currentNeuron->influence != 0) {
-                    window->draw(influenceText);
+                sf::Text pulseText;
+                pulseText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
+                pulseText.setString(std::to_string(currentNeuron->pulse));
+                pulseText.setFont(font);
+                pulseText.setCharacterSize(8);
+                pulseText.setFillColor(sf::Color::White);
+                if (currentNeuron->pulse != 0) {
+                    window->draw(pulseText);
                 }
             }
 
