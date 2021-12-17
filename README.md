@@ -1,6 +1,6 @@
 # Hal
 <p align="center" width="100%">
-    <img width="33%" src="/liath.png"> 
+    <img width="33%" src="/hal.png"> 
 </p>
 Spiking neural network implementation through cellular automata.<br/>
 Hal stands for "Heuristically programmed ALgorithmic computer" (did you get it?).
