@@ -2,8 +2,8 @@ CCOMP=gcc
 NVCOMP=nvcc
 
 STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g
-CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
-CLINK_FLAGS=-Wall
+CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
+CLINK_FLAGS=-Wall -fopenmp
 
 ifdef CUDA_ARCH
 CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)

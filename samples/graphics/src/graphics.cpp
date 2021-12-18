@@ -149,6 +149,13 @@ int main(int argc, char **argv) {
             exit(0);
             break;
     }
+    
+    bool feeding = false;
+    bool showInfo = false;
+    bool randomPositions = true;
+
+    int counter = 0;
+    int renderingInterval = 1;
 
     srand(time(0));
 
@@ -163,20 +170,13 @@ int main(int argc, char **argv) {
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
 
-    initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
+    initPositions(&even_field, xNeuronPositions, yNeuronPositions, randomPositions);
     
     sf::ContextSettings settings;
     // settings.antialiasingLevel = 16;
 
     // create the window
     sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
-    
-    bool feeding = false;
-    bool showInfo = false;
-    bool randomPositions = false;
-
-    int counter = 0;
-    int renderingInterval = 1;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
         // Feed the field.
         if (feeding && rand() % 100 > 10) {
-            f2d_rsfeed(prev_field, 0, inputs_count, 2 * NEURON_CHARGE_RATE, inputs_spread);
+            f2d_rsfeed(prev_field, 0, inputs_count, 2 * DEFAULT_CHARGE_VALUE, inputs_spread);
         }
 
         if (counter % renderingInterval == 0) {
@@ -262,7 +262,7 @@ int main(int argc, char **argv) {
         }
 
         // Tick the field.
-        f2d_tick(prev_field, next_field, 0x0000u);
+        f2d_tick(prev_field, next_field);
     }
     return 0;
 }

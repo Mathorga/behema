@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
         if (rand() % 100 > 50) {
-            f2d_rsfeed(prev_field, 0, inputs_count, NEURON_CHARGE_RATE, 2);
+            f2d_rsfeed(prev_field, 0, inputs_count, DEFAULT_CHARGE_VALUE, 2);
         }
 
         f2d_tick(prev_field, next_field, 0x0000u);

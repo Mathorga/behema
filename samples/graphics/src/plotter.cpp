@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
         if (feeding) {
             for (field_size_t k = 0; k < inputs_count; k++) {
                 if (samples_count % inputs[k]) {
-                    prev_field->neurons[k].value += NEURON_CHARGE_RATE;
+                    prev_field->neurons[k].value += DEFAULT_CHARGE_VALUE;
                 }
             }
         }
@@ -254,7 +254,7 @@ int main(int argc, char **argv) {
         }
 
         // Tick the field.
-        f2d_tick(prev_field, next_field, 0x0040u);
+        f2d_tick(prev_field, next_field);
 
         samples_count ++;
     }

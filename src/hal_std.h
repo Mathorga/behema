@@ -39,6 +39,16 @@ void f2d_set_nhmask(field2d_t* field, nh_mask_t mask);
 /// Sets the fire threshold for all neurons in the field.
 void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold);
 
+/// Sets the maximum allowable touch for each neuron in the network.
+/// A neuron touch is defined as its synapses count divided by its total neighbors count.
+/// @param touch The touch to assign the field. Only values between 0 and 1 are allowed.
+void f2d_set_max_touch(field2d_t* field, float touch);
+
+/// Sets the pulse needed to allow synapse generation.
+/// A neuron beat is defined as its pulses count divided by the size of the field's pulse window.
+/// @param beat The beat to assign the field. Only values between 0 and 1 are allowed.
+void f2d_set_syngen_beat(field2d_t* field, float beat);
+
 
 // Execution functions:
 
@@ -58,7 +68,7 @@ void f2d_sfeed(field2d_t* field, field_size_t starting_index, field_size_t count
 void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t max_value, field_size_t spread);
 
 /// Performs a full run cycle over the network field.
-void f2d_tick(field2d_t* prev_field, field2d_t* next_field, ticks_count_t evol_step);
+void f2d_tick(field2d_t* prev_field, field2d_t* next_field);
 
 
 #ifdef __cplusplus

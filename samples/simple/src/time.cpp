@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
         // Feed the field.
         for (field_size_t k = 0; k < inputs_count; k++) {
             if (samples_count % inputs[k]) {
-                prev_field->neurons[k].value += NEURON_CHARGE_RATE;
+                prev_field->neurons[k].value += DEFAULT_CHARGE_VALUE;
             }
         }
 
