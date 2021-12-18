@@ -97,6 +97,10 @@ void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count,
     }
 }
 
+void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, neuron_value_t value) {
+    // TODO.
+}
+
 void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
     if (starting_index + count < field->width * field->height) {
         // Loop through count.

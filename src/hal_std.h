@@ -45,7 +45,7 @@ void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold);
 void f2d_set_max_touch(field2d_t* field, float touch);
 
 /// Sets the pulse needed to allow synapse generation.
-/// A neuron beat is defined as its pulses count divided by the size of the field's pulse window.
+/// A neuron beat is defined as its pulses count divided by the size of the field's pulse window (aka the max possible pulses count).
 /// @param beat The beat to assign the field. Only values between 0 and 1 are allowed.
 void f2d_set_syngen_beat(field2d_t* field, float beat);
 
@@ -54,6 +54,16 @@ void f2d_set_syngen_beat(field2d_t* field, float beat);
 
 /// Feeds external spikes to the specified neurons.
 void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t* values);
+
+/// Externally feeds the neurons inside the rectangle described by the given parameters.
+/// x0 and y0 cannot be less than 0, while x1 and y1 cannot be greater than the field's width and height respectively.
+/// @param field The target field to feed.
+/// @param x0 The starting x index of the target neurons square.
+/// @param y0 The starting y index of the target neurons square.
+/// @param x1 The ending x index of the target neurons square.
+/// @param y1 The ending y index of the target neurons square.
+/// @param value The value used to feed each input neuron.
+void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, neuron_value_t value);
 
 /// Default feed.
 void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);

@@ -4,18 +4,6 @@
 #include <unistd.h>
 #include <hal/hal.h>
 
-void print(field2d_t* field) {
-    system("clear");
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            neuron_t currentNeuron = field->neurons[IDX2D(j, i, field->width)];
-            printf("%c ", currentNeuron.value > currentNeuron.threshold ? '@' : '.');
-        }
-        printf("\n");
-    }
-    printf("\n");
-}
-
 int main(int argc, char **argv) {
     field_size_t field_width = 150;
     field_size_t field_height = 80;
@@ -82,13 +70,9 @@ int main(int argc, char **argv) {
             }
         }
 
-        // print(next_field);
-
         // Tick the field.
-        f2d_tick(prev_field, next_field, 0x0010u);
+        f2d_tick(prev_field, next_field);
 
         samples_count++;
-
-        // usleep(20000);
     }
 }

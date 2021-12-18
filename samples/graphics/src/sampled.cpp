@@ -4,23 +4,11 @@
 #include <time.h>
 #include <unistd.h>
 
-float randomFloat(float min, float max) {
-    float random = ((float)rand()) / (float)RAND_MAX;
-
-    float range = max - min;
-    return (random * range) + min;
-}
-
-void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions, bool random) {
+void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            if (random) {
-                xNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
-                yNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
-            } else {
-                xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
-                yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
-            }
+            xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
+            yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
         }
     }
 }
@@ -169,7 +157,7 @@ int main(int argc, char **argv) {
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
 
-    initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
+    initPositions(&even_field, xNeuronPositions, yNeuronPositions);
     
     sf::ContextSettings settings;
     // settings.antialiasingLevel = 16;
@@ -180,7 +168,6 @@ int main(int argc, char **argv) {
     
     bool feeding = false;
     bool showInfo = false;
-    bool randomPositions = false;
 
     int counter = 0;
     int renderingInterval = 1;
@@ -212,10 +199,6 @@ int main(int argc, char **argv) {
                     break;
                 case sf::Event::KeyReleased:
                     switch (event.key.code) {
-                        case sf::Keyboard::R:
-                            randomPositions = !randomPositions;
-                            initPositions(prev_field, xNeuronPositions, yNeuronPositions, randomPositions);
-                            break;
                         case sf::Keyboard::Escape:
                         case sf::Keyboard::Q:
                             window.close();
@@ -284,7 +267,7 @@ int main(int argc, char **argv) {
             // End the current frame.
             window.display();
             
-            // usleep(5000);
+            usleep(5000);
         }
 
         // Tick the field.
