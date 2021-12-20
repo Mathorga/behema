@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
     f2d_init(&even_field, field_width, field_height, nh_radius);
     f2d_set_evol_step(&even_field, 0x20u);
     f2d_set_pulse_window(&even_field, 0x3A);
-    // f2d_set_syngen_beat(&even_field, 0.3F);
+    f2d_set_syngen_beat(&even_field, 0.1F);
     f2d_set_max_touch(&even_field, 0.2F);
     f2d_set_sample_window(&even_field, 10);
     odd_field = *f2d_copy(&even_field);
@@ -170,8 +170,8 @@ int main(int argc, char **argv) {
     int renderingInterval = 1;
 
     // Coordinates for input neurons.
-    field_size_t lInputsCoords[] = {5, 5, 30, 20};
-    field_size_t rInputsCoords[] = {50, 5, 75, 20};
+    field_size_t lInputsCoords[] = {10, 5, 40, 20};
+    field_size_t rInputsCoords[] = {even_field.width - 40 , 5, even_field.width - 10, 20};
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
@@ -258,7 +258,27 @@ int main(int argc, char **argv) {
                     float radius = 6.0f;
                     neuronCircle.setRadius(radius);
                     neuronCircle.setOutlineThickness(1);
-                    neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
+                    neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 32));
+
+                    neuronCircle.setFillColor(sf::Color::Transparent);
+                    
+                    neuronCircle.setPosition(xNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.width, yNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.height);
+
+                    // Center the spot.
+                    neuronCircle.setOrigin(radius, radius);
+                    window.draw(neuronCircle);
+                }
+            }
+
+            // Highlight input neurons.
+            for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
+                for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
+                    sf::CircleShape neuronCircle;
+
+                    float radius = 6.0f;
+                    neuronCircle.setRadius(radius);
+                    neuronCircle.setOutlineThickness(1);
+                    neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 32));
 
                     neuronCircle.setFillColor(sf::Color::Transparent);
                     
