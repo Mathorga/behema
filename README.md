@@ -1,6 +1,6 @@
 # Portia
 <p align="center" width="100%">
-    <img width="33%" src="/hal.png"> 
+    <img width="33%" src="/portia.png"> 
 </p>
 Spiking neural network implementation through cellular automata.<br/>
 
