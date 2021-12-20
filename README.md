@@ -3,7 +3,6 @@
     <img width="33%" src="/hal.png"> 
 </p>
 Spiking neural network implementation through cellular automata.<br/>
-HAL stands for "Heuristically programmed ALgorithmic computer" (did you get it?).
 
 ## Shared library installation (Linux)
 ### Standard
