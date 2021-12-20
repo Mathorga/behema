@@ -186,7 +186,11 @@ int main(int argc, char **argv) {
         // Toggle feeding at feeding period.
         if (counter % feedingPeriod == 0) {
             feeding = !feeding;
-            feedingPeriod = (rand() % 1000) * 100;
+            if (feeding) {
+                feedingPeriod = (rand() % 1000) * 100;
+            } else {
+                feedingPeriod = (rand() % 1000) * 10;
+            }
             counter = 0;
         }
         
