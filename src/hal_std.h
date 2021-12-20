@@ -36,6 +36,15 @@ void f2d_set_nhradius(field2d_t* field, nh_radius_t radius);
 /// Sets the neighborhood mask for all neurons in the field.
 void f2d_set_nhmask(field2d_t* field, nh_mask_t mask);
 
+/// Sets the evolution step for the field.
+void f2d_set_evol_step(field2d_t* field, evol_step_t evol_step);
+
+/// Sets the pulse window width for the field.
+void f2d_set_pulse_window(field2d_t* field, pulses_count_t window);
+
+/// Sets the sample window for the field.
+void f2d_set_sample_window(field2d_t* field, ticks_count_t sample_window);
+
 /// Sets the fire threshold for all neurons in the field.
 void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold);
 
@@ -64,6 +73,18 @@ void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count,
 /// @param y1 The ending y index of the target neurons square.
 /// @param value The value used to feed each input neuron.
 void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, neuron_value_t value);
+
+/// Externally feeds the neurons inside the rectangle described by the given parameters.
+/// The feeding is done by inputs mapping: inputs have to be values between 0 and field->sample_window.
+/// @param field The target field to feed.
+/// @param x0 The starting x index of the target neurons square.
+/// @param y0 The starting y index of the target neurons square.
+/// @param x1 The ending x index of the target neurons square.
+/// @param y1 The ending y index of the target neurons square.
+/// @param sample_step The current step in the sample window, must be between 0 and field->sample_window - 1.
+/// @param inputs The input values mapped to the sample window.
+/// @param value The value used to feed each input neuron.
+void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value);
 
 /// Default feed.
 void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value);

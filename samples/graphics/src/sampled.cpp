@@ -114,7 +114,6 @@ int main(int argc, char **argv) {
     field_size_t field_width = 100;
     field_size_t field_height = 60;
     nh_radius_t nh_radius = 2;
-    field_size_t inputs_count = 30;
 
     // Input handling.
     switch (argc) {
@@ -132,19 +131,13 @@ int main(int argc, char **argv) {
             field_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             break;
-        case 5:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
-            nh_radius = atoi(argv[3]);
-            inputs_count = atoi(argv[4]);
-            break;
         default:
             printf("USAGE: sampled <width> <height> <nh_radius> <inputs_count>\n");
             exit(0);
             break;
     }
 
-    srand(time(0));
+    srand(time(NULL));
 
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
 
@@ -152,6 +145,11 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
+    f2d_set_evol_step(&even_field, 0x20u);
+    f2d_set_pulse_window(&even_field, 0x3A);
+    // f2d_set_syngen_beat(&even_field, 0.3F);
+    f2d_set_max_touch(&even_field, 0.2F);
+    f2d_set_sample_window(&even_field, 10);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -159,23 +157,25 @@ int main(int argc, char **argv) {
 
     initPositions(&even_field, xNeuronPositions, yNeuronPositions);
     
-    sf::ContextSettings settings;
-    // settings.antialiasingLevel = 16;
-
     // create the window
-    sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen, settings);
+    sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen);
     window.setMouseCursorVisible(false);
     
     bool feeding = false;
     bool showInfo = false;
+    bool nDraw = true;
+    bool sDraw = true;
 
     int counter = 0;
     int renderingInterval = 1;
 
-    ticks_count_t sample_rate = 10;
+    // Coordinates for input neurons.
+    field_size_t lInputsCoords[] = {5, 5, 30, 20};
+    field_size_t rInputsCoords[] = {50, 5, 75, 20};
 
-    ticks_count_t* inputs = (ticks_count_t*) malloc(inputs_count * sizeof(ticks_count_t));
-    ticks_count_t samples_count = 0;
+    ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
+    ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
+    ticks_count_t sample_step = 0;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -184,11 +184,6 @@ int main(int argc, char **argv) {
 
     // Run the program as long as the window is open.
     for (int i = 0; window.isOpen(); i++) {
-        counter++;
-        
-        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
-        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
-
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -209,6 +204,12 @@ int main(int argc, char **argv) {
                         case sf::Keyboard::I:
                             showInfo = !showInfo;
                             break;
+                        case sf::Keyboard::N:
+                            nDraw = !nDraw;
+                            break;
+                        case sf::Keyboard::S:
+                            sDraw = !sDraw;
+                            break;
                         default:
                             break;
                     }
@@ -218,22 +219,31 @@ int main(int argc, char **argv) {
             }
         }
 
+        counter++;
+
+        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
+        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
+
         // Only get new inputs according to the sample rate.
-        if (i % sample_rate == 0) {
+        if (sample_step == prev_field->sample_window) {
             // Fetch input.
-            for (field_size_t j = 0; j < inputs_count; j++) {
-                inputs[j] = 1 + (rand() % (sample_rate - 1));
+            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+                }
             }
-            samples_count = 0;
+            for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
+                for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
+                    rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+                }
+            }
+            sample_step = 0;
         }
 
         // Feed the field.
         if (feeding) {
-            for (field_size_t k = 0; k < inputs_count; k++) {
-                if (samples_count % inputs[k]) {
-                    prev_field->neurons[k].value += DEFAULT_CHARGE_VALUE;
-                }
-            }
+            f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_CHARGE_VALUE);
+            f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_CHARGE_VALUE);
         }
 
         if (counter % renderingInterval == 0) {
@@ -241,28 +251,44 @@ int main(int argc, char **argv) {
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            for (field_size_t i = 0; i < inputs_count; i++) {
-                sf::CircleShape neuronCircle;
+            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                    sf::CircleShape neuronCircle;
 
-                float radius = 6.0f;
-                neuronCircle.setRadius(radius);
-                neuronCircle.setOutlineThickness(1);
-                neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
+                    float radius = 6.0f;
+                    neuronCircle.setRadius(radius);
+                    neuronCircle.setOutlineThickness(1);
+                    neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 64));
 
-                neuronCircle.setFillColor(sf::Color::Transparent);
-                
-                neuronCircle.setPosition(xNeuronPositions[i] * desktopMode.width, yNeuronPositions[i] * desktopMode.height);
+                    neuronCircle.setFillColor(sf::Color::Transparent);
+                    
+                    neuronCircle.setPosition(xNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.width, yNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.height);
 
-                // Center the spot.
-                neuronCircle.setOrigin(radius, radius);
-                window.draw(neuronCircle);
+                    // Center the spot.
+                    neuronCircle.setOrigin(radius, radius);
+                    window.draw(neuronCircle);
+                }
             }
 
             // Draw neurons.
-            drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+            if (nDraw) {
+                drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+            }
 
             // Draw synapses.
-            drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            if (sDraw) {
+                drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            }
+
+            sf::Text text;
+            text.setPosition(10.0, 10.0);
+            text.setFont(font);
+            char string[100];
+            snprintf(string, 100, "%d", sample_step);
+            text.setString(string);
+            text.setCharacterSize(12);
+            text.setFillColor(sf::Color::White);
+            window.draw(text);
 
             // End the current frame.
             window.display();
@@ -273,7 +299,8 @@ int main(int argc, char **argv) {
         // Tick the field.
         f2d_tick(prev_field, next_field);
 
-        samples_count ++;
+        sample_step++;
     }
+
     return 0;
 }

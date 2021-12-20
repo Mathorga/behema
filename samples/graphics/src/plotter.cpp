@@ -112,8 +112,7 @@ int main(int argc, char **argv) {
     field_size_t field_width = 100;
     field_size_t field_height = 60;
     nh_radius_t nh_radius = 2;
-    field_size_t inputs_count = 131;
-    ticks_count_t plotInterval = 5000;
+    ticks_count_t plotInterval = 1000;
 
     uint32_t textureWidth = 1366;
     uint32_t textureHeight = 768;
@@ -140,13 +139,6 @@ int main(int argc, char **argv) {
             field_width = atoi(argv[1]);
             field_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
-            inputs_count = atoi(argv[4]);
-            break;
-        case 6:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
-            nh_radius = atoi(argv[3]);
-            inputs_count = atoi(argv[4]);
             plotInterval = atoi(argv[5]);
             break;
         default:
@@ -161,6 +153,8 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
+    f2d_set_evol_step(&even_field, 0x8Au);
+    f2d_set_max_touch(&even_field, 0.2F);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -175,9 +169,11 @@ int main(int argc, char **argv) {
 
     int counter = 0;
 
-    ticks_count_t sample_rate = 10;
+    ticks_count_t sample_step = 10;
 
-    ticks_count_t* inputs = (ticks_count_t*) malloc(inputs_count * sizeof(ticks_count_t));
+    field_size_t lInputsCoords[] = {5, 5, 30, 20};
+    ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
+
     ticks_count_t samples_count = 0;
 
     bool running = true;
@@ -197,21 +193,19 @@ int main(int argc, char **argv) {
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
         // Only get new inputs according to the sample rate.
-        if (i % sample_rate == 0) {
+        if (i % sample_step == 0) {
             // Fetch input.
-            for (field_size_t j = 0; j < inputs_count; j++) {
-                inputs[j] = 1 + (rand() % (sample_rate - 1));
+            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+                }
             }
             samples_count = 0;
         }
 
         // Feed the field.
         if (feeding) {
-            for (field_size_t k = 0; k < inputs_count; k++) {
-                if (samples_count % inputs[k]) {
-                    prev_field->neurons[k].value += DEFAULT_CHARGE_VALUE;
-                }
-            }
+            f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_CHARGE_VALUE);
         }
 
         if (counter % plotInterval == 0) {
@@ -219,12 +213,14 @@ int main(int argc, char **argv) {
             image.setTo(cv::Scalar(0, 0, 0));
 
             // Highlight input neurons.
-            for (field_size_t i = 0; i < inputs_count; i++) {
-                cv::circle(image,
-                           cv::Point(xNeuronPositions[i] * textureWidth, yNeuronPositions[i] * textureHeight),
-                           2.0f,
-                           cv::Scalar(64, 64, 64),
-                           1);
+            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                    cv::circle(image,
+                            cv::Point(xNeuronPositions[IDX2D(x, y, prev_field->width)] * textureWidth, yNeuronPositions[IDX2D(x, y, prev_field->width)] * textureHeight),
+                            2.0f,
+                            cv::Scalar(64, 64, 64),
+                            1);
+                }
             }
 
             // Draw synapses.

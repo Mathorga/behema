@@ -18,10 +18,10 @@ Copyright (C) 2021 Luka Micheletti
 #define WRAP(i, n) ((i) >= 0 ? ((i) % (n)) : ((n) + ((i) % (n))))
 
 // Computes the diameter of a square neighborhood given its radius.
-#define SNH_DIAM(r) (2 * (r) + 1)
+#define SQNH_DIAM(r) (2 * (r) + 1)
 
 // Computes the number of neighbors in a square neighborhood given its diameter.
-#define SNH_COUNT(d) ((d) * (d) - 1)
+#define SQNH_COUNT(d) ((d) * (d) - 1)
 
 // Translates bidimensional indexes to a monodimensional one.
 // |i| is the row index.
@@ -37,22 +37,24 @@ Copyright (C) 2021 Luka Micheletti
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
-#define DEFAULT_THRESHOLD 0x88u
-#define DEFAULT_STARTING_VALUE 0x00u
+#define DEFAULT_THRESHOLD 0x88U
+#define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
-#define DEFAULT_MAX_TOUCH 0.1f
-#define DEFAULT_CHARGE_VALUE 0x20u
-#define DEFAULT_DECAY_RATE 0x01u
+#define DEFAULT_MAX_TOUCH 0.1F
+#define DEFAULT_CHARGE_VALUE 0x20U
+#define DEFAULT_DECAY_RATE 0x01U
 
-#define DEFAULT_SYNGEN_PULSE 0.01f
+#define DEFAULT_SYNGEN_BEAT 0.01F
 
 // Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
 // #define DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
-#define DEFAULT_NH_MASK 0x0000000000000000u
-#define DEFAULT_PULSE_MASK 0x00000000u
+#define DEFAULT_NH_MASK 0x0000000000000000U
+#define DEFAULT_PULSE_MASK 0x0000000000000000U
 
-#define DEFAULT_PULSE_WINDOW 0x1F;
-#define DEFAULT_EVOL_STEP 0x01u;
+#define DEFAULT_PULSE_WINDOW 0x0AU
+#define DEFAULT_EVOL_STEP 0x00000001U
+#define EVOL_STEP_NEVER 0x0000FFFFU
+#define DEFAULT_SAMPLE_WINDOW 0x0AU
 
 typedef int16_t neuron_value_t;
 typedef uint8_t neuron_threshold_t;
@@ -64,7 +66,7 @@ typedef int8_t nh_radius_t;
 typedef uint8_t syn_count_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
-typedef uint32_t pulse_mask_t;
+typedef uint64_t pulse_mask_t;
 typedef int8_t pulses_count_t;
 
 typedef int32_t field_size_t;
@@ -93,6 +95,10 @@ typedef struct {
     syn_count_t syn_count;
 } neuron_t;
 
+typedef struct {
+    // TODO
+} field_input_t;
+
 /// 2D Field of neurons.
 typedef struct {
     field_size_t width;
@@ -100,6 +106,7 @@ typedef struct {
     ticks_count_t ticks_count;
     ticks_count_t evol_step;
     pulses_count_t pulse_window;
+
 
     nh_radius_t nh_radius;
     neuron_threshold_t fire_threshold;
@@ -110,6 +117,10 @@ typedef struct {
 
     // Defines the maximum number of synapses between a neuron and his neighbors.
     syn_count_t max_syn_count;
+
+
+    ticks_count_t sample_window;
+
     
     neuron_t* neurons;
 } field2d_t;

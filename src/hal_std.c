@@ -12,8 +12,10 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->recovery_value = DEFAULT_RECOVERY_VALUE;
     field->charge_value = DEFAULT_CHARGE_VALUE;
     field->decay_value = DEFAULT_DECAY_RATE;
-    field->syngen_pulses_count = DEFAULT_SYNGEN_PULSE * DEFAULT_PULSE_WINDOW;
-    field->max_syn_count = DEFAULT_MAX_TOUCH * SNH_COUNT(SNH_DIAM(nh_radius));
+    field->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
+    field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
+
+    field->sample_window = DEFAULT_SAMPLE_WINDOW;
 
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
@@ -44,6 +46,8 @@ field2d_t* f2d_copy(field2d_t* other) {
     field->syngen_pulses_count = other->syngen_pulses_count;
     field->max_syn_count = other->max_syn_count;
 
+    field->sample_window = other->sample_window;
+
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
     for (field_size_t y = 0; y < other->height; y++) {
@@ -70,6 +74,20 @@ void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
     }
 }
 
+void f2d_set_evol_step(field2d_t* field, evol_step_t evol_step) {
+    field->evol_step = evol_step;
+}
+
+void f2d_set_pulse_window(field2d_t* field, pulses_count_t window) {
+    if (window >= 0x00u && window < 0x3Fu) {
+        field->pulse_window = window;
+    }
+}
+
+void f2d_set_sample_window(field2d_t* field, ticks_count_t sample_window) {
+    field->sample_window = sample_window;
+}
+
 void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold) {
     field->fire_threshold = threshold;
 }
@@ -77,14 +95,14 @@ void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold) {
 void f2d_set_max_touch(field2d_t* field, float touch) {
     // Only set touch if a valid value is provided.
     if (touch <= 1 && touch >= 0) {
-        field->max_syn_count = touch * SNH_COUNT(SNH_DIAM(field->nh_radius));
+        field->max_syn_count = touch * SQNH_COUNT(SQNH_DIAM(field->nh_radius));
     }
 }
 
 void f2d_set_syngen_beat(field2d_t* field, float beat) {
     // Only set beat if a valid value is provided.
-    if (beat <= 1 && beat >= 0) {
-        field->max_syn_count = beat * field->pulse_window;
+    if (beat <= 1.0F && beat >= 0.0F) {
+        field->syngen_pulses_count = beat * field->pulse_window;
     }
 }
 
@@ -98,7 +116,49 @@ void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count,
 }
 
 void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, neuron_value_t value) {
-    // TODO.
+    // Make sure the provided values are within the field size.
+    if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
+        for (field_size_t y = y0; y < y1; y++) {
+            for (field_size_t x = x0; x < x1; x++) {
+                field->neurons[IDX2D(x, y, field->width)].value += value;
+            }
+        }
+    }
+}
+
+void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
+    // Make sure the provided values are within the field size.
+    if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
+        #pragma omp parallel for
+        for (field_size_t y = y0; y < y1; y++) {
+            for (field_size_t x = x0; x < x1; x++) {
+                ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)] + 1;
+
+                // Input sampling works by mapping the given input value to reasonably accurate spike trains.
+                // Each input neuron is fed according to its mapping:
+                // sample_window = 10;
+                // |         @| -> inputs[x] = 0;
+                // |    @    @| -> inputs[x] = 1;
+                // |  @  @  @ | -> inputs[x] = 2;
+                // | @ @ @ @ @| -> inputs[x] = 3;
+                // | @ @ @ @ @| -> inputs[x] = 4;
+                // |@ @ @ @ @ | -> inputs[x] = 5;
+                // |@@ @@ @@ @| -> inputs[x] = 6;
+                // |@@@@ @@@@ | -> inputs[x] = 7;
+                // |@@@@@@@@@ | -> inputs[x] = 8;
+                // |@@@@@@@@@ | -> inputs[x] = 9;
+                if (current_input <= field->sample_window / 2) {
+                    if (sample_step % current_input == 0) {
+                        field->neurons[IDX2D(x, y, field->width)].value += value;
+                    }
+                } else {
+                    if (sample_step % current_input != 0) {
+                        field->neurons[IDX2D(x, y, field->width)].value += value;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
@@ -160,7 +220,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
               +-|-|-|-|-|-|-+
               |             |
               |             |
-              |      X      |
+              |      @      |
               |             |
               |             |
               +-|-|-|-|-|-|-+
@@ -195,17 +255,17 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
-                        if ((prev_field->ticks_count % (prev_field->evol_step + 1)) == 0 &&
+                        if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
                             // (prev_field->ticks_count + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
                             (rand + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
                             if (prev_mask & 0x01 &&
-                                nb_pulse < DEFAULT_SYNGEN_PULSE) {
+                                nb_pulse < DEFAULT_SYNGEN_BEAT) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(next_neuron->nh_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
                                 next_neuron->nh_mask = ~mask;
                             } else if (!(prev_mask & 0x01) &&
-                                       nb_pulse > DEFAULT_SYNGEN_PULSE &&
+                                       nb_pulse > DEFAULT_SYNGEN_BEAT &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));

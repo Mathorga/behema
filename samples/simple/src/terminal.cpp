@@ -9,7 +9,7 @@ void print(field2d_t* field) {
     for (field_size_t i = 0; i < field->height; i++) {
         for (field_size_t j = 0; j < field->width; j++) {
             neuron_t currentNeuron = field->neurons[IDX2D(j, i, field->width)];
-            printf("%c ", currentNeuron.value > currentNeuron.threshold ? '@' : '.');
+            printf("%c ", currentNeuron.value > field->fire_threshold ? '@' : '.');
         }
         printf("\n");
     }
@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 
     srand(time(NULL));
 
-    f2d_rinit(&even_field, field_width, field_height, nh_radius);
+    f2d_init(&even_field, field_width, field_height, nh_radius);
     odd_field = *f2d_copy(&even_field);
 
     for (int i = 0;; i++) {
@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
             f2d_rsfeed(prev_field, 0, inputs_count, DEFAULT_CHARGE_VALUE, 2);
         }
 
-        f2d_tick(prev_field, next_field, 0x0000u);
+        f2d_tick(prev_field, next_field);
 
         print(next_field);
 
