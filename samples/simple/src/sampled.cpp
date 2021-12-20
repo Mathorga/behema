@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <hal/hal.h>
+#include <portia/portia.h>
 
 void print(field2d_t* field) {
     system("clear");
