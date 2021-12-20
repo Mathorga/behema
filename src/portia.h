@@ -1,20 +1,20 @@
 /*
 *****************************************************************
-hal.h
+portia.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __HAL__
-#define __HAL__
+#ifndef __PORTIA__
+#define __PORTIA__
 
 #include "field.h"
 
 #ifdef __CUDACC__
-#include "hal_cuda.h"
+#include "portia_cuda.h"
 #else
-#include "hal_std.h"
+#include "portia_std.h"
 #endif
 
 #endif
