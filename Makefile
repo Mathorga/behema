@@ -37,33 +37,33 @@ install: std-install
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
 std-install: std
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/hal
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/hal
-	sudo cp $(BLD_DIR)/libhal.so $(SYSTEM_LIB_DIR)
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/portia
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/portia
+	sudo cp $(BLD_DIR)/libportia.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 cuda-install: cuda
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/hal
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/hal
-	sudo cp $(BLD_DIR)/hal.so $(SYSTEM_LIB_DIR)
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/portia
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/portia
+	sudo cp $(BLD_DIR)/libportia.so $(SYSTEM_LIB_DIR)
 	@printf "\nInstallation complete!\n\n"
 
 uninstall: clean
-	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/hal
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libhal.so
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libhal.a
+	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/portia
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libportia.so
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libportia.a
 	@printf "\nSuccessfully uninstalled.\n\n"
 
 std: create std-build
 cuda: create cuda-build
 
 # Builds all library files.
-std-build: hal_std.o utils.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libhal.so
+std-build: portia_std.o utils.o
+	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libportia.so
 	@printf "\nCompiled $@!\n\n"
 
-cuda-build: hal_cuda.o utils.o
-	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libhal.so
+cuda-build: portia_cuda.o utils.o
+	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libportia.so
 	@printf "\nCompiled $@!\n\n"
 
 
