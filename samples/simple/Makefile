@@ -8,7 +8,7 @@ STD_LIBS=-lrt -lm
 GRAPHICS_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
 SPIKES_COUNT_LIBS=-lncurses
 TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
-HAL_LIBS=-lhal
+PORTIA_LIBS=-lportia
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -25,13 +25,13 @@ all: clean terminal sampled
 terminal: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(HAL_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
 	@printf "\nCreated terminal!\n"
 
 sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(HAL_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
 	@printf "\nCreated vision!\n"
 
 create:
