@@ -6,8 +6,8 @@ Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __HAL_STD__
-#define __HAL_STD__
+#ifndef __PORTIA_STD__
+#define __PORTIA_STD__
 
 #include <stdint.h>
 #include <stdlib.h>
