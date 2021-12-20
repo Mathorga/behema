@@ -94,7 +94,7 @@ void drawSynapses(field2d_t* field,
                             cv::line(*image,
                                      cv::Point(xNeuronPositions[neighborIndex] * textureWidth, yNeuronPositions[neighborIndex] * textureHeight),
                                      cv::Point(xNeuronPositions[neuronIndex] * textureWidth, yNeuronPositions[neuronIndex] * textureHeight),
-                                     cv::Scalar(63, 31, 7),
+                                     cv::Scalar(127, 63, 15),
                                      1,
                                      cv::LINE_8);
                         }
@@ -153,9 +153,10 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x8Au);
+    f2d_set_evol_step(&even_field, 0x8AU);
     f2d_set_max_touch(&even_field, 0.22F);
     f2d_set_syngen_beat(&even_field, 0.1F);
+    f2d_set_pulse_window(&even_field, 0x10U);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
