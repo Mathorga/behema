@@ -9,8 +9,7 @@ void print(field2d_t* field) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
             neuron_t currentNeuron = field->neurons[IDX2D(x, y, field->width)];
-            //printf("%c ", currentNeuron.value >= field->fire_threshold ? '@' : '.');
-	    printf("%d ", currentNeuron.value);
+            printf("%c ", currentNeuron.value >= field->fire_threshold ? '@' : '.');
         }
         printf("\n");
     }
@@ -59,7 +58,7 @@ int main(int argc, char **argv) {
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
-    ticks_count_t sample_step = 0;
+    ticks_count_t sample_step = even_field.sample_window;
 
     srand(time(NULL));
 
@@ -76,7 +75,6 @@ int main(int argc, char **argv) {
                 }
             }
 
-
             for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
                 for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
                     rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
@@ -86,16 +84,16 @@ int main(int argc, char **argv) {
         }
 
         // Feed the field.
-        f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[4], sample_step, lInputs, DEFAULT_CHARGE_VALUE);
-        f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[4], sample_step, rInputs, DEFAULT_CHARGE_VALUE);
+        f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_CHARGE_VALUE);
+        f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_CHARGE_VALUE);
 
         print(next_field);
 
         // Tick the field.
         f2d_tick(prev_field, next_field);
-   
+
 	sample_step++;
 
-        usleep(20000);
+        usleep(10000);
     }
 }
