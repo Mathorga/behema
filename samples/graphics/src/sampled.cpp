@@ -29,7 +29,7 @@ void drawNeurons(field2d_t* field,
 
             float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
 
-            float radius = 3.0f;
+            float radius = 2.0F + 3.0F * ((float) currentNeuron->pulse) / ((float) field->pulse_window);
 
             neuronSpot.setRadius(radius);
 
