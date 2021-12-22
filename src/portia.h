@@ -10,6 +10,7 @@ Copyright (C) 2021 Luka Micheletti
 #define __PORTIA__
 
 #include "field.h"
+#include "utils.h"
 
 #ifdef __CUDACC__
 #include "portia_cuda.h"

@@ -6,7 +6,7 @@ CLINK_FLAGS=-Wall
 
 STD_LIBS=-lrt -lm
 SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
-OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
+OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 SPIKES_COUNT_LIBS=-lncurses
 TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
 PORTIA_LIBS=-lportia
@@ -40,6 +40,12 @@ plotter: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(PORTIA_LIBS)
+	@printf "\nCreated $@!\n"
+
+camera: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:
