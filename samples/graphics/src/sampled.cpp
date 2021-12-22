@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
         // Only get new inputs according to the sample rate.
         if (feeding) {
-            if (sample_step >= prev_field->sample_window - 1) {
+            if (sample_step > prev_field->sample_window - 1) {
                 // Fetch input.
                 for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
                     for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
