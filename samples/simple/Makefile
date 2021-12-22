@@ -32,7 +32,7 @@ sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
-	@printf "\nCreated vision!\n"
+	@printf "\nCreated sampled!\n"
 
 create:
 	$(MKDIR) $(BLD_DIR)
