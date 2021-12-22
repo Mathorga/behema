@@ -138,22 +138,23 @@ void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field
                 // Input sampling works by mapping the given input value to reasonably accurate spike trains.
                 // Each input neuron is fed according to its mapping:
                 // sample_window = 10;
-                // |          | -> inputs[x] = 0;
-                // |         @| -> inputs[x] = 1;
-                // |   @   @  | -> inputs[x] = 2;
-                // |  @  @  @ | -> inputs[x] = 3;
-                // | @ @ @ @ @| -> inputs[x] = 4;
-                // |@ @ @ @ @ | -> inputs[x] = 5;
-                // |@@ @@ @@ @| -> inputs[x] = 6;
-                // |@@@ @@@ @@| -> inputs[x] = 7;
-                // |@@@@@@@@@ | -> inputs[x] = 8;
-                // |@@@@@@@@@@| -> inputs[x] = 9;
+                // upper = sample_window - 1 = 9;
+                // |          | -> x = 0;
+                // |         @| -> x = 1;
+                // |   @   @  | -> x = 2;
+                // |  @  @  @ | -> x = 3;
+                // | @ @ @ @ @| -> x = 4;
+                // |@ @ @ @ @ | -> x = 5;
+                // |@@ @@ @@ @| -> x = 6;
+                // |@@@ @@@ @@| -> x = 7;
+                // |@@@@@@@@@ | -> x = 8;
+                // |@@@@@@@@@@| -> x = 9;
                 if (current_input < field->sample_window / 2) {
                     if (current_input > 0 && sample_step % (upper / current_input) == 0) {
                         field->neurons[IDX2D(x, y, field->width)].value += value;
                     }
                 } else {
-                    if (current_input < upper && sample_step % (upper / (upper - current_input)) != 0) {
+                    if (current_input >= upper || sample_step % (upper / (upper - current_input)) != 0) {
                         field->neurons[IDX2D(x, y, field->width)].value += value;
                     }
                 }
