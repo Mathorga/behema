@@ -29,7 +29,7 @@ void drawNeurons(field2d_t* field,
 
             float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
 
-            float radius = 2.0F + 3.0F * ((float) currentNeuron->pulse) / ((float) field->pulse_window);
+            float radius = 2.0F + 5.0F * ((float) currentNeuron->pulse) / ((float) field->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -145,11 +145,11 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x20u);
+    f2d_set_evol_step(&even_field, 0x0A);
     f2d_set_pulse_window(&even_field, 0x3A);
     f2d_set_syngen_beat(&even_field, 0.1F);
     f2d_set_max_touch(&even_field, 0.2F);
-    f2d_set_sample_window(&even_field, 10);
+    f2d_set_sample_window(&even_field, 100);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -175,7 +175,7 @@ int main(int argc, char **argv) {
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
-    ticks_count_t sample_step = 0;
+    ticks_count_t sample_step = even_field.sample_window - 1;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -225,25 +225,27 @@ int main(int argc, char **argv) {
         field2d_t* next_field = i % 2 ? &even_field : &odd_field;
 
         // Only get new inputs according to the sample rate.
-        if (sample_step == prev_field->sample_window) {
-            // Fetch input.
-            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
-                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
-                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
-                }
-            }
-            for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
-                for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
-                    rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
-                }
-            }
-            sample_step = 0;
-        }
-
-        // Feed the field.
         if (feeding) {
+            if (sample_step >= prev_field->sample_window - 1) {
+                // Fetch input.
+                for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                    for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                        lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+                    }
+                }
+                for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
+                    for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
+                        rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+                    }
+                }
+                sample_step = 0;
+            }
+
+            // Feed the field.
             f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_CHARGE_VALUE);
             f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_CHARGE_VALUE);
+
+            sample_step++;
         }
 
         if (counter % renderingInterval == 0) {
@@ -267,6 +269,14 @@ int main(int argc, char **argv) {
                     // Center the spot.
                     neuronCircle.setOrigin(radius, radius);
                     window.draw(neuronCircle);
+
+                    // sf::Text pulseText;
+                    // pulseText.setPosition(xNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(x, y, prev_field->width)] * desktopMode.height + 6.0f);
+                    // pulseText.setString(std::to_string(lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])]));
+                    // pulseText.setFont(font);
+                    // pulseText.setCharacterSize(8);
+                    // pulseText.setFillColor(sf::Color::White);
+                    // window.draw(pulseText);
                 }
             }
 
@@ -318,8 +328,6 @@ int main(int argc, char **argv) {
 
         // Tick the field.
         f2d_tick(prev_field, next_field);
-
-        sample_step++;
     }
 
     return 0;

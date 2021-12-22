@@ -129,30 +129,31 @@ void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t
 void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
     // Make sure the provided values are within the field size.
     if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
-        #pragma omp parallel for
+        // #pragma omp parallel for
         for (field_size_t y = y0; y < y1; y++) {
             for (field_size_t x = x0; x < x1; x++) {
-                ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)] + 1;
+                ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)];
+                ticks_count_t upper = field->sample_window - 1;
 
                 // Input sampling works by mapping the given input value to reasonably accurate spike trains.
                 // Each input neuron is fed according to its mapping:
                 // sample_window = 10;
-                // |         @| -> inputs[x] = 0;
-                // |    @    @| -> inputs[x] = 1;
-                // |  @  @  @ | -> inputs[x] = 2;
-                // | @ @ @ @ @| -> inputs[x] = 3;
+                // |          | -> inputs[x] = 0;
+                // |         @| -> inputs[x] = 1;
+                // |   @   @  | -> inputs[x] = 2;
+                // |  @  @  @ | -> inputs[x] = 3;
                 // | @ @ @ @ @| -> inputs[x] = 4;
                 // |@ @ @ @ @ | -> inputs[x] = 5;
                 // |@@ @@ @@ @| -> inputs[x] = 6;
-                // |@@@@ @@@@ | -> inputs[x] = 7;
+                // |@@@ @@@ @@| -> inputs[x] = 7;
                 // |@@@@@@@@@ | -> inputs[x] = 8;
-                // |@@@@@@@@@ | -> inputs[x] = 9;
-                if (current_input <= field->sample_window / 2) {
-                    if (sample_step % current_input == 0) {
+                // |@@@@@@@@@@| -> inputs[x] = 9;
+                if (current_input < field->sample_window / 2) {
+                    if (current_input > 0 && sample_step % (upper / current_input) == 0) {
                         field->neurons[IDX2D(x, y, field->width)].value += value;
                     }
                 } else {
-                    if (sample_step % current_input != 0) {
+                    if (current_input < upper && sample_step % (upper / (upper - current_input)) != 0) {
                         field->neurons[IDX2D(x, y, field->width)].value += value;
                     }
                 }

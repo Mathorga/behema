@@ -9,7 +9,7 @@ void print(field2d_t* field) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
             neuron_t currentNeuron = field->neurons[IDX2D(x, y, field->width)];
-            printf("%c ", currentNeuron.value >= field->fire_threshold ? '@' : '.');
+            printf("%c ", currentNeuron.value >= field->fire_threshold ? '@' : ' ');
         }
         printf("\n");
     }
@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
     f2d_set_pulse_window(&even_field, 0x3A);
     f2d_set_syngen_beat(&even_field, 0.1F);
     f2d_set_max_touch(&even_field, 0.2F);
-    f2d_set_sample_window(&even_field, 10);
+    f2d_set_sample_window(&even_field, 100);
     odd_field = *f2d_copy(&even_field);
 
     field_size_t lInputsCoords[] = {10, 5, 40, 20};
@@ -88,12 +88,22 @@ int main(int argc, char **argv) {
         f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_CHARGE_VALUE);
 
         print(next_field);
+        // system("clear");
+        printf("%d\n", sample_step);
+        // for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+        //     for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+        //         ticks_count_t currentInput = lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])];
+        //         printf("%d\t", currentInput);
+        //     }
+        //     printf("\n");
+        // }
+        // printf("\n");
 
         // Tick the field.
         f2d_tick(prev_field, next_field);
 
-	sample_step++;
+        sample_step++;
 
-        usleep(10000);
+        usleep(100000);
     }
 }
