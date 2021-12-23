@@ -71,6 +71,12 @@ typedef int8_t pulses_count_t;
 
 typedef int32_t field_size_t;
 
+enum input_mapping_t {
+    INPUT_MAPPING_LINEAR,
+    INPUT_MAPPING_SPECULAR,
+    INPUT_MAPPING_SPECULAR_DOUBLE,
+}
+
 /// Neuron.
 typedef struct {
     // Neighborhood connections pattern:
