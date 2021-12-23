@@ -16,6 +16,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
 
     field->sample_window = DEFAULT_SAMPLE_WINDOW;
+    field->input_mapping = INPUT_MAPPING_SPECULAR;
 
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
@@ -47,6 +48,7 @@ field2d_t* f2d_copy(field2d_t* other) {
     field->max_syn_count = other->max_syn_count;
 
     field->sample_window = other->sample_window;
+    field->input_mapping = other->input_mapping;
 
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
