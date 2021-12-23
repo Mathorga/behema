@@ -126,6 +126,7 @@ typedef struct {
 
 
     ticks_count_t sample_window;
+    input_mapping_t input_mapping;
 
     
     neuron_t* neurons;
