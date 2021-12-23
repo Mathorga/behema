@@ -58,6 +58,9 @@ void f2d_set_max_touch(field2d_t* field, float touch);
 /// @param beat The beat to assign the field. Only values between 0 and 1 are allowed.
 void f2d_set_syngen_beat(field2d_t* field, float beat);
 
+/// Sets the preferred input mapping for the given field.
+void f2d_set_input_mapping(field2d_t* field, input_mapping_t input_mapping);
+
 
 // Execution functions:
 
