@@ -71,7 +71,7 @@ ticks_count_t sample_step = samplingBound;
 ```
 
 #### Input mapping
-<img width="33%" src="/meta/10f.png"><img width="33%" src="/meta/10f.png">
+<img width="33%" src="/meta/10f.png"> <img width="33%" src="/meta/10f.png">
 
 ## TODO
 Neurons competition for synapses
