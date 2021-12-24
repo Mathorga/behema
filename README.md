@@ -70,6 +70,9 @@ ticks_count_t* inputs = (ticks_count_t*) malloc((inputsCoords[2] - inputsCoords[
 ticks_count_t sample_step = samplingBound;
 ```
 
+#### Input mapping
+<img width="33%" src="/meta/10f.png"><img width="33%" src="/meta/10f.png">
+
 ## TODO
 Neurons competition for synapses
 CUDA support
