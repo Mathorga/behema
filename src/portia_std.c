@@ -108,6 +108,11 @@ void f2d_set_syngen_beat(field2d_t* field, float beat) {
     }
 }
 
+void f2d_set_pulse_mapping(field2d_t* field, pulse_mapping_t pulse_mapping) {
+    field->pulse_mapping = pulse_mapping;
+}
+
+
 void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t* values) {
     if (starting_index + count < field->width * field->height) {
         // Loop through count.

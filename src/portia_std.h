@@ -60,7 +60,7 @@ void f2d_set_max_touch(field2d_t* field, float touch);
 void f2d_set_syngen_beat(field2d_t* field, float beat);
 
 /// Sets the preferred input mapping for the given field.
-void f2d_set_input_mapping(field2d_t* field, pulse_mapping_t pulse_mapping);
+void f2d_set_pulse_mapping(field2d_t* field, pulse_mapping_t pulse_mapping);
 
 
 // Execution functions:
