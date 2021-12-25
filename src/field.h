@@ -10,6 +10,7 @@ Copyright (C) 2021 Luka Micheletti
 #define __FIELD__
 
 #include <stdint.h>
+#include "utils.h"
 
 // Translate an id wrapping it to the provided size (pacman effect).
 // WARNING: Only works with signed types and does not show errors otherwise.
@@ -71,11 +72,14 @@ typedef int8_t pulses_count_t;
 
 typedef int32_t field_size_t;
 
-enum input_mapping_t {
-    INPUT_MAPPING_LINEAR,
-    INPUT_MAPPING_SPECULAR,
-    INPUT_MAPPING_SPECULAR_DOUBLE,
-}
+typedef enum {
+    // Linear.
+    PULSE_MAPPING_LINEAR,
+    // Floored proportional.
+    PULSE_MAPPING_FPROP,
+    // Rounded proportional.
+    PULSE_MAPPING_RPROP,
+} pulse_mapping_t;
 
 /// Neuron.
 typedef struct {
@@ -101,10 +105,6 @@ typedef struct {
     syn_count_t syn_count;
 } neuron_t;
 
-typedef struct {
-    // TODO
-} field_input_t;
-
 /// 2D Field of neurons.
 typedef struct {
     field_size_t width;
@@ -126,9 +126,8 @@ typedef struct {
 
 
     ticks_count_t sample_window;
-    input_mapping_t input_mapping;
+    pulse_mapping_t pulse_mapping;
 
-    
     neuron_t* neurons;
 } field2d_t;
 

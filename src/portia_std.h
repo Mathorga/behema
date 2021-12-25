@@ -15,6 +15,7 @@ Copyright (C) 2021 Luka Micheletti
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
 #include "field.h"
 #include "utils.h"
 
@@ -59,7 +60,7 @@ void f2d_set_max_touch(field2d_t* field, float touch);
 void f2d_set_syngen_beat(field2d_t* field, float beat);
 
 /// Sets the preferred input mapping for the given field.
-void f2d_set_input_mapping(field2d_t* field, input_mapping_t input_mapping);
+void f2d_set_input_mapping(field2d_t* field, pulse_mapping_t pulse_mapping);
 
 
 // Execution functions:
@@ -108,8 +109,30 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field);
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
-/// @param input_mapping The mapping algorithm to apply for mapping.
-void pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, input_mapping_t input_mapping);
+/// @param pulse_mapping The mapping algorithm to apply for mapping.
+bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
+
+/// Computes a linear mapping for the given input and sample step.
+/// @param sample_window The width of the sampling window.
+/// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
+bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+
+/// Computes a proportional mapping for the given input and sample step.
+/// This is computationally cheap if compared to rprop, but it provides a less even distribution. The difference can be seen on big windows.
+/// This is to be preferred if a narrow window is being used or an even distribution is not critical.
+/// @param sample_window The width of the sampling window.
+/// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
+bool pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+
+/// Computes a proportional mapping for the given input and sample step.
+/// Provides a better distribution if compared to fprop, but is computationally more expensive. The difference can be seen on big windows.
+/// This is to be preferred if a wide window is being used and an even distribution are critical, otherwise go for fprop.
+/// @param sample_window The width of the sampling window.
+/// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
+bool pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 
 #ifdef __cplusplus

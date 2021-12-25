@@ -16,7 +16,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
 
     field->sample_window = DEFAULT_SAMPLE_WINDOW;
-    field->input_mapping = INPUT_MAPPING_SPECULAR;
+    field->pulse_mapping = PULSE_MAPPING_FPROP;
 
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
@@ -48,7 +48,7 @@ field2d_t* f2d_copy(field2d_t* other) {
     field->max_syn_count = other->max_syn_count;
 
     field->sample_window = other->sample_window;
-    field->input_mapping = other->input_mapping;
+    field->pulse_mapping = other->pulse_mapping;
 
     field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
 
@@ -135,30 +135,8 @@ void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field
         for (field_size_t y = y0; y < y1; y++) {
             for (field_size_t x = x0; x < x1; x++) {
                 ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)];
-                ticks_count_t upper = field->sample_window - 1;
-
-                // Input sampling works by mapping the given input value to reasonably accurate spike trains.
-                // Each input neuron is fed according to its mapping:
-                // sample_window = 10;
-                // upper = sample_window - 1 = 9;
-                // |          | -> x = 0;
-                // |         @| -> x = 1;
-                // |   @   @  | -> x = 2;
-                // |  @  @  @ | -> x = 3;
-                // | @ @ @ @ @| -> x = 4;
-                // |@ @ @ @ @ | -> x = 5;
-                // |@@ @@ @@ @| -> x = 6;
-                // |@@@ @@@ @@| -> x = 7;
-                // |@@@@@@@@@ | -> x = 8;
-                // |@@@@@@@@@@| -> x = 9;
-                if (current_input < field->sample_window / 2) {
-                    if (current_input > 0 && sample_step % (upper / current_input) == 0) {
-                        field->neurons[IDX2D(x, y, field->width)].value += value;
-                    }
-                } else {
-                    if (current_input >= upper || sample_step % (upper / (upper - current_input)) != 0) {
-                        field->neurons[IDX2D(x, y, field->width)].value += value;
-                    }
+                if (pulse_map(field->sample_window, sample_step, current_input, field->pulse_mapping)) {
+                    field->neurons[IDX2D(x, y, field->width)].value += value;
                 }
             }
         }
@@ -309,4 +287,90 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
     }
 
     next_field->ticks_count++;
+}
+
+bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+    bool result = FALSE;
+
+    // Make sure the provided input correctly lies inside the provided window.
+    if (input >= 0 && input < sample_window) {
+        switch (pulse_mapping) {
+            case PULSE_MAPPING_LINEAR:
+                result = pulse_map_linear(sample_window, sample_step, input);
+                break;
+            case PULSE_MAPPING_FPROP:
+                result = pulse_map_fprop(sample_window, sample_step, input);
+                break;
+            case PULSE_MAPPING_RPROP:
+                result = pulse_map_rprop(sample_window, sample_step, input);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return result;
+}
+
+bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    return FALSE;
+}
+
+bool pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool result = FALSE;
+    ticks_count_t upper = sample_window - 1;
+
+    // sample_window = 10;
+    // upper = sample_window - 1 = 9;
+    // | | | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | |@| | | |@| | -> x = 2;
+    // |@| | |@| | |@| | |@| -> x = 3;
+    // |@| |@| |@| |@| |@| | -> x = 4;
+    // | |@| |@| |@| |@| |@| -> x = 5;
+    // | |@|@| |@|@| |@|@| | -> x = 6;
+    // | |@|@|@| |@|@|@| |@| -> x = 7;
+    // | |@|@|@|@|@|@|@|@| | -> x = 8;
+    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    if (input < sample_window / 2) {
+        if (input > 0 && sample_step % (upper / input) == 0) {
+            result = TRUE;
+        }
+    } else {
+        if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
+            result = TRUE;
+        }
+    }
+
+    return result;
+}
+
+bool pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool result = FALSE;
+    double upper = sample_window - 1;
+    double d_input = input;
+
+    // sample_window = 10;
+    // upper = sample_window - 1 = 9;
+    // | | | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | | |@| | | | | -> x = 2;
+    // |@| | |@| | |@| | |@| -> x = 3;
+    // |@| |@| |@| |@| |@| | -> x = 4;
+    // | |@| |@| |@| |@| |@| -> x = 5;
+    // | |@|@| |@|@| |@|@| | -> x = 6;
+    // | |@|@|@|@| |@|@|@|@| -> x = 7;
+    // | |@|@|@|@|@|@|@|@| | -> x = 8;
+    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    if ((double) input < ((double) sample_window) / 2) {
+        if (input > 0 && sample_step % (ticks_count_t) round(upper / d_input) == 0) {
+            result = TRUE;
+        }
+    } else {
+        if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
+            result = TRUE;
+        }
+    }
+
+    return result;
 }
