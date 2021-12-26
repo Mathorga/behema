@@ -73,13 +73,6 @@ typedef int8_t pulses_count_t;
 
 typedef int32_t field_size_t;
 
-// In real brains, excitatory and inhibitory behaviors belong to synapses, not to whole neurons.
-// TODO Find a way to place this in synapses.
-typedef enum {
-    NEURON_TYPE_EXCITER,
-    NEURON_TYPE_INHIBITER
-} neuron_type_t;
-
 typedef enum {
     // Linear.
     PULSE_MAPPING_LINEAR,
@@ -91,14 +84,15 @@ typedef enum {
 
 /// Neuron.
 typedef struct {
-    // Neuron type, can be excitatory or inhibitory.
-    neuron_type_t neuron_type;
-
     // Neighborhood connections pattern:
     // 1|1|0
     // 0|x|1 => 0011x0011
     // 1|0|0
-    nh_mask_t nh_mask;
+    nh_mask_t syn_mask;
+
+    // Neighborhood excitatory states pattern, defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
+    // Only values corresponding to active synapses are used.
+    nh_mask_t excite_mask;
 
     // Activation history pattern:
     //           |<--pulse_window-->|

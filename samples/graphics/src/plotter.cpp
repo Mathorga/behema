@@ -73,7 +73,7 @@ void drawSynapses(field2d_t* field,
 
             field_size_t nh_diameter = 2 * field->nh_radius + 1;
 
-            nh_mask_t nb_mask = currentNeuron->nh_mask;
+            nh_mask_t nb_mask = currentNeuron->syn_mask;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {

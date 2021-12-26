@@ -22,11 +22,11 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
 
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].neuron_type = NEURON_TYPE_EXCITER;
-            field->neurons[IDX2D(x, y, field->width)].nh_mask = DEFAULT_NH_MASK;
+            field->neurons[IDX2D(x, y, field->width)].syn_mask = DEFAULT_NH_MASK;
+            field->neurons[IDX2D(x, y, field->width)].excite_mask = DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = DEFAULT_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].syn_count = 0x00u;
-            field->neurons[IDX2D(x, y, field->width)].pulse_mask = 0x00000000u;
+            field->neurons[IDX2D(x, y, field->width)].pulse_mask = DEFAULT_PULSE_MASK;
             field->neurons[IDX2D(x, y, field->width)].pulse = 0x00u;
         }
     }
@@ -72,7 +72,7 @@ void f2d_set_nhradius(field2d_t* field, nh_radius_t radius) {
 void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].nh_mask = mask;
+            field->neurons[IDX2D(x, y, field->width)].syn_mask = mask;
         }
     }
 }
@@ -215,7 +215,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             */
             field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
-            nh_mask_t prev_mask = prev_neuron.nh_mask;
+            nh_mask_t prev_mask = prev_neuron.syn_mask;
 
             rand = xorshf96();
 
@@ -249,14 +249,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                             if (prev_mask & 0x01 &&
                                 nb_pulse < DEFAULT_SYNGEN_BEAT) {
                                 // Delete synapse.
-                                nh_mask_t mask = ~(next_neuron->nh_mask);
+                                nh_mask_t mask = ~(next_neuron->syn_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
-                                next_neuron->nh_mask = ~mask;
+                                next_neuron->syn_mask = ~mask;
                             } else if (!(prev_mask & 0x01) &&
                                        nb_pulse > DEFAULT_SYNGEN_BEAT &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
-                                next_neuron->nh_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                next_neuron->syn_mask |= (0x01 << IDX2D(i, j, nh_diameter));
                             }
                         }
                     }
