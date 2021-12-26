@@ -42,7 +42,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
 #define DEFAULT_MAX_TOUCH 0.1F
-#define DEFAULT_CHARGE_VALUE 0x20U
+#define DEFAULT_EXCITING_VALUE 0x20U
+#define DEFAULT_INHIBITING_VALUE -0x20U
 #define DEFAULT_DECAY_RATE 0x01U
 
 #define DEFAULT_SYNGEN_BEAT 0.01F
@@ -72,6 +73,13 @@ typedef int8_t pulses_count_t;
 
 typedef int32_t field_size_t;
 
+// In real brains, excitatory and inhibitory behaviors belong to synapses, not to whole neurons.
+// TODO Find a way to place this in synapses.
+typedef enum {
+    NEURON_TYPE_EXCITER,
+    NEURON_TYPE_INHIBITER
+} neuron_type_t;
+
 typedef enum {
     // Linear.
     PULSE_MAPPING_LINEAR,
@@ -83,6 +91,9 @@ typedef enum {
 
 /// Neuron.
 typedef struct {
+    // Neuron type, can be excitatory or inhibitory.
+    neuron_type_t neuron_type;
+
     // Neighborhood connections pattern:
     // 1|1|0
     // 0|x|1 => 0011x0011
@@ -121,7 +132,7 @@ typedef struct {
     neuron_value_t decay_value;
     pulses_count_t syngen_pulses_count;
 
-    // Defines the maximum number of synapses between a neuron and his neighbors.
+    // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
 
 

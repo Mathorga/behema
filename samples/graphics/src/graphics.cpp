@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
         // Feed the field.
         if (feeding && rand() % 100 > 10) {
-            f2d_rsfeed(prev_field, 0, inputs_count, 2 * DEFAULT_CHARGE_VALUE, inputs_spread);
+            f2d_rsfeed(prev_field, 0, inputs_count, 2 * DEFAULT_EXCITING_VALUE, inputs_spread);
         }
 
         if (counter % renderingInterval == 0) {

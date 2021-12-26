@@ -113,6 +113,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field);
 bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
 
 /// Computes a linear mapping for the given input and sample step.
+/// Linear mapping always fire at least once, even if input is 0.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).

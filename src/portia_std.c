@@ -10,7 +10,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->nh_radius = nh_radius;
     field->fire_threshold = DEFAULT_THRESHOLD;
     field->recovery_value = DEFAULT_RECOVERY_VALUE;
-    field->charge_value = DEFAULT_CHARGE_VALUE;
+    field->charge_value = DEFAULT_EXCITING_VALUE;
     field->decay_value = DEFAULT_DECAY_RATE;
     field->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
@@ -22,6 +22,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
 
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
+            field->neurons[IDX2D(x, y, field->width)].neuron_type = NEURON_TYPE_EXCITER;
             field->neurons[IDX2D(x, y, field->width)].nh_mask = DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = DEFAULT_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].syn_count = 0x00u;
@@ -231,7 +232,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
                         if (prev_mask & 0x01) {
                             if (neighbor.value > prev_field->fire_threshold) {
-                                next_neuron->value += DEFAULT_CHARGE_VALUE;
+                                next_neuron->value += DEFAULT_EXCITING_VALUE;
                             }
                             next_neuron->syn_count++;
                         }
@@ -318,7 +319,19 @@ bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_cou
 }
 
 bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    return FALSE;
+    // sample_window = 10;
+    // upper = sample_window - 1 = 9;
+    // |@| | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | | | | | |@| | -> x = 2;
+    // |@| | | | | | |@| | | -> x = 3;
+    // |@| | | | | |@| | | | -> x = 4;
+    // |@| | | | |@| | | | | -> x = 5;
+    // |@| | | |@| | | |@| | -> x = 6;
+    // |@| | |@| | |@| | |@| -> x = 7;
+    // |@| |@| |@| |@| |@| | -> x = 8;
+    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    return sample_step % (sample_window - input) == 0;
 }
 
 bool pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
