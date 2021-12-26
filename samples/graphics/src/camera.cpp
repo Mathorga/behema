@@ -104,10 +104,10 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(127, 255, 31, 10) : sf::Color(255, 127, 31, 10)),
+                                    excMask & 1 ? sf::Color(63, 127, 31, 200) : sf::Color(127, 100, 31, 200)),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(127, 255, 31, 100) : sf::Color(255, 127, 31, 100))
+                                    excMask & 1 ? sf::Color(63, 127, 31, 50) : sf::Color(127, 100, 31, 50))
                             };
 
                             window->draw(line, 2, sf::Lines);
@@ -174,13 +174,13 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x0C);
+    f2d_set_evol_step(&even_field, 0x0F);
     f2d_set_pulse_window(&even_field, 0x3A);
     f2d_set_syngen_beat(&even_field, 0.1F);
     f2d_set_max_touch(&even_field, 0.2F);
     f2d_set_sample_window(&even_field, sampleWindow);
     f2d_set_pulse_mapping(&even_field, PULSE_MAPPING_FPROP);
-    f2d_set_inhexc_prop(&even_field, 0x0FU);
+    f2d_set_inhexc_ratio(&even_field, 0xFFU);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));

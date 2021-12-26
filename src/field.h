@@ -130,8 +130,8 @@ typedef struct {
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
 
-    // Proportion between excitatory and inhibitory generated synapses (e.g. inhexc_prop = 10 => 9 exc, 1 inh).
-    ticks_count_t inhexc_prop;
+    // Proportion between excitatory and inhibitory generated synapses (e.g. inhexc_ratio = 10 => 9 exc, 1 inh).
+    ticks_count_t inhexc_ratio;
 
 
     ticks_count_t sample_window;

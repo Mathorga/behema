@@ -63,7 +63,7 @@ void f2d_set_syngen_beat(field2d_t* field, float beat);
 void f2d_set_pulse_mapping(field2d_t* field, pulse_mapping_t pulse_mapping);
 
 /// Sets the proportion between excitatory and inhibitory generated synapses.
-void f2d_set_inhexc_prop(field2d_t* field, ticks_count_t inhexc_prop);
+void f2d_set_inhexc_ratio(field2d_t* field, ticks_count_t inhexc_ratio);
 
 
 // Execution functions:
