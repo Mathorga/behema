@@ -82,7 +82,8 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 
             field_size_t nh_diameter = 2 * field->nh_radius + 1;
 
-            nh_mask_t nb_mask = currentNeuron->syn_mask;
+            nh_mask_t synMask = currentNeuron->synac_mask;
+            nh_mask_t excMask = currentNeuron->synex_mask;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
@@ -99,14 +100,14 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                                                            field->width);
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (nb_mask & 0x01) {
+                        if (synMask & 1) {
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
-                                    sf::Color(255, 127, 31, 10)),
+                                    excMask & 1 ? sf::Color(127, 255, 31, 10) : sf::Color(255, 127, 31, 10)),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    sf::Color(31, 127, 255, 50))
+                                    excMask & 1 ? sf::Color(127, 255, 31, 100) : sf::Color(255, 127, 31, 100))
                             };
 
                             window->draw(line, 2, sf::Lines);
@@ -114,7 +115,8 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                     }
 
                     // Shift the mask to check for the next neighbor.
-                    nb_mask >>= 1;
+                    synMask >>= 1;
+                    excMask >>= 1;
                 }
             }
         }
@@ -126,9 +128,37 @@ int main(int argc, char **argv) {
     field_size_t field_height = 60;
     nh_radius_t nh_radius = 2;
     ticks_count_t sampleWindow = 10;
-    ticks_count_t samplingBound = sampleWindow - 1;
     cv::Mat frame;
     cv::VideoCapture cam;
+
+    // Input handling.
+    switch (argc) {
+        case 1:
+            break;
+        case 2:
+            field_width = atoi(argv[1]);
+            break;
+        case 3:
+            field_width = atoi(argv[1]);
+            field_height = atoi(argv[2]);
+            break;
+        case 4:
+            field_width = atoi(argv[1]);
+            field_height = atoi(argv[2]);
+            nh_radius = atoi(argv[3]);
+            break;
+        case 5:
+            field_width = atoi(argv[1]);
+            field_height = atoi(argv[2]);
+            nh_radius = atoi(argv[3]);
+            sampleWindow = atoi(argv[4]);
+            break;
+        default:
+            printf("USAGE: sampled <width> <height> <nh_radius> <inputs_count>\n");
+            exit(0);
+            break;
+    }
+    ticks_count_t samplingBound = sampleWindow - 1;
 
     cam.open(0);
     if (!cam.isOpened()) {
@@ -144,12 +174,13 @@ int main(int argc, char **argv) {
     field2d_t even_field;
     field2d_t odd_field;
     f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x0B);
+    f2d_set_evol_step(&even_field, 0x0C);
     f2d_set_pulse_window(&even_field, 0x3A);
     f2d_set_syngen_beat(&even_field, 0.1F);
     f2d_set_max_touch(&even_field, 0.2F);
     f2d_set_sample_window(&even_field, sampleWindow);
     f2d_set_pulse_mapping(&even_field, PULSE_MAPPING_FPROP);
+    f2d_set_inhexc_prop(&even_field, 0x0FU);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));

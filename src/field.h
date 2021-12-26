@@ -56,6 +56,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_PULSE_WINDOW 0x0AU
 #define DEFAULT_EVOL_STEP 0x00000001U
 #define EVOL_STEP_NEVER 0x0000FFFFU
+#define DEFAULT_INHEXC_PROP 0x0AU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 
 typedef int16_t neuron_value_t;
@@ -84,15 +85,15 @@ typedef enum {
 
 /// Neuron.
 typedef struct {
-    // Neighborhood connections pattern:
+    // Neighborhood connections pattern (SYNapse ACtivation):
     // 1|1|0
     // 0|x|1 => 0011x0011
     // 1|0|0
-    nh_mask_t syn_mask;
+    nh_mask_t synac_mask;
 
-    // Neighborhood excitatory states pattern, defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
+    // Neighborhood excitatory states pattern (SYNapse EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
     // Only values corresponding to active synapses are used.
-    nh_mask_t excite_mask;
+    nh_mask_t synex_mask;
 
     // Activation history pattern:
     //           |<--pulse_window-->|
@@ -128,6 +129,9 @@ typedef struct {
 
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
+
+    // Proportion between excitatory and inhibitory generated synapses (e.g. inhexc_prop = 10 => 9 exc, 1 inh).
+    ticks_count_t inhexc_prop;
 
 
     ticks_count_t sample_window;

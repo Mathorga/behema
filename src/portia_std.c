@@ -14,6 +14,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->decay_value = DEFAULT_DECAY_RATE;
     field->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
+    field->inhexc_prop = DEFAULT_INHEXC_PROP;
 
     field->sample_window = DEFAULT_SAMPLE_WINDOW;
     field->pulse_mapping = PULSE_MAPPING_FPROP;
@@ -22,8 +23,8 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
 
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].syn_mask = DEFAULT_NH_MASK;
-            field->neurons[IDX2D(x, y, field->width)].excite_mask = DEFAULT_NH_MASK;
+            field->neurons[IDX2D(x, y, field->width)].synac_mask = DEFAULT_NH_MASK;
+            field->neurons[IDX2D(x, y, field->width)].synex_mask = ~DEFAULT_NH_MASK;
             field->neurons[IDX2D(x, y, field->width)].value = DEFAULT_STARTING_VALUE;
             field->neurons[IDX2D(x, y, field->width)].syn_count = 0x00u;
             field->neurons[IDX2D(x, y, field->width)].pulse_mask = DEFAULT_PULSE_MASK;
@@ -47,6 +48,7 @@ field2d_t* f2d_copy(field2d_t* other) {
     field->decay_value = other->decay_value;
     field->syngen_pulses_count = other->syngen_pulses_count;
     field->max_syn_count = other->max_syn_count;
+    field->inhexc_prop = other->inhexc_prop;
 
     field->sample_window = other->sample_window;
     field->pulse_mapping = other->pulse_mapping;
@@ -72,7 +74,7 @@ void f2d_set_nhradius(field2d_t* field, nh_radius_t radius) {
 void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
     for (field_size_t y = 0; y < field->height; y++) {
         for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].syn_mask = mask;
+            field->neurons[IDX2D(x, y, field->width)].synac_mask = mask;
         }
     }
 }
@@ -111,6 +113,10 @@ void f2d_set_syngen_beat(field2d_t* field, float beat) {
 
 void f2d_set_pulse_mapping(field2d_t* field, pulse_mapping_t pulse_mapping) {
     field->pulse_mapping = pulse_mapping;
+}
+
+void f2d_set_inhexc_prop(field2d_t* field, ticks_count_t inhexc_prop) {
+    field->inhexc_prop = inhexc_prop;
 }
 
 
@@ -215,7 +221,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             */
             field_size_t nh_diameter = 2 * prev_field->nh_radius + 1;
 
-            nh_mask_t prev_mask = prev_neuron.syn_mask;
+            nh_mask_t prev_syn_mask = prev_neuron.synac_mask;
+            nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
 
             rand = xorshf96();
 
@@ -230,9 +237,9 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                                                       prev_field->width)];
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (prev_mask & 0x01) {
+                        if (prev_syn_mask & 0x01) {
                             if (neighbor.value > prev_field->fire_threshold) {
-                                next_neuron->value += DEFAULT_EXCITING_VALUE;
+                                next_neuron->value += prev_exc_mask & 0x01 ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
                             }
                             next_neuron->syn_count++;
                         }
@@ -244,25 +251,34 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
-                            // (prev_field->ticks_count + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
                             (rand + (IDX2D(i, j, nh_diameter))) % 1000 < 10) {
-                            if (prev_mask & 0x01 &&
+                            if (prev_syn_mask & 0x01 &&
                                 nb_pulse < DEFAULT_SYNGEN_BEAT) {
                                 // Delete synapse.
-                                nh_mask_t mask = ~(next_neuron->syn_mask);
+                                nh_mask_t mask = ~(next_neuron->synac_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
-                                next_neuron->syn_mask = ~mask;
-                            } else if (!(prev_mask & 0x01) &&
+                                next_neuron->synac_mask = ~mask;
+                            } else if (!(prev_syn_mask & 0x01) &&
                                        nb_pulse > DEFAULT_SYNGEN_BEAT &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
-                                next_neuron->syn_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                next_neuron->synac_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+
+                                // Define whether the new synapse is excitatory or inhibitory.
+                                if ((prev_field->ticks_count + IDX2D(x, y, prev_field->width) + IDX2D(i, j, nh_diameter)) % prev_field->inhexc_prop == 0) {
+                                    // Inhibitory.
+                                    next_neuron->synex_mask &= (0x00 << IDX2D(i, j, nh_diameter));
+                                } else {
+                                    // Excitatory.
+                                    next_neuron->synex_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                }
                             }
                         }
                     }
 
                     // Shift the mask to check for the next neighbor.
-                    prev_mask >>= 0x01;
+                    prev_syn_mask >>= 0x01;
+                    prev_exc_mask >>= 0x01;
                 }
             }
 
