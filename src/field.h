@@ -56,7 +56,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_PULSE_WINDOW 0x0AU
 #define DEFAULT_EVOL_STEP 0x00000001U
 #define EVOL_STEP_NEVER 0x0000FFFFU
-#define DEFAULT_INHEXC_PROP 0x0AU
+
+#define DEFAULT_INHEXC_RATIO 0x0AU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 
 typedef int16_t neuron_value_t;

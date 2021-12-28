@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     f2d_set_max_touch(&even_field, 0.2F);
     f2d_set_sample_window(&even_field, sampleWindow);
     f2d_set_pulse_mapping(&even_field, PULSE_MAPPING_FPROP);
-    f2d_set_inhexc_ratio(&even_field, 0xFFU);
+    f2d_set_inhexc_ratio(&even_field, 0x02U);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -201,7 +201,7 @@ int main(int argc, char **argv) {
     int renderingInterval = 1;
 
     // Coordinates for input neurons.
-    field_size_t lInputsCoords[] = {20, 10, field_width - 20, field_height - 10};
+    field_size_t lInputsCoords[] = {30, 15, field_width - 30, field_height - 15};
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t sample_step = samplingBound;

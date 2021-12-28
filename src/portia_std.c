@@ -14,7 +14,7 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
     field->decay_value = DEFAULT_DECAY_RATE;
     field->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
-    field->inhexc_ratio = DEFAULT_INHEXC_PROP;
+    field->inhexc_ratio = DEFAULT_INHEXC_RATIO;
 
     field->sample_window = DEFAULT_SAMPLE_WINDOW;
     field->pulse_mapping = PULSE_MAPPING_FPROP;
@@ -192,7 +192,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 }
 
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
-    ticks_count_t rand;
+    uint32_t neighbor_rand;
 
     #pragma omp parallel for
     for (field_size_t y = 0; y < prev_field->height; y++) {
@@ -224,7 +224,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             nh_mask_t prev_syn_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
 
-            rand = xorshf96();
+            // rand = xorshf96();
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -245,14 +245,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         }
 
                         float nb_pulse = ((float) neighbor.pulse) / ((float) (prev_field->pulse_window));
-                        uint32_t neighbor_rand = prev_field->ticks_count + IDX2D(x, y, prev_field->width) + IDX2D(i, j, nh_diameter);
+                        neighbor_rand = xorshf96();
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
-                            (rand + neighbor_rand) % 1000 < 10) {
+                            neighbor_rand % 1000 < 10) {
                             if (prev_syn_mask & 0x01 &&
                                 nb_pulse < DEFAULT_SYNGEN_BEAT) {
                                 // Delete synapse.
@@ -337,17 +337,17 @@ bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_cou
 
 bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
-    // upper = sample_window - 1 = 9;
-    // |@| | | | | | | | | | -> x = 0;
-    // |@| | | | | | | | |@| -> x = 1;
-    // |@| | | | | | | |@| | -> x = 2;
-    // |@| | | | | | |@| | | -> x = 3;
-    // |@| | | | | |@| | | | -> x = 4;
+    // x = sample_window - input;
+    // |@| | | | | | | | | | -> x = 10;
+    // |@| | | | | | | | |@| -> x = 9;
+    // |@| | | | | | | |@| | -> x = 8;
+    // |@| | | | | | |@| | | -> x = 7;
+    // |@| | | | | |@| | | | -> x = 6;
     // |@| | | | |@| | | | | -> x = 5;
-    // |@| | | |@| | | |@| | -> x = 6;
-    // |@| | |@| | |@| | |@| -> x = 7;
-    // |@| |@| |@| |@| |@| | -> x = 8;
-    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    // |@| | | |@| | | |@| | -> x = 4;
+    // |@| | |@| | |@| | |@| -> x = 3;
+    // |@| |@| |@| |@| |@| | -> x = 2;
+    // |@|@|@|@|@|@|@|@|@|@| -> x = 1;
     return sample_step % (sample_window - input) == 0;
 }
 
