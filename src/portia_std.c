@@ -192,7 +192,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 }
 
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
-    uint32_t neighbor_rand;
+    uint32_t rand;
 
     #pragma omp parallel for
     for (field_size_t y = 0; y < prev_field->height; y++) {
@@ -245,14 +245,14 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         }
 
                         float nb_pulse = ((float) neighbor.pulse) / ((float) (prev_field->pulse_window));
-                        neighbor_rand = xorshf96();
+                        rand = xorshf96();
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
-                            neighbor_rand % 1000 < 10) {
+                            rand % 10000 < 10) {
                             if (prev_syn_mask & 0x01 &&
                                 nb_pulse < DEFAULT_SYNGEN_BEAT) {
                                 // Delete synapse.
@@ -266,7 +266,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                 next_neuron->synac_mask |= (0x01 << IDX2D(i, j, nh_diameter));
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (neighbor_rand % prev_field->inhexc_ratio == 0) {
+                                if (rand % prev_field->inhexc_ratio == 0) {
                                     // Inhibitory.
                                     next_neuron->synex_mask &= (0x00 << IDX2D(i, j, nh_diameter));
                                 } else {
