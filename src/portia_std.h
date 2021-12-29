@@ -54,6 +54,11 @@ void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold);
 /// @param touch The touch to assign the field. Only values between 0 and 1 are allowed.
 void f2d_set_max_touch(field2d_t* field, float touch);
 
+/// Sets the minimum amount of pulses needed to create a synapse.
+/// @param field The field to set the value to.
+/// @param pulse The minimum amount of pulses count to generate a synapse.
+void f2d_set_syngen_pulses_count(field2d_t* field, pulses_count_t pulses_count);
+
 /// Sets the pulse needed to allow synapse generation.
 /// A neuron beat is defined as its pulses count divided by the size of the field's pulse window (aka the max possible pulses count).
 /// @param beat The beat to assign the field. Only values between 0 and 1 are allowed.

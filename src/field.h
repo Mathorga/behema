@@ -86,7 +86,7 @@ typedef enum {
 
 /// Neuron.
 typedef struct {
-    // Neighborhood connections pattern (SYNapse ACtivation):
+    // Neighborhood connections pattern (SYNapse ACtivation state):
     // 1|1|0
     // 0|x|1 => 0011x0011
     // 1|0|0

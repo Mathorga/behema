@@ -104,6 +104,10 @@ void f2d_set_max_touch(field2d_t* field, float touch) {
     }
 }
 
+void f2d_set_syngen_pulses_count(field2d_t* field, pulses_count_t pulses_count) {
+    field->syngen_pulses_count = pulses_count;
+}
+
 void f2d_set_syngen_beat(field2d_t* field, float beat) {
     // Only set beat if a valid value is provided.
     if (beat <= 1.0F && beat >= 0.0F) {
@@ -192,7 +196,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 }
 
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
-    uint32_t rand;
+    uint32_t random;
 
     #pragma omp parallel for
     for (field_size_t y = 0; y < prev_field->height; y++) {
@@ -224,7 +228,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             nh_mask_t prev_syn_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
 
-            // rand = xorshf96();
+            // random = xorshf96();
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -244,31 +248,33 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                             next_neuron->syn_count++;
                         }
 
-                        float nb_pulse = ((float) neighbor.pulse) / ((float) (prev_field->pulse_window));
-                        rand = xorshf96();
+                        random = xorshf96();
+                        // random = rand();
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
-                            rand % 10000 < 10) {
+                            random % 10000 < 10) {
                             if (prev_syn_mask & 0x01 &&
-                                nb_pulse < DEFAULT_SYNGEN_BEAT) {
+                                neighbor.pulse < prev_field->syngen_pulses_count) {
                                 // Delete synapse.
-                                nh_mask_t mask = ~(next_neuron->synac_mask);
+                                nh_mask_t mask = ~(prev_neuron.synac_mask);
                                 mask |= (0x01 << IDX2D(i, j, nh_diameter));
                                 next_neuron->synac_mask = ~mask;
                             } else if (!(prev_syn_mask & 0x01) &&
-                                       nb_pulse > DEFAULT_SYNGEN_BEAT &&
+                                       neighbor.pulse > prev_field->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01 << IDX2D(i, j, nh_diameter));
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (rand % prev_field->inhexc_ratio == 0) {
+                                if (random % prev_field->inhexc_ratio == 0) {
                                     // Inhibitory.
-                                    next_neuron->synex_mask &= (0x00 << IDX2D(i, j, nh_diameter));
+                                    nh_mask_t mask = ~(prev_neuron.synex_mask);
+                                    mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                    next_neuron->synex_mask = ~mask;
                                 } else {
                                     // Excitatory.
                                     next_neuron->synex_mask |= (0x01 << IDX2D(i, j, nh_diameter));
