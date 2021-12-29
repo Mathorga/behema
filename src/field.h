@@ -88,7 +88,7 @@ typedef enum {
 typedef struct {
     // Neighborhood connections pattern (SYNapse ACtivation state):
     // 1|1|0
-    // 0|x|1 => 0011x0011
+    // 0|x|1 => 1100x1100
     // 1|0|0
     nh_mask_t synac_mask;
 
