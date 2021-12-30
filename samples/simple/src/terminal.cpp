@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <portia/portia.h>
 
-void print(field2d_t* field) {
+void print(cortex2d_t* cortex) {
     system("clear");
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            neuron_t currentNeuron = field->neurons[IDX2D(j, i, field->width)];
-            printf("%c ", currentNeuron.value > field->fire_threshold ? '@' : '.');
+    for (cortex_size_t i = 0; i < cortex->height; i++) {
+        for (cortex_size_t j = 0; j < cortex->width; j++) {
+            neuron_t currentNeuron = cortex->neurons[IDX2D(j, i, cortex->width)];
+            printf("%c ", currentNeuron.value > cortex->fire_threshold ? '@' : '.');
         }
         printf("\n");
     }
@@ -17,30 +17,30 @@ void print(field2d_t* field) {
 }
 
 int main(int argc, char **argv) {
-    field2d_t even_field;
-    field2d_t odd_field;
+    cortex2d_t even_cortex;
+    cortex2d_t odd_cortex;
 
-    field_size_t field_width = 150;
-    field_size_t field_height = 50;
+    cortex_size_t cortex_width = 150;
+    cortex_size_t cortex_height = 50;
     nh_radius_t nh_radius = 1;
-    field_size_t inputs_count = 2000;
+    cortex_size_t inputs_count = 2000;
 
     srand(time(NULL));
 
-    f2d_init(&even_field, field_width, field_height, nh_radius);
-    odd_field = *f2d_copy(&even_field);
+    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    odd_cortex = *c2d_copy(&even_cortex);
 
     for (int i = 0;; i++) {
-        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
-        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
+        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         if (rand() % 100 > 50) {
-            f2d_rsfeed(prev_field, 0, inputs_count, DEFAULT_EXCITING_VALUE, 2);
+            c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXCITING_VALUE, 2);
         }
 
-        f2d_tick(prev_field, next_field);
+        c2d_tick(prev_cortex, next_cortex);
 
-        print(next_field);
+        print(next_cortex);
 
         usleep(40000);
     }

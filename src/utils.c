@@ -22,6 +22,6 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
     return output_start + slope * (input - input_start);
 }
 
-void f2d_dump(field2d_t* field, char* file_name) {
-    
+void c2d_dump(cortex2d_t* cortex, char* file_name) {
+
 }

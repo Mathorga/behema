@@ -4,11 +4,11 @@
 #include <unistd.h>
 #include <portia/portia.h>
 
-void print(field2d_t* field) {
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
-            neuron_t currentNeuron = field->neurons[IDX2D(x, y, field->width)];
-            printf("%c ", currentNeuron.value >= field->fire_threshold ? '@' : '.');
+void print(cortex2d_t* cortex) {
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
+            neuron_t currentNeuron = cortex->neurons[IDX2D(x, y, cortex->width)];
+            printf("%c ", currentNeuron.value >= cortex->fire_threshold ? '@' : '.');
         }
         printf("\n");
     }
@@ -16,8 +16,8 @@ void print(field2d_t* field) {
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 100;
-    field_size_t field_height = 60;
+    cortex_size_t cortex_width = 100;
+    cortex_size_t cortex_height = 60;
     nh_radius_t nh_radius = 2;
     ticks_count_t sampleWindow = 10;
     ticks_count_t samplingBound = sampleWindow - 1;
@@ -27,15 +27,15 @@ int main(int argc, char **argv) {
         case 1:
             break;
         case 2:
-            field_width = atoi(argv[1]);
+            cortex_width = atoi(argv[1]);
             break;
         case 3:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             break;
         case 4:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             break;
         default:
@@ -44,18 +44,18 @@ int main(int argc, char **argv) {
             break;
     }
 
-    field2d_t even_field;
-    field2d_t odd_field;
-    f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x20U);
-    f2d_set_pulse_window(&even_field, 0x3A);
-    f2d_set_syngen_beat(&even_field, 0.1F);
-    f2d_set_max_touch(&even_field, 0.2F);
-    f2d_set_sample_window(&even_field, sampleWindow);
-    odd_field = *f2d_copy(&even_field);
+    cortex2d_t even_cortex;
+    cortex2d_t odd_cortex;
+    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_set_evol_step(&even_cortex, 0x20U);
+    c2d_set_pulse_window(&even_cortex, 0x3A);
+    c2d_set_syngen_beat(&even_cortex, 0.1F);
+    c2d_set_max_touch(&even_cortex, 0.2F);
+    c2d_set_sample_window(&even_cortex, sampleWindow);
+    odd_cortex = *c2d_copy(&even_cortex);
 
-    field_size_t lInputsCoords[] = {10, 5, 40, 20};
-    field_size_t rInputsCoords[] = {even_field.width - 40, 5, even_field.width - 10, 20};
+    cortex_size_t lInputsCoords[] = {10, 5, 40, 20};
+    cortex_size_t rInputsCoords[] = {even_cortex.width - 40, 5, even_cortex.width - 10, 20};
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
@@ -64,22 +64,22 @@ int main(int argc, char **argv) {
     srand(time(NULL));
 
     for (int i = 0;; i++) {
-        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
-        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
+        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         system("clear");
 
         // Only get new inputs according to the sample rate.
         if (sample_step > samplingBound) {
             // Fetch input.
-            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
-                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+            for (cortex_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (cortex_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
                     lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (samplingBound));
                 }
             }
 
-            for (field_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
-                for (field_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
+            for (cortex_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
+                for (cortex_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
                     rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (samplingBound));
                 }
             }
@@ -89,16 +89,16 @@ int main(int argc, char **argv) {
 
         printf("%d\n", sample_step);
 
-        // Feed the field.
-        f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
-        f2d_sample_sqfeed(prev_field, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE);
+        // Feed the cortex.
+        c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
+        c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE);
 
         sample_step++;
 
-        print(next_field);
+        print(next_cortex);
 
-        // Tick the field.
-        f2d_tick(prev_field, next_field);
+        // Tick the cortex.
+        c2d_tick(prev_cortex, next_cortex);
 
         usleep(1000000);
     }

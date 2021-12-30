@@ -1,220 +1,220 @@
 #include "portia_std.h"
 
-error_code_t f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
+error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     if (SQNH_COUNT(SQNH_DIAM(nh_radius)) > sizeof(nh_mask_t) * 8) {
         // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    field->width = width;
-    field->height = height;
-    field->ticks_count = 0x00;
-    field->evol_step = DEFAULT_EVOL_STEP;
-    field->pulse_window = DEFAULT_PULSE_WINDOW;
+    cortex->width = width;
+    cortex->height = height;
+    cortex->ticks_count = 0x00;
+    cortex->evol_step = DEFAULT_EVOL_STEP;
+    cortex->pulse_window = DEFAULT_PULSE_WINDOW;
 
-    field->nh_radius = nh_radius;
-    field->fire_threshold = DEFAULT_THRESHOLD;
-    field->recovery_value = DEFAULT_RECOVERY_VALUE;
-    field->charge_value = DEFAULT_EXCITING_VALUE;
-    field->decay_value = DEFAULT_DECAY_RATE;
-    field->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
-    field->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
-    field->inhexc_ratio = DEFAULT_INHEXC_RATIO;
+    cortex->nh_radius = nh_radius;
+    cortex->fire_threshold = DEFAULT_THRESHOLD;
+    cortex->recovery_value = DEFAULT_RECOVERY_VALUE;
+    cortex->charge_value = DEFAULT_EXCITING_VALUE;
+    cortex->decay_value = DEFAULT_DECAY_RATE;
+    cortex->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
+    cortex->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
+    cortex->inhexc_ratio = DEFAULT_INHEXC_RATIO;
 
-    field->sample_window = DEFAULT_SAMPLE_WINDOW;
-    field->pulse_mapping = PULSE_MAPPING_FPROP;
+    cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
+    cortex->pulse_mapping = PULSE_MAPPING_FPROP;
 
-    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
+    cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
 
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].synac_mask = DEFAULT_NH_MASK;
-            field->neurons[IDX2D(x, y, field->width)].synex_mask = ~DEFAULT_NH_MASK;
-            field->neurons[IDX2D(x, y, field->width)].value = DEFAULT_STARTING_VALUE;
-            field->neurons[IDX2D(x, y, field->width)].syn_count = 0x00u;
-            field->neurons[IDX2D(x, y, field->width)].pulse_mask = DEFAULT_PULSE_MASK;
-            field->neurons[IDX2D(x, y, field->width)].pulse = 0x00u;
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
+            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = DEFAULT_NH_MASK;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = ~DEFAULT_NH_MASK;
+            cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
+            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00u;
+            cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = DEFAULT_PULSE_MASK;
+            cortex->neurons[IDX2D(x, y, cortex->width)].pulse = 0x00u;
         }
     }
 
     return NO_ERROR;
 }
 
-field2d_t* f2d_copy(field2d_t* other) {
-    field2d_t* field = (field2d_t*) malloc(sizeof(field2d_t));
-    field->width = other->width;
-    field->height = other->height;
-    field->ticks_count = other->ticks_count;
-    field->evol_step = other->evol_step;
-    field->pulse_window = other->pulse_window;
+cortex2d_t* c2d_copy(cortex2d_t* other) {
+    cortex2d_t* cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    cortex->width = other->width;
+    cortex->height = other->height;
+    cortex->ticks_count = other->ticks_count;
+    cortex->evol_step = other->evol_step;
+    cortex->pulse_window = other->pulse_window;
 
-    field->nh_radius = other->nh_radius;
-    field->fire_threshold = other->fire_threshold;
-    field->recovery_value = other->recovery_value;
-    field->charge_value = other->charge_value;
-    field->decay_value = other->decay_value;
-    field->syngen_pulses_count = other->syngen_pulses_count;
-    field->max_syn_count = other->max_syn_count;
-    field->inhexc_ratio = other->inhexc_ratio;
+    cortex->nh_radius = other->nh_radius;
+    cortex->fire_threshold = other->fire_threshold;
+    cortex->recovery_value = other->recovery_value;
+    cortex->charge_value = other->charge_value;
+    cortex->decay_value = other->decay_value;
+    cortex->syngen_pulses_count = other->syngen_pulses_count;
+    cortex->max_syn_count = other->max_syn_count;
+    cortex->inhexc_ratio = other->inhexc_ratio;
 
-    field->sample_window = other->sample_window;
-    field->pulse_mapping = other->pulse_mapping;
+    cortex->sample_window = other->sample_window;
+    cortex->pulse_mapping = other->pulse_mapping;
 
-    field->neurons = (neuron_t*) malloc(field->width * field->height * sizeof(neuron_t));
+    cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
 
-    for (field_size_t y = 0; y < other->height; y++) {
-        for (field_size_t x = 0; x < other->width; x++) {
-            field->neurons[IDX2D(x, y, other->width)] = other->neurons[IDX2D(x, y, other->width)];
+    for (cortex_size_t y = 0; y < other->height; y++) {
+        for (cortex_size_t x = 0; x < other->width; x++) {
+            cortex->neurons[IDX2D(x, y, other->width)] = other->neurons[IDX2D(x, y, other->width)];
         }
     }
 
-    return field;
+    return cortex;
 }
 
-error_code_t f2d_set_nhradius(field2d_t* field, nh_radius_t radius) {
+error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
     // Make sure the provided radius is valid.
     if (radius <= 0 || SQNH_COUNT(SQNH_DIAM(radius)) > sizeof(nh_mask_t) * 8) {
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    field->nh_radius = radius;
+    cortex->nh_radius = radius;
 
     return NO_ERROR;
 }
 
-void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
-            field->neurons[IDX2D(x, y, field->width)].synac_mask = mask;
+void c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask) {
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
+            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = mask;
         }
     }
 }
 
-void f2d_set_evol_step(field2d_t* field, evol_step_t evol_step) {
-    field->evol_step = evol_step;
+void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
+    cortex->evol_step = evol_step;
 }
 
-void f2d_set_pulse_window(field2d_t* field, pulses_count_t window) {
+void c2d_set_pulse_window(cortex2d_t* cortex, pulses_count_t window) {
     if (window >= 0x00u && window < 0x3Fu) {
-        field->pulse_window = window;
+        cortex->pulse_window = window;
     }
 }
 
-void f2d_set_sample_window(field2d_t* field, ticks_count_t sample_window) {
-    field->sample_window = sample_window;
+void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window) {
+    cortex->sample_window = sample_window;
 }
 
-void f2d_set_fire_threshold(field2d_t* field, neuron_threshold_t threshold) {
-    field->fire_threshold = threshold;
+void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_threshold_t threshold) {
+    cortex->fire_threshold = threshold;
 }
 
-void f2d_set_max_touch(field2d_t* field, float touch) {
+void c2d_set_max_touch(cortex2d_t* cortex, float touch) {
     // Only set touch if a valid value is provided.
     if (touch <= 1 && touch >= 0) {
-        field->max_syn_count = touch * SQNH_COUNT(SQNH_DIAM(field->nh_radius));
+        cortex->max_syn_count = touch * SQNH_COUNT(SQNH_DIAM(cortex->nh_radius));
     }
 }
 
-void f2d_set_syngen_pulses_count(field2d_t* field, pulses_count_t pulses_count) {
-    field->syngen_pulses_count = pulses_count;
+void c2d_set_syngen_pulses_count(cortex2d_t* cortex, pulses_count_t pulses_count) {
+    cortex->syngen_pulses_count = pulses_count;
 }
 
-void f2d_set_syngen_beat(field2d_t* field, float beat) {
+void c2d_set_syngen_beat(cortex2d_t* cortex, float beat) {
     // Only set beat if a valid value is provided.
     if (beat <= 1.0F && beat >= 0.0F) {
-        field->syngen_pulses_count = beat * field->pulse_window;
+        cortex->syngen_pulses_count = beat * cortex->pulse_window;
     }
 }
 
-void f2d_set_pulse_mapping(field2d_t* field, pulse_mapping_t pulse_mapping) {
-    field->pulse_mapping = pulse_mapping;
+void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
+    cortex->pulse_mapping = pulse_mapping;
 }
 
-void f2d_set_inhexc_ratio(field2d_t* field, ticks_count_t inhexc_ratio) {
-    field->inhexc_ratio = inhexc_ratio;
+void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio) {
+    cortex->inhexc_ratio = inhexc_ratio;
 }
 
 
-void f2d_feed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t* values) {
-    if (starting_index + count < field->width * field->height) {
+void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values) {
+    if (starting_index + count < cortex->width * cortex->height) {
         // Loop through count.
-        for (field_size_t i = starting_index; i < starting_index + count; i++) {
-            field->neurons[i].value += values[i];
+        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
+            cortex->neurons[i].value += values[i];
         }
     }
 }
 
-void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, neuron_value_t value) {
-    // Make sure the provided values are within the field size.
-    if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
-        for (field_size_t y = y0; y < y1; y++) {
-            for (field_size_t x = x0; x < x1; x++) {
-                field->neurons[IDX2D(x, y, field->width)].value += value;
+void c2d_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t value) {
+    // Make sure the provided values are within the cortex size.
+    if (x0 >= 0 && y0 >= 0 && x1 < cortex->width && y1 < cortex->height) {
+        for (cortex_size_t y = y0; y < y1; y++) {
+            for (cortex_size_t x = x0; x < x1; x++) {
+                cortex->neurons[IDX2D(x, y, cortex->width)].value += value;
             }
         }
     }
 }
 
-void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
-    // Make sure the provided values are within the field size.
-    if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
+void c2d_sample_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
+    // Make sure the provided values are within the cortex size.
+    if (x0 >= 0 && y0 >= 0 && x1 < cortex->width && y1 < cortex->height) {
         #pragma omp parallel for
-        for (field_size_t y = y0; y < y1; y++) {
-            for (field_size_t x = x0; x < x1; x++) {
+        for (cortex_size_t y = y0; y < y1; y++) {
+            for (cortex_size_t x = x0; x < x1; x++) {
                 ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)];
-                if (pulse_map(field->sample_window, sample_step, current_input, field->pulse_mapping)) {
-                    field->neurons[IDX2D(x, y, field->width)].value += value;
+                if (pulse_map(cortex->sample_window, sample_step, current_input, cortex->pulse_mapping)) {
+                    cortex->neurons[IDX2D(x, y, cortex->width)].value += value;
                 }
             }
         }
     }
 }
 
-void f2d_dfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value) {
-    if (starting_index + count < field->width * field->height) {
+void c2d_dfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value) {
+    if (starting_index + count < cortex->width * cortex->height) {
         // Loop through count.
-        for (field_size_t i = starting_index; i < starting_index + count; i++) {
-            field->neurons[i].value += value;
+        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
+            cortex->neurons[i].value += value;
         }
     }
 }
 
-void f2d_rfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t max_value) {
-    if (starting_index + count < field->width * field->height) {
+void c2d_rfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value) {
+    if (starting_index + count < cortex->width * cortex->height) {
         // Loop through count.
-        for (field_size_t i = starting_index; i < starting_index + count; i++) {
-            field->neurons[i].value += rand() % max_value;
+        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
+            cortex->neurons[i].value += rand() % max_value;
         }
     }
 }
 
-void f2d_sfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t value, field_size_t spread) {
-    if ((starting_index + count) * spread < field->width * field->height) {
+void c2d_sfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value, cortex_size_t spread) {
+    if ((starting_index + count) * spread < cortex->width * cortex->height) {
         // Loop through count.
-        for (field_size_t i = starting_index; i < starting_index + count; i++) {
-            field->neurons[i * spread].value += value;
+        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
+            cortex->neurons[i * spread].value += value;
         }
     }
 }
 
-void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t count, neuron_value_t max_value, field_size_t spread) {
-    if ((starting_index + count) * spread < field->width * field->height) {
+void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value, cortex_size_t spread) {
+    if ((starting_index + count) * spread < cortex->width * cortex->height) {
         // Loop through count.
-        for (field_size_t i = starting_index; i < starting_index + count; i++) {
-            field->neurons[i * spread].value += rand() % max_value;
+        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
+            cortex->neurons[i * spread].value += rand() % max_value;
         }
     }
 }
 
-void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
+void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     uint32_t random;
 
     #pragma omp parallel for
-    for (field_size_t y = 0; y < prev_field->height; y++) {
-        for (field_size_t x = 0; x < prev_field->width; x++) {
+    for (cortex_size_t y = 0; y < prev_cortex->height; y++) {
+        for (cortex_size_t x = 0; x < prev_cortex->width; x++) {
             // Retrieve the involved neurons.
-            neuron_t prev_neuron = prev_field->neurons[IDX2D(x, y, prev_field->width)];
-            neuron_t* next_neuron = &(next_field->neurons[IDX2D(x, y, prev_field->width)]);
+            neuron_t prev_neuron = prev_cortex->neurons[IDX2D(x, y, prev_cortex->width)];
+            neuron_t* next_neuron = &(next_cortex->neurons[IDX2D(x, y, prev_cortex->width)]);
 
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
@@ -234,7 +234,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
               |             |
               +-|-|-|-|-|-|-+
             */
-            field_size_t nh_diameter = SQNH_DIAM(prev_field->nh_radius);
+            cortex_size_t nh_diameter = SQNH_DIAM(prev_cortex->nh_radius);
 
             nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
@@ -243,15 +243,15 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
                 for (nh_radius_t i = 0; i < nh_diameter; i++) {
                     // Exclude the central neuron from the list of neighbors.
-                    if (!(j == prev_field->nh_radius && i == prev_field->nh_radius)) {
+                    if (!(j == prev_cortex->nh_radius && i == prev_cortex->nh_radius)) {
                         // Fetch the current neighbor.
-                        neuron_t neighbor = prev_field->neurons[IDX2D(WRAP(x + (i - prev_field->nh_radius), prev_field->width),
-                                                                      WRAP(y + (j - prev_field->nh_radius), prev_field->height),
-                                                                      prev_field->width)];
+                        neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(x + (i - prev_cortex->nh_radius), prev_cortex->width),
+                                                                      WRAP(y + (j - prev_cortex->nh_radius), prev_cortex->height),
+                                                                      prev_cortex->width)];
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01) {
-                            if (neighbor.value > prev_field->fire_threshold) {
+                            if (neighbor.value > prev_cortex->fire_threshold) {
                                 next_neuron->value += prev_exc_mask & 0x01 ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
                             }
                             next_neuron->syn_count++;
@@ -261,24 +261,24 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-                        // 0x0000 -> 0 + 1 = 1, so the field evolves at every tick, meaning that there are no free ticks between evolutions.
-                        // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
-                        if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
+                        // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
+                        // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
+                        if ((prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0 &&
                             random % 10000 < 10) {
                             if (prev_ac_mask & 0x01U &&
-                                neighbor.pulse < prev_field->syngen_pulses_count) {
+                                neighbor.pulse < prev_cortex->syngen_pulses_count) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(prev_neuron.synac_mask);
                                 mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 next_neuron->synac_mask = ~mask;
                             } else if (!(prev_ac_mask & 0x01U) &&
-                                       neighbor.pulse > prev_field->syngen_pulses_count &&
-                                       prev_neuron.syn_count < prev_field->max_syn_count) {
+                                       neighbor.pulse > prev_cortex->syngen_pulses_count &&
+                                       prev_neuron.syn_count < prev_cortex->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (random % prev_field->inhexc_ratio == 0) {
+                                if (random % prev_cortex->inhexc_ratio == 0) {
                                     // Inhibitory.
                                     nh_mask_t mask = ~(prev_neuron.synex_mask);
                                     mask |= (0x01UL << IDX2D(i, j, nh_diameter));
@@ -305,7 +305,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
             }
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-            if (prev_neuron.value > prev_field->fire_threshold) {
+            if (prev_neuron.value > prev_cortex->fire_threshold) {
                 // Fired at the previous step.
                 next_neuron->value = DEFAULT_RECOVERY_VALUE;
 
@@ -314,7 +314,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                 next_neuron->pulse++;
             }
 
-            if ((prev_neuron.pulse_mask >> prev_field->pulse_window) & 0x01) {
+            if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01) {
                 // Decrease pulse if the oldest recorded pulse is active.
                 next_neuron->pulse--;
             }
@@ -323,7 +323,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
         }
     }
 
-    next_field->ticks_count++;
+    next_cortex->ticks_count++;
 }
 
 bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {

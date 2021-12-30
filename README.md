@@ -24,44 +24,44 @@ Once the installation is complete you can include the library by `#include <port
 During linking you can specify `-lportia` in order to link the compiled functions.
 
 ### Usage example
-The first step is to create and initialize two fields by:
+The first step is to create and initialize two cortexs by:
 ```
 // Define starting parameters.
-field_size_t field_width = 100;
-field_size_t field_height = 60;
+cortex_size_t cortex_width = 100;
+cortex_size_t cortex_height = 60;
 nh_radius_t nh_radius = 2;
 
 // Define the sampling interval, used later.
 ticks_count_t sampleWindow = 10;
 
-// Create the fields.
-field2d_t even_field;
-field2d_t odd_field;
+// Create the cortexs.
+cortex2d_t even_cortex;
+cortex2d_t odd_cortex;
 
-// Initialize the first field and copy it to the second.
-f2d_init(&even_field, field_width, field_height, nh_radius);
-odd_field = *f2d_copy(&even_field);
+// Initialize the first cortex and copy it to the second.
+c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+odd_cortex = *c2d_copy(&even_cortex);
 ```
-This will setup two identical 100x60 fields with default values.<br/>
-Optionally, before copying the first field to the second, its properties can be set by:
+This will setup two identical 100x60 cortexs with default values.<br/>
+Optionally, before copying the first cortex to the second, its properties can be set by:
 ```
-f2d_set_evol_step(&even_field, 0x20U);
-f2d_set_pulse_window(&even_field, 0x3A);
-f2d_set_syngen_beat(&even_field, 0.1F);
-f2d_set_max_touch(&even_field, 0.2F);
-f2d_set_sample_window(&even_field, sampleWindow);
+c2d_set_evol_step(&even_cortex, 0x20U);
+c2d_set_pulse_window(&even_cortex, 0x3A);
+c2d_set_syngen_beat(&even_cortex, 0.1F);
+c2d_set_max_touch(&even_cortex, 0.2F);
+c2d_set_sample_window(&even_cortex, sampleWindow);
 ```
-The two fields will be updated alternatively at each iteration step.
+The two cortexs will be updated alternatively at each iteration step.
 
-Now the field can already be deployed, but it's often useful to setup its inputs and outputs:
+Now the cortex can already be deployed, but it's often useful to setup its inputs and outputs:
 ```
 // Support variable for input sampling.
 ticks_count_t samplingBound = sampleWindow - 1;
 
 // Define an input rectangle (the area of neurons directly attached to inputs).
-// Since even_field and odd_field are 2D fields, inputs are arranged in a 2D surface.
+// Since even_cortex and odd_cortex are 2D cortexs, inputs are arranged in a 2D surface.
 // inputCoords contains the bound coordinates of the input rectangle as [x0, y0, x1, y1].
-field_size_t inputsCoords[] = {10, 5, 40, 20};
+cortex_size_t inputsCoords[] = {10, 5, 40, 20};
 
 // Allocate inputs according to the defined area.
 ticks_count_t* inputs = (ticks_count_t*) malloc((inputsCoords[2] - inputsCoords[0]) * (inputsCoords[3] - inputsCoords[1]) * sizeof(ticks_count_t));

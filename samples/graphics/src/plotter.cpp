@@ -14,45 +14,45 @@ float randomFloat(float min, float max) {
     return (random * range) + min;
 }
 
-void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions, bool random) {
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
+void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions, bool random) {
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
             if (random) {
-                xNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
-                yNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
+                xNeuronPositions[IDX2D(x, y, cortex->width)] = randomFloat(0, 1);
+                yNeuronPositions[IDX2D(x, y, cortex->width)] = randomFloat(0, 1);
             } else {
-                xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
-                yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
+                xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
+                yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
             }
         }
     }
 }
 
-void drawNeurons(field2d_t* field,
+void drawNeurons(cortex2d_t* cortex,
                  cv::Mat* image,
                  uint32_t textureWidth,
                  uint32_t textureHeight,
                  float* xNeuronPositions,
                  float* yNeuronPositions) {
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
+    for (cortex_size_t i = 0; i < cortex->height; i++) {
+        for (cortex_size_t j = 0; j < cortex->width; j++) {
+            neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
+            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             float radius = 3.0f;
             cv::Scalar* color;
 
             if (neuronValue < 0) {
                 color = new cv::Scalar(31 - 31 * neuronValue, 15 - 15 * neuronValue, 0);
-            } else if (currentNeuron->value > field->fire_threshold) {
+            } else if (currentNeuron->value > cortex->fire_threshold) {
                 color = new cv::Scalar(255, 255, 255, 255);
             } else {
                 color = new cv::Scalar(31 + 224 * neuronValue, 15 + 112 * neuronValue, 0);
             }
 
             cv::circle(*image,
-                       cv::Point(xNeuronPositions[IDX2D(j, i, field->width)] * textureWidth, yNeuronPositions[IDX2D(j, i, field->width)] * textureHeight),
+                       cv::Point(xNeuronPositions[IDX2D(j, i, cortex->width)] * textureWidth, yNeuronPositions[IDX2D(j, i, cortex->width)] * textureHeight),
                        radius,
                        *color,
                        cv::FILLED);
@@ -60,18 +60,18 @@ void drawNeurons(field2d_t* field,
     }
 }
 
-void drawSynapses(field2d_t* field,
+void drawSynapses(cortex2d_t* cortex,
                   cv::Mat* image,
                   uint32_t textureWidth,
                   uint32_t textureHeight,
                   float* xNeuronPositions,
                   float* yNeuronPositions) {
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            field_size_t neuronIndex = IDX2D(j, i, field->width);
-            neuron_t* currentNeuron = &(field->neurons[neuronIndex]);
+    for (cortex_size_t i = 0; i < cortex->height; i++) {
+        for (cortex_size_t j = 0; j < cortex->width; j++) {
+            cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
-            field_size_t nh_diameter = 2 * field->nh_radius + 1;
+            cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
             nh_mask_t nb_mask = currentNeuron->synac_mask;
             
@@ -79,15 +79,15 @@ void drawSynapses(field2d_t* field,
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
                     // Exclude the actual neuron from the list of neighbors.
                     // Also exclude wrapping.
-                    if (!(k == field->nh_radius && l == field->nh_radius) &&
-                        (j + (l - field->nh_radius)) >= 0 &&
-                        (j + (l - field->nh_radius)) < field->width &&
-                        (i + (k - field->nh_radius)) >= 0 &&
-                        (i + (k - field->nh_radius)) < field->height) {
+                    if (!(k == cortex->nh_radius && l == cortex->nh_radius) &&
+                        (j + (l - cortex->nh_radius)) >= 0 &&
+                        (j + (l - cortex->nh_radius)) < cortex->width &&
+                        (i + (k - cortex->nh_radius)) >= 0 &&
+                        (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        field_size_t neighborIndex = IDX2D(WRAP(j + (l - field->nh_radius), field->width),
-                                                           WRAP(i + (k - field->nh_radius), field->height),
-                                                           field->width);
+                        cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
+                                                           WRAP(i + (k - cortex->nh_radius), cortex->height),
+                                                           cortex->width);
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
                         if (nb_mask & 0x01) {
@@ -109,8 +109,8 @@ void drawSynapses(field2d_t* field,
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 100;
-    field_size_t field_height = 60;
+    cortex_size_t cortex_width = 100;
+    cortex_size_t cortex_height = 60;
     nh_radius_t nh_radius = 2;
     ticks_count_t plotInterval = 1000;
 
@@ -124,20 +124,20 @@ int main(int argc, char **argv) {
         case 1:
             break;
         case 2:
-            field_width = atoi(argv[1]);
+            cortex_width = atoi(argv[1]);
             break;
         case 3:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             break;
         case 4:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             break;
         case 5:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             plotInterval = atoi(argv[5]);
             break;
@@ -150,19 +150,23 @@ int main(int argc, char **argv) {
     srand(time(0));
 
     // Create network model.
-    field2d_t even_field;
-    field2d_t odd_field;
-    f2d_init(&even_field, field_width, field_height, nh_radius);
-    f2d_set_evol_step(&even_field, 0x8AU);
-    f2d_set_max_touch(&even_field, 0.22F);
-    f2d_set_syngen_beat(&even_field, 0.1F);
-    f2d_set_pulse_window(&even_field, 0x10U);
-    odd_field = *f2d_copy(&even_field);
+    cortex2d_t even_cortex;
+    cortex2d_t odd_cortex;
+    error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    if (error != 0) {
+        printf("Error %d during init\n", error);
+        exit(1);
+    }
+    c2d_set_evol_step(&even_cortex, 0x8AU);
+    c2d_set_max_touch(&even_cortex, 0.22F);
+    c2d_set_syngen_beat(&even_cortex, 0.1F);
+    c2d_set_pulse_window(&even_cortex, 0x10U);
+    odd_cortex = *c2d_copy(&even_cortex);
 
-    float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
-    float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
+    float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
+    float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
 
-    initPositions(&even_field, xNeuronPositions, yNeuronPositions, false);
+    initPositions(&even_cortex, xNeuronPositions, yNeuronPositions, false);
     
     // Create the texture to render.
     cv::Mat image = cv::Mat::zeros(textureHeight, textureWidth, CV_8UC3);
@@ -173,7 +177,7 @@ int main(int argc, char **argv) {
 
     ticks_count_t sample_step = 10;
 
-    field_size_t lInputsCoords[] = {5, 5, 30, 20};
+    cortex_size_t lInputsCoords[] = {5, 5, 30, 20};
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
 
     ticks_count_t samples_count = 0;
@@ -195,23 +199,23 @@ int main(int argc, char **argv) {
             counter = 0;
         }
         
-        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
-        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
+        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         // Only get new inputs according to the sample rate.
         if (i % sample_step == 0) {
             // Fetch input.
-            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
-                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
-                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_field->sample_window - 1));
+            for (cortex_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (cortex_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (prev_cortex->sample_window - 1));
                 }
             }
             samples_count = 0;
         }
 
-        // Feed the field.
+        // Feed the cortex.
         if (feeding) {
-            f2d_sample_sqfeed(prev_field, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
+            c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
         }
 
         if (counter % plotInterval == 0) {
@@ -219,10 +223,10 @@ int main(int argc, char **argv) {
             image.setTo(cv::Scalar(0, 0, 0));
 
             // Highlight input neurons.
-            for (field_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
-                for (field_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
+            for (cortex_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
+                for (cortex_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
                     cv::circle(image,
-                            cv::Point(xNeuronPositions[IDX2D(x, y, prev_field->width)] * textureWidth, yNeuronPositions[IDX2D(x, y, prev_field->width)] * textureHeight),
+                            cv::Point(xNeuronPositions[IDX2D(x, y, prev_cortex->width)] * textureWidth, yNeuronPositions[IDX2D(x, y, prev_cortex->width)] * textureHeight),
                             2.0f,
                             cv::Scalar(64, 64, 64),
                             1);
@@ -230,10 +234,10 @@ int main(int argc, char **argv) {
             }
 
             // Draw synapses.
-            drawSynapses(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+            drawSynapses(next_cortex, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // Draw neurons.
-            // drawNeurons(next_field, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
+            // drawNeurons(next_cortex, &image, textureWidth, textureHeight, xNeuronPositions, yNeuronPositions);
 
             // Draw input period.
             char periodString[100];
@@ -255,8 +259,8 @@ int main(int argc, char **argv) {
             usleep(5000);
         }
 
-        // Tick the field.
-        f2d_tick(prev_field, next_field);
+        // Tick the cortex.
+        c2d_tick(prev_cortex, next_cortex);
 
         samples_count ++;
     }

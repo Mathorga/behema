@@ -11,21 +11,21 @@ float randomFloat(float min, float max) {
     return (random * range) + min;
 }
 
-void initPositions(field2d_t* field, float* xNeuronPositions, float* yNeuronPositions, bool random) {
-    for (field_size_t y = 0; y < field->height; y++) {
-        for (field_size_t x = 0; x < field->width; x++) {
+void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions, bool random) {
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
             if (random) {
-                xNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
-                yNeuronPositions[IDX2D(x, y, field->width)] = randomFloat(0, 1);
+                xNeuronPositions[IDX2D(x, y, cortex->width)] = randomFloat(0, 1);
+                yNeuronPositions[IDX2D(x, y, cortex->width)] = randomFloat(0, 1);
             } else {
-                xNeuronPositions[IDX2D(x, y, field->width)] = (((float) x) + 0.5f) / (float) field->width;
-                yNeuronPositions[IDX2D(x, y, field->width)] = (((float) y) + 0.5f) / (float) field->height;
+                xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
+                yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
             }
         }
     }
 }
 
-void drawNeurons(field2d_t* field,
+void drawNeurons(cortex2d_t* cortex,
                  sf::RenderWindow* window,
                  sf::VideoMode videoMode,
                  float* xNeuronPositions,
@@ -33,13 +33,13 @@ void drawNeurons(field2d_t* field,
                  bool drawInfo,
                  sf::VideoMode desktopMode,
                  sf::Font font) {
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
+    for (cortex_size_t i = 0; i < cortex->height; i++) {
+        for (cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            neuron_t* currentNeuron = &(field->neurons[IDX2D(j, i, field->width)]);
+            neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) field->fire_threshold);
+            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             float radius = 3.0f;
 
@@ -47,20 +47,20 @@ void drawNeurons(field2d_t* field,
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            } else if (currentNeuron->value > field->fire_threshold) {
+            } else if (currentNeuron->value > cortex->fire_threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
             }
             
-            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, field->width)] * videoMode.height);
+            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.height);
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
 
             if (drawInfo) {
                 sf::Text valueText;
-                valueText.setPosition(xNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, field->width)] * desktopMode.height + 6.0f);
+                valueText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
                 valueText.setString(std::to_string(currentNeuron->value));
                 valueText.setFont(font);
                 valueText.setCharacterSize(8);
@@ -73,24 +73,24 @@ void drawNeurons(field2d_t* field,
     }
 }
 
-void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
-    for (field_size_t i = 0; i < field->height; i++) {
-        for (field_size_t j = 0; j < field->width; j++) {
-            field_size_t neuronIndex = IDX2D(j, i, field->width);
-            neuron_t* currentNeuron = &(field->neurons[neuronIndex]);
+void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+    for (cortex_size_t i = 0; i < cortex->height; i++) {
+        for (cortex_size_t j = 0; j < cortex->width; j++) {
+            cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
-            field_size_t nh_diameter = 2 * field->nh_radius + 1;
+            cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
             nh_mask_t nb_mask = currentNeuron->synac_mask;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
                     // Exclude the actual neuron from the list of neighbors.
-                    if (!(k == field->nh_radius && l == field->nh_radius)) {
+                    if (!(k == cortex->nh_radius && l == cortex->nh_radius)) {
                         // Fetch the current neighbor.
-                        field_size_t neighborIndex = IDX2D(WRAP(j + (l - field->nh_radius), field->width),
-                                                           WRAP(i + (k - field->nh_radius), field->height),
-                                                           field->width);
+                        cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
+                                                           WRAP(i + (k - cortex->nh_radius), cortex->height),
+                                                           cortex->width);
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
                         if (nb_mask & 0x01) {
@@ -116,31 +116,31 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
 }
 
 int main(int argc, char **argv) {
-    field_size_t field_width = 100;
-    field_size_t field_height = 60;
+    cortex_size_t cortex_width = 100;
+    cortex_size_t cortex_height = 60;
     nh_radius_t nh_radius = 2;
-    field_size_t inputs_count = 30;
-    field_size_t inputs_spread = 4;
+    cortex_size_t inputs_count = 30;
+    cortex_size_t inputs_spread = 4;
 
     // Input handling.
     switch (argc) {
         case 1:
             break;
         case 2:
-            field_width = atoi(argv[1]);
+            cortex_width = atoi(argv[1]);
             break;
         case 3:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             break;
         case 4:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             break;
         case 5:
-            field_width = atoi(argv[1]);
-            field_height = atoi(argv[2]);
+            cortex_width = atoi(argv[1]);
+            cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             inputs_count = atoi(argv[4]);
             break;
@@ -162,15 +162,15 @@ int main(int argc, char **argv) {
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
 
     // Create network model.
-    field2d_t even_field;
-    field2d_t odd_field;
-    f2d_init(&even_field, field_width, field_height, nh_radius);
-    odd_field = *f2d_copy(&even_field);
+    cortex2d_t even_cortex;
+    cortex2d_t odd_cortex;
+    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    odd_cortex = *c2d_copy(&even_cortex);
 
-    float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
-    float* yNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
+    float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
+    float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
 
-    initPositions(&even_field, xNeuronPositions, yNeuronPositions, randomPositions);
+    initPositions(&even_cortex, xNeuronPositions, yNeuronPositions, randomPositions);
     
     sf::ContextSettings settings;
     // settings.antialiasingLevel = 16;
@@ -188,8 +188,8 @@ int main(int argc, char **argv) {
         usleep(5000);
         counter++;
         
-        field2d_t* prev_field = i % 2 ? &odd_field : &even_field;
-        field2d_t* next_field = i % 2 ? &even_field : &odd_field;
+        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
                     switch (event.key.code) {
                         case sf::Keyboard::R:
                             randomPositions = !randomPositions;
-                            initPositions(prev_field, xNeuronPositions, yNeuronPositions, randomPositions);
+                            initPositions(prev_cortex, xNeuronPositions, yNeuronPositions, randomPositions);
                             break;
                         case sf::Keyboard::Escape:
                         case sf::Keyboard::Q:
@@ -224,9 +224,9 @@ int main(int argc, char **argv) {
             }
         }
 
-        // Feed the field.
+        // Feed the cortex.
         if (feeding && rand() % 100 > 10) {
-            f2d_rsfeed(prev_field, 0, inputs_count, 2 * DEFAULT_EXCITING_VALUE, inputs_spread);
+            c2d_rsfeed(prev_cortex, 0, inputs_count, 2 * DEFAULT_EXCITING_VALUE, inputs_spread);
         }
 
         if (counter % renderingInterval == 0) {
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            for (field_size_t i = 0; i < inputs_count; i++) {
+            for (cortex_size_t i = 0; i < inputs_count; i++) {
                 sf::CircleShape neuronCircle;
 
                 float radius = 10.0f;
@@ -252,17 +252,17 @@ int main(int argc, char **argv) {
             }
 
             // Draw neurons.
-            drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+            drawNeurons(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
 
             // Draw synapses.
-            drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            drawSynapses(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions);
 
             // End the current frame.
             window.display();
         }
 
-        // Tick the field.
-        f2d_tick(prev_field, next_field);
+        // Tick the cortex.
+        c2d_tick(prev_cortex, next_cortex);
     }
     return 0;
 }

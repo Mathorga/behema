@@ -9,7 +9,7 @@ Copyright (C) 2021 Luka Micheletti
 #ifndef __PORTIA__
 #define __PORTIA__
 
-#include "field.h"
+#include "cortex.h"
 #include "utils.h"
 
 #ifdef __CUDACC__

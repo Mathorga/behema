@@ -1,13 +1,13 @@
 /*
 *****************************************************************
-field.h
+cortex.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __FIELD__
-#define __FIELD__
+#ifndef __cortex__
+#define __cortex__
 
 #include <stdint.h>
 
@@ -72,7 +72,7 @@ typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
 typedef int8_t pulses_count_t;
 
-typedef int32_t field_size_t;
+typedef int32_t cortex_size_t;
 
 typedef enum {
     // Linear.
@@ -101,7 +101,7 @@ typedef struct {
     //                              ^
     pulse_mask_t pulse_mask;
 
-    // Amount of activations in the field's pulse window.
+    // Amount of activations in the cortex's pulse window.
     pulses_count_t pulse;
 
     // Current internal value.
@@ -111,10 +111,10 @@ typedef struct {
     syn_count_t syn_count;
 } neuron_t;
 
-/// 2D Field of neurons.
+/// 2D cortex of neurons.
 typedef struct {
-    field_size_t width;
-    field_size_t height;
+    cortex_size_t width;
+    cortex_size_t height;
     ticks_count_t ticks_count;
     ticks_count_t evol_step;
     pulses_count_t pulse_window;
@@ -138,6 +138,6 @@ typedef struct {
     pulse_mapping_t pulse_mapping;
 
     neuron_t* neurons;
-} field2d_t;
+} cortex2d_t;
 
 #endif
