@@ -104,10 +104,10 @@ void drawSynapses(field2d_t* field, sf::RenderWindow* window, sf::VideoMode vide
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(63, 127, 31, 200) : sf::Color(127, 100, 31, 200)),
+                                    excMask & 1 ? sf::Color(31, 100, 127, 200) : sf::Color(127, 100, 31, 200)),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(63, 127, 31, 50) : sf::Color(127, 100, 31, 50))
+                                    excMask & 1 ? sf::Color(31, 100, 127, 50) : sf::Color(127, 100, 31, 50))
                             };
 
                             window->draw(line, 2, sf::Lines);
@@ -178,14 +178,14 @@ int main(int argc, char **argv) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    f2d_set_evol_step(&even_field, 0x0FU);
+    f2d_set_evol_step(&even_field, 0x0AU);
     f2d_set_pulse_window(&even_field, 0x3AU);
     f2d_set_syngen_pulses_count(&even_field, 0x01U);
     f2d_set_syngen_beat(&even_field, 0.05F);
-    f2d_set_max_touch(&even_field, 0.2F);
+    f2d_set_max_touch(&even_field, 0.3F);
     f2d_set_sample_window(&even_field, sampleWindow);
     f2d_set_pulse_mapping(&even_field, PULSE_MAPPING_FPROP);
-    f2d_set_inhexc_ratio(&even_field, 0xFFU);
+    f2d_set_inhexc_ratio(&even_field, 0x0FU);
     odd_field = *f2d_copy(&even_field);
 
     float* xNeuronPositions = (float*) malloc(field_width * field_height * sizeof(float));
@@ -273,8 +273,6 @@ int main(int argc, char **argv) {
                 
                 cv::cvtColor(resized, frame, cv::COLOR_BGR2GRAY);
 
-                // system("clear");
-
                 resized.at<uint8_t>(cv::Point(0, 0));
                 for (field_size_t y = 0; y < lInputsCoords[3] - lInputsCoords[1]; y++) {
                     for (field_size_t x = 0; x < lInputsCoords[2] - lInputsCoords[0]; x++) {
@@ -282,14 +280,9 @@ int main(int argc, char **argv) {
                         lInputs[IDX2D(x, y, lInputsCoords[2] - lInputsCoords[0])] = map(val,
                                                                                         0, 255,
                                                                                         0, even_field.sample_window - 1);
-                        // printf("%c ", val > 200 ? '@' : val > 100 ? '~' : '.');
                     }
-                    // printf("\n");
                 }
                 sample_step = 0;
-
-                // cv::resize(frame, resized, cv::Size(300, 200), 0, 0, cv::INTER_NEAREST);
-                // imshow("Live", resized);
             }
 
             // Feed the field.

@@ -21,3 +21,7 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
     uint32_t slope = (output_end - output_start) / (input_end - input_start);
     return output_start + slope * (input - input_start);
 }
+
+void f2d_dump(field2d_t* field, char* file_name) {
+    
+}

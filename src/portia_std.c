@@ -71,11 +71,15 @@ field2d_t* f2d_copy(field2d_t* other) {
     return field;
 }
 
-void f2d_set_nhradius(field2d_t* field, nh_radius_t radius) {
-    // Only set radius if greater than zero.
-    if (radius > 0) {
-        field->nh_radius = radius;
+error_code_t f2d_set_nhradius(field2d_t* field, nh_radius_t radius) {
+    // Make sure the provided radius is valid.
+    if (radius <= 0 || SQNH_COUNT(SQNH_DIAM(radius)) > sizeof(nh_mask_t) * 8) {
+        return ERROR_NH_RADIUS_TOO_BIG;
     }
+
+    field->nh_radius = radius;
+
+    return NO_ERROR;
 }
 
 void f2d_set_nhmask(field2d_t* field, nh_mask_t mask) {
@@ -154,7 +158,7 @@ void f2d_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t
 void f2d_sample_sqfeed(field2d_t* field, field_size_t x0, field_size_t y0, field_size_t x1, field_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
     // Make sure the provided values are within the field size.
     if (x0 >= 0 && y0 >= 0 && x1 < field->width && y1 < field->height) {
-        // #pragma omp parallel for
+        #pragma omp parallel for
         for (field_size_t y = y0; y < y1; y++) {
             for (field_size_t x = x0; x < x1; x++) {
                 ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)];
@@ -205,7 +209,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
     uint32_t random;
 
-    // #pragma omp parallel for
+    #pragma omp parallel for
     for (field_size_t y = 0; y < prev_field->height; y++) {
         for (field_size_t x = 0; x < prev_field->width; x++) {
             // Retrieve the involved neurons.
@@ -322,8 +326,8 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
     next_field->ticks_count++;
 }
 
-bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
-    bool result = FALSE;
+bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+    bool_t result = FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input >= 0 && input < sample_window) {
@@ -345,7 +349,7 @@ bool pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_cou
     return result;
 }
 
-bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
     // x = sample_window - input;
     // |@| | | | | | | | | | -> x = 10;
@@ -361,8 +365,8 @@ bool pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ti
     return sample_step % (sample_window - input) == 0;
 }
 
-bool pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool result = FALSE;
+bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool_t result = FALSE;
     ticks_count_t upper = sample_window - 1;
 
     // sample_window = 10;
@@ -390,8 +394,8 @@ bool pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, tic
     return result;
 }
 
-bool pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool result = FALSE;
+bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool_t result = FALSE;
     double upper = sample_window - 1;
     double d_input = input;
 
