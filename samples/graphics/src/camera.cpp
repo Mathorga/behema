@@ -318,14 +318,14 @@ int main(int argc, char **argv) {
                 }
             }
 
-            // Draw neurons.
-            if (nDraw) {
-                drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
-            }
-
             // Draw synapses.
             if (sDraw) {
                 drawSynapses(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+            }
+
+            // Draw neurons.
+            if (nDraw) {
+                drawNeurons(next_field, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
             }
 
             sf::Text text;

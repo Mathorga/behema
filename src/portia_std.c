@@ -224,6 +224,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
               +-|-|-|-|-|-|-+
             */
             field_size_t nh_diameter = SQNH_DIAM(prev_field->nh_radius);
+            field_size_t nb_count = SQNH_COUNT(nh_diameter);
 
             nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
@@ -262,18 +263,18 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         // 0xFFFF -> 65535 + 1 = 65536, so the field never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if ((prev_field->ticks_count % (((evol_step_t) prev_field->evol_step) + 1)) == 0 &&
                             random % 10000 < 10) {
-                            if (prev_ac_mask & 0x01 &&
+                            if (prev_ac_mask & 0x01U &&
                                 neighbor.pulse < prev_field->syngen_pulses_count) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(prev_neuron.synac_mask);
-                                mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 next_neuron->synac_mask = ~mask;
-                            } else if (!(prev_ac_mask & 0x01) &&
+                            } else if (!(prev_ac_mask & 0x01U) &&
                                        neighbor.pulse > prev_field->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
-                                // printf("mask before %d %d: %lX\n", x, y, prev_ac_mask);
-                                next_neuron->synac_mask |= (0x01U << IDX2D(i, j, nh_diameter));
+                                // printf("neighbor %d %d neuron %d %d: %lX\n", i, j, x, y, prev_ac_mask);
+                                next_neuron->synac_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 // printf("mask after %d %d: %lX\n\n", x, y, next_neuron->synac_mask);
                                 // getchar();
 
@@ -281,19 +282,19 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                 if (random % prev_field->inhexc_ratio == 0) {
                                     // Inhibitory.
                                     nh_mask_t mask = ~(prev_neuron.synex_mask);
-                                    mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                    mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                     next_neuron->synex_mask = ~mask;
                                 } else {
                                     // Excitatory.
-                                    next_neuron->synex_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                    next_neuron->synex_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 }
                             }
                         }
                     }
 
                     // Shift the mask to check for the next neighbor.
-                    prev_ac_mask >>= 0x01;
-                    prev_exc_mask >>= 0x01;
+                    prev_ac_mask >>= 0x01U;
+                    prev_exc_mask >>= 0x01U;
                 }
             }
 
