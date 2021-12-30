@@ -250,9 +250,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                                       prev_cortex->width)];
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
-                        if (prev_ac_mask & 0x01) {
+                        if (prev_ac_mask & 0x01U) {
                             if (neighbor.value > prev_cortex->fire_threshold) {
-                                next_neuron->value += prev_exc_mask & 0x01 ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
+                                next_neuron->value += prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
                             }
                             next_neuron->syn_count++;
                         }
