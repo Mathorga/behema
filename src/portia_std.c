@@ -198,7 +198,7 @@ void f2d_rsfeed(field2d_t* field, field_size_t starting_index, field_size_t coun
 void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
     uint32_t random;
 
-    #pragma omp parallel for
+    // #pragma omp parallel for
     for (field_size_t y = 0; y < prev_field->height; y++) {
         for (field_size_t x = 0; x < prev_field->width; x++) {
             // Retrieve the involved neurons.
@@ -240,7 +240,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                                                       WRAP(y + (j - prev_field->nh_radius), prev_field->height),
                                                                       prev_field->width)];
 
-                        // Check if the last bit of the mask is 1 or 0: 1 = active input, 0 = inactive input.
+                        // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01) {
                             if (neighbor.value > prev_field->fire_threshold) {
                                 next_neuron->value += prev_exc_mask & 0x01 ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
@@ -250,6 +250,11 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
 
                         random = xorshf96();
                         // random = rand();
+
+                        // if (x >= 30 && y >= 15 && x < prev_field->width - 30 && y < prev_field->height && prev_ac_mask & 0x01) {
+                        //     printf("neighbor index %d %d of neuron %d %d: %lX\n", i, j, x, y, prev_ac_mask);
+                        //     getchar();
+                        // }
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
@@ -267,7 +272,10 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                        neighbor.pulse > prev_field->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
-                                next_neuron->synac_mask |= (0x01 << IDX2D(i, j, nh_diameter));
+                                // printf("mask before %d %d: %lX\n", x, y, prev_ac_mask);
+                                next_neuron->synac_mask |= (0x01U << IDX2D(i, j, nh_diameter));
+                                // printf("mask after %d %d: %lX\n\n", x, y, next_neuron->synac_mask);
+                                // getchar();
 
                                 // Define whether the new synapse is excitatory or inhibitory.
                                 if (random % prev_field->inhexc_ratio == 0) {
