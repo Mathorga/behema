@@ -17,6 +17,7 @@ Copyright (C) 2021 Luka Micheletti
 #include <string.h>
 #include <math.h>
 #include "field.h"
+#include "error.h"
 #include "utils.h"
 
 #ifdef __cplusplus
@@ -26,7 +27,7 @@ extern "C" {
 // Initialization functions:
 
 /// Initializes the given field with default values.
-void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
+error_code_t f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius);
 
 /// Returns a field with the same properties as the given one.
 field2d_t* f2d_copy(field2d_t* other);

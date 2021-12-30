@@ -1,6 +1,11 @@
 #include "portia_std.h"
 
-void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
+error_code_t f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radius_t nh_radius) {
+    if (SQNH_COUNT(SQNH_DIAM(nh_radius)) > sizeof(nh_mask_t) * 8) {
+        // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
+        return ERROR_NH_RADIUS_TOO_BIG;
+    }
+
     field->width = width;
     field->height = height;
     field->ticks_count = 0x00;
@@ -31,6 +36,8 @@ void f2d_init(field2d_t* field, field_size_t width, field_size_t height, nh_radi
             field->neurons[IDX2D(x, y, field->width)].pulse = 0x00u;
         }
     }
+
+    return NO_ERROR;
 }
 
 field2d_t* f2d_copy(field2d_t* other) {
@@ -224,12 +231,9 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
               +-|-|-|-|-|-|-+
             */
             field_size_t nh_diameter = SQNH_DIAM(prev_field->nh_radius);
-            field_size_t nb_count = SQNH_COUNT(nh_diameter);
 
             nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
-
-            // random = xorshf96();
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -250,12 +254,6 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                         }
 
                         random = xorshf96();
-                        // random = rand();
-
-                        // if (x >= 30 && y >= 15 && x < prev_field->width - 30 && y < prev_field->height && prev_ac_mask & 0x01) {
-                        //     printf("neighbor index %d %d of neuron %d %d: %lX\n", i, j, x, y, prev_ac_mask);
-                        //     getchar();
-                        // }
 
                         // Perform evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
@@ -273,10 +271,7 @@ void f2d_tick(field2d_t* prev_field, field2d_t* next_field) {
                                        neighbor.pulse > prev_field->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_field->max_syn_count) {
                                 // Add synapse.
-                                // printf("neighbor %d %d neuron %d %d: %lX\n", i, j, x, y, prev_ac_mask);
                                 next_neuron->synac_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
-                                // printf("mask after %d %d: %lX\n\n", x, y, next_neuron->synac_mask);
-                                // getchar();
 
                                 // Define whether the new synapse is excitatory or inhibitory.
                                 if (random % prev_field->inhexc_ratio == 0) {

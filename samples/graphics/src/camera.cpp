@@ -173,7 +173,11 @@ int main(int argc, char **argv) {
     // Create network model.
     field2d_t even_field;
     field2d_t odd_field;
-    f2d_init(&even_field, field_width, field_height, nh_radius);
+    error_code_t error = f2d_init(&even_field, field_width, field_height, nh_radius);
+    if (error != 0) {
+        printf("Error %d during init\n", error);
+        exit(1);
+    }
     f2d_set_evol_step(&even_field, 0x0FU);
     f2d_set_pulse_window(&even_field, 0x3AU);
     f2d_set_syngen_pulses_count(&even_field, 0x01U);
@@ -202,7 +206,7 @@ int main(int argc, char **argv) {
     int renderingInterval = 1;
 
     // Coordinates for input neurons.
-    field_size_t lInputsCoords[] = {30, 15, field_width - 30, field_height - 15};
+    field_size_t lInputsCoords[] = {field_width / 4, field_height / 4, (field_width / 4) * 3, (field_height / 4) * 3};
 
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
     ticks_count_t sample_step = samplingBound;
