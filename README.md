@@ -24,7 +24,7 @@ Once the installation is complete you can include the library by `#include <port
 During linking you can specify `-lportia` in order to link the compiled functions.
 
 ### Usage example
-The first step is to create and initialize two cortexs by:
+The first step is to create and initialize two cortexes by:
 ```
 // Define starting parameters.
 cortex_size_t cortex_width = 100;
@@ -34,7 +34,7 @@ nh_radius_t nh_radius = 2;
 // Define the sampling interval, used later.
 ticks_count_t sampleWindow = 10;
 
-// Create the cortexs.
+// Create the cortexes.
 cortex2d_t even_cortex;
 cortex2d_t odd_cortex;
 
@@ -42,7 +42,7 @@ cortex2d_t odd_cortex;
 c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
 odd_cortex = *c2d_copy(&even_cortex);
 ```
-This will setup two identical 100x60 cortexs with default values.<br/>
+This will setup two identical 100x60 cortexes with default values.<br/>
 Optionally, before copying the first cortex to the second, its properties can be set by:
 ```
 c2d_set_evol_step(&even_cortex, 0x20U);
@@ -51,7 +51,7 @@ c2d_set_syngen_beat(&even_cortex, 0.1F);
 c2d_set_max_touch(&even_cortex, 0.2F);
 c2d_set_sample_window(&even_cortex, sampleWindow);
 ```
-The two cortexs will be updated alternatively at each iteration step.
+The two cortexes will be updated alternatively at each iteration step.
 
 Now the cortex can already be deployed, but it's often useful to setup its inputs and outputs:
 ```
@@ -59,7 +59,7 @@ Now the cortex can already be deployed, but it's often useful to setup its input
 ticks_count_t samplingBound = sampleWindow - 1;
 
 // Define an input rectangle (the area of neurons directly attached to inputs).
-// Since even_cortex and odd_cortex are 2D cortexs, inputs are arranged in a 2D surface.
+// Since even_cortex and odd_cortex are 2D cortexes, inputs are arranged in a 2D surface.
 // inputCoords contains the bound coordinates of the input rectangle as [x0, y0, x1, y1].
 cortex_size_t inputsCoords[] = {10, 5, 40, 20};
 
