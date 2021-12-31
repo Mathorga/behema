@@ -27,14 +27,32 @@ void c2d_dump(cortex2d_t* cortex, char* file_name) {
     FILE* out_file = fopen(file_name, "w");
 
     // Write cortex metadata to the output file.
-    fwrite(cortex, sizeof(cortex2d_t), 1, out_file);
+    // fwrite(cortex, sizeof(cortex2d_t), 1, out_file);
+    fwrite(&(cortex->width), sizeof(cortex_size_t), 1, out_file);
+    fwrite(&(cortex->height), sizeof(cortex_size_t), 1, out_file);
+    fwrite(&(cortex->ticks_count), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->evol_step), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->pulse_window), sizeof(pulses_count_t), 1, out_file);
+
+    fwrite(&(cortex->nh_radius), sizeof(nh_radius_t), 1, out_file);
+    fwrite(&(cortex->fire_threshold), sizeof(neuron_value_t), 1, out_file);
+    fwrite(&(cortex->recovery_value), sizeof(neuron_value_t), 1, out_file);
+    fwrite(&(cortex->charge_value), sizeof(neuron_value_t), 1, out_file);
+    fwrite(&(cortex->decay_value), sizeof(neuron_value_t), 1, out_file);
+    fwrite(&(cortex->syngen_pulses_count), sizeof(pulses_count_t), 1, out_file);
+    fwrite(&(cortex->max_syn_count), sizeof(syn_count_t), 1, out_file);
+
+    fwrite(&(cortex->inhexc_ratio), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->sample_window), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, out_file);
+
 
     // Write all neurons.
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
-            fwrite(&(cortex->neurons), sizeof(neuron_t), cortex->width * cortex->height, out_file);
-        }
-    }
+    fwrite(&(cortex->neurons), sizeof(neuron_t), cortex->width * cortex->height, out_file);
+    // for (cortex_size_t y = 0; y < cortex->height; y++) {
+    //     for (cortex_size_t x = 0; x < cortex->width; x++) {
+    //     }
+    // }
 
     fclose(out_file);
 }
