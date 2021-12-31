@@ -21,6 +21,10 @@ unsigned long xorshf96(void);
 
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
 
+/// Dumps the cortex' content to a file.
+/// The file is created if not already present, overwritten otherwise.
+/// @param cortex The cortex to be written to file.
+/// @param file_name The destination file to write the cortex to.
 void c2d_dump(cortex2d_t* cortex, char* file_name);
 
 #ifdef __cplusplus
