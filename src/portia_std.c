@@ -104,7 +104,7 @@ void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window) {
     cortex->sample_window = sample_window;
 }
 
-void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_threshold_t threshold) {
+void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold) {
     cortex->fire_threshold = threshold;
 }
 

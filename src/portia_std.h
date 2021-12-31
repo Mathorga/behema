@@ -48,7 +48,7 @@ void c2d_set_pulse_window(cortex2d_t* cortex, pulses_count_t window);
 void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
 
 /// Sets the fire threshold for all neurons in the cortex.
-void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_threshold_t threshold);
+void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
 
 /// Sets the maximum allowable touch for each neuron in the network.
 /// A neuron touch is defined as its synapses count divided by its total neighbors count.

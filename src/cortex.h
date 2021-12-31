@@ -60,7 +60,6 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 
 typedef int16_t neuron_value_t;
-typedef uint8_t neuron_threshold_t;
 
 // A mask made of 8 bytes can hold up to 48 neighbors (i.e. radius = 3).
 // Using 16 bytes the radius can be up to 5 (120 neighbors).
@@ -121,7 +120,7 @@ typedef struct {
 
 
     nh_radius_t nh_radius;
-    neuron_threshold_t fire_threshold;
+    neuron_value_t fire_threshold;
     neuron_value_t recovery_value;
     neuron_value_t charge_value;
     neuron_value_t decay_value;

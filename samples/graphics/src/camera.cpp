@@ -217,6 +217,11 @@ int main(int argc, char **argv) {
     }
 
     for (int i = 0; window.isOpen(); i++) {
+        counter++;
+
+        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
+
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
         while (window.pollEvent(event)) {
@@ -243,6 +248,8 @@ int main(int argc, char **argv) {
                         case sf::Keyboard::S:
                             sDraw = !sDraw;
                             break;
+                        case sf::Keyboard::D:
+                            c2d_dump(prev_cortex, "out/test.c2d");
                         default:
                             break;
                     }
@@ -251,11 +258,6 @@ int main(int argc, char **argv) {
                     break;
             }
         }
-
-        counter++;
-
-        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         // Only get new inputs according to the sample rate.
         if (feeding) {

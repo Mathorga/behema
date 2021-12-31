@@ -23,5 +23,18 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
 }
 
 void c2d_dump(cortex2d_t* cortex, char* file_name) {
+    // Open output file if possible.
+    FILE* out_file = fopen(file_name, "w");
 
+    // Write cortex metadata to the output file.
+    fwrite(cortex, sizeof(cortex2d_t), 1, out_file);
+
+    // Write all neurons.
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
+            fwrite(&(cortex->neurons), sizeof(neuron_t), cortex->width * cortex->height, out_file);
+        }
+    }
+
+    fclose(out_file);
 }
