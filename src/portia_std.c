@@ -183,7 +183,7 @@ void c2d_rfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t c
     if (starting_index + count < cortex->width * cortex->height) {
         // Loop through count.
         for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i].value += rand() % max_value;
+            cortex->neurons[i].value += xorshf96() % max_value;
         }
     }
 }
@@ -201,7 +201,7 @@ void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t 
     if ((starting_index + count) * spread < cortex->width * cortex->height) {
         // Loop through count.
         for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i * spread].value += rand() % max_value;
+            cortex->neurons[i * spread].value += xorshf96() % max_value;
         }
     }
 }
