@@ -74,12 +74,13 @@ typedef int8_t pulses_count_t;
 typedef int32_t cortex_size_t;
 
 typedef enum {
+    // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
     // Linear.
-    PULSE_MAPPING_LINEAR,
+    PULSE_MAPPING_LINEAR = 0x10000,
     // Floored proportional.
-    PULSE_MAPPING_FPROP,
+    PULSE_MAPPING_FPROP = 0x10001,
     // Rounded proportional.
-    PULSE_MAPPING_RPROP,
+    PULSE_MAPPING_RPROP = 0x10002,
 } pulse_mapping_t;
 
 /// Neuron.

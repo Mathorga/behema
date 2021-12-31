@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     c2d_set_evol_step(&even_cortex, 0x0AU);
     c2d_set_pulse_window(&even_cortex, 0x3AU);
     c2d_set_syngen_pulses_count(&even_cortex, 0x01U);
-    c2d_set_syngen_beat(&even_cortex, 0.05F);
+    // c2d_set_syngen_beat(&even_cortex, 0.05F);
     c2d_set_max_touch(&even_cortex, 0.3F);
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
@@ -249,7 +249,7 @@ int main(int argc, char **argv) {
                             sDraw = !sDraw;
                             break;
                         case sf::Keyboard::D:
-                            c2d_dump(prev_cortex, "out/test.c2d");
+                            c2d_to_file(prev_cortex, (char*) "out/test.c2d");
                         default:
                             break;
                     }
