@@ -48,6 +48,12 @@ camera: create
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
 	@printf "\nCreated $@!\n"
 
+video: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
+	@printf "\nCreated $@!\n"
+
 create:
 	$(MKDIR) $(BLD_DIR)
 	$(MKDIR) $(BIN_DIR)

@@ -158,6 +158,7 @@ int main(int argc, char **argv) {
             exit(0);
             break;
     }
+
     ticks_count_t samplingBound = sampleWindow - 1;
 
     cam.open(0);
@@ -206,8 +207,10 @@ int main(int argc, char **argv) {
 
     // Coordinates for input neurons.
     cortex_size_t lInputsCoords[] = {cortex_width / 4, cortex_height / 4, (cortex_width / 4) * 3, (cortex_height / 4) * 3};
-
     ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
+
+    cv::Size inputSize = cv::Size(lInputsCoords[2] - lInputsCoords[0], lInputsCoords[3] - lInputsCoords[1]);
+
     ticks_count_t sample_step = samplingBound;
 
     sf::Font font;
@@ -270,7 +273,7 @@ int main(int argc, char **argv) {
                 }
 
                 cv::Mat resized;
-                cv::resize(frame, resized, cv::Size(lInputsCoords[2] - lInputsCoords[0], lInputsCoords[3] - lInputsCoords[1]));
+                cv::resize(frame, resized, inputSize);
                 
                 cv::cvtColor(resized, frame, cv::COLOR_BGR2GRAY);
 
@@ -284,6 +287,10 @@ int main(int argc, char **argv) {
                     }
                 }
                 sample_step = 0;
+
+                cv::resize(frame, resized, inputSize * 10, 0, 0, cv::INTER_NEAREST);
+                cv::imshow("Preview", resized);
+                cv::waitKey(1);
             }
 
             // Feed the cortex.
