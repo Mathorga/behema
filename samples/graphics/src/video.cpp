@@ -68,6 +68,8 @@ int main(int argc, char **argv) {
 
     ticks_count_t sample_step = samplingBound;
 
+    int frameCount = 0;
+
     for (int i = 0; ; i++) {
         cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
         cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
@@ -108,11 +110,13 @@ int main(int argc, char **argv) {
             //     c2d_to_file(&even_cortex, (char *) "out/video.c2d");
             //     break;
             // }
-        }
 
-        // if (i % 100 == 0) {
-        //     printf("Frame %d\n", i);
-        // }
+            if (frameCount % 100 == 0) {
+                printf("Frame %d\n", frameCount);
+            }
+
+            frameCount++;
+        }
 
         // Feed the cortex.
         c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
