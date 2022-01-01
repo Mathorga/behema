@@ -110,9 +110,9 @@ int main(int argc, char **argv) {
             // }
         }
 
-        if (i % 100 == 0) {
-            printf("Frame %d\n", i);
-        }
+        // if (i % 100 == 0) {
+        //     printf("Frame %d\n", i);
+        // }
 
         // Feed the cortex.
         c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
