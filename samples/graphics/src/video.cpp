@@ -75,10 +75,10 @@ int main(int argc, char **argv) {
 
         if (sample_step > samplingBound) {
             // Fetch input.
-            cap.read(frame);
+            bool validFrame = cap.read(frame);
             // cap >> frame;
 
-            if (frame.empty()) {
+            if (!validFrame) {
                 // Write cortex to file and exit.
                 c2d_to_file(&even_cortex, (char *) "out/video.c2d");
                 break;
@@ -103,11 +103,15 @@ int main(int argc, char **argv) {
             // cv::resize(frame, resized, inputSize * 10, 0, 0, cv::INTER_NEAREST);
             // cv::imshow("Result", resized);
 
-            // if (cv::waitKey(5) >= 0) {
+            // if (cv::waitKey(1) >= 0) {
             //     // Write cortex to file and exit.
             //     c2d_to_file(&even_cortex, (char *) "out/video.c2d");
             //     break;
             // }
+        }
+
+        if (i % 100 == 0) {
+            printf("Frame %d\n", i);
         }
 
         // Feed the cortex.
