@@ -138,8 +138,10 @@ int main(int argc, char **argv) {
 
     initPositions(&cortex, xNeuronPositions, yNeuronPositions);
     
-    // create the window
-    sf::RenderWindow window(desktopMode, "Inspect");
+    // Create the window
+    sf::ContextSettings settings;
+    settings.antialiasingLevel = 8;
+    sf::RenderWindow window(desktopMode, "Inspect", sf::Style::Default, settings);
     
     bool showInfo = false;
     bool nDraw = true;
@@ -158,6 +160,25 @@ int main(int argc, char **argv) {
                 case sf::Event::Closed:
                     // Close requested event: close the window.
                     window.close();
+                    break;
+                case sf::Event::KeyReleased:
+                    switch (event.key.code) {
+                        case sf::Keyboard::Escape:
+                        case sf::Keyboard::Q:
+                            window.close();
+                            break;
+                        case sf::Keyboard::I:
+                            showInfo = !showInfo;
+                            break;
+                        case sf::Keyboard::N:
+                            nDraw = !nDraw;
+                            break;
+                        case sf::Keyboard::S:
+                            sDraw = !sDraw;
+                            break;
+                        default:
+                            break;
+                    }
                     break;
                 default:
                     break;
