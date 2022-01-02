@@ -72,7 +72,7 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
 
             cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            nh_mask_t synMask = currentNeuron->synac_mask;
+            nh_mask_t acMask = currentNeuron->synac_mask;
             nh_mask_t excMask = currentNeuron->synex_mask;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
@@ -86,11 +86,11 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
                         cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
-                                                           WRAP(i + (k - cortex->nh_radius), cortex->height),
-                                                           cortex->width);
+                                                            WRAP(i + (k - cortex->nh_radius), cortex->height),
+                                                            cortex->width);
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (synMask & 1) {
+                        if (acMask & 1) {
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
@@ -105,10 +105,89 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                     }
 
                     // Shift the mask to check for the next neighbor.
-                    synMask >>= 1;
+                    acMask >>= 1;
                     excMask >>= 1;
                 }
             }
+        }
+    }
+}
+
+void highlightNeuron(cortex2d_t* cortex,
+                     sf::RenderWindow* window,
+                     sf::VideoMode videoMode,
+                     int* passedNeurons,
+                     int* passedNeuronsSize,
+                     float* xNeuronPositions,
+                     float* yNeuronPositions,
+                     int xFocus,
+                     int yFocus) {
+    passedNeurons[*passedNeuronsSize] = IDX2D(xFocus, yFocus, cortex->width);
+    (*passedNeuronsSize)++;
+
+    cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
+
+    int neuronIndex = IDX2D(xFocus, yFocus, cortex->width);
+
+    neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
+
+    nh_mask_t acMask = currentNeuron->synac_mask;
+    nh_mask_t excMask = currentNeuron->synex_mask;
+    
+    // Loop through neighbors.
+    for (nh_radius_t y = 0; y < nh_diameter; y++) {
+        for (nh_radius_t x = 0; x < nh_diameter; x++) {
+            // Exclude the actual neuron from the list of neighbors.
+            // Also exclude wrapping.
+            if (!(x == cortex->nh_radius && y == cortex->nh_radius)) {
+                // Fetch the current neighbor.
+                cortex_size_t neighborIndex = IDX2D(WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                                                    WRAP(yFocus + (y - cortex->nh_radius), cortex->height),
+                                                    cortex->width);
+
+                bool passed = false;
+
+                for (int i = 0; i < *passedNeuronsSize; i++) {
+                    if (passedNeurons[i] == neighborIndex) {
+                        passed = true;
+                    }
+                }
+
+                if (acMask & 0x01U && !passed) {
+                    if ((xFocus + (x - cortex->nh_radius)) >= 0 &&
+                        (xFocus + (x - cortex->nh_radius)) < cortex->width &&
+                        (yFocus + (y - cortex->nh_radius)) >= 0 &&
+                        (yFocus + (y - cortex->nh_radius)) < cortex->height) {
+                        // Draw synapse.
+                        sf::Vertex line[] = {
+                            sf::Vertex(
+                                {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
+                                sf::Color(255, 255, 255, 255)),
+                            sf::Vertex(
+                                {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
+                                sf::Color(255, 255, 255, 150))
+                        };
+
+                        window->draw(line, 2, sf::Lines);
+                    }
+
+                    // Recall.
+                    highlightNeuron(cortex,
+                                    window,
+                                    videoMode,
+                                    passedNeurons,
+                                    passedNeuronsSize,
+                                    xNeuronPositions,
+                                    yNeuronPositions,
+                                    WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                                    WRAP(yFocus + (y - cortex->nh_radius), cortex->height));
+                    return;
+                }
+            }
+
+            // Shift the mask to check for the next neighbor.
+            acMask >>= 1;
+            excMask >>= 1;
         }
     }
 }
@@ -146,6 +225,8 @@ int main(int argc, char **argv) {
     bool showInfo = false;
     bool nDraw = true;
     bool sDraw = true;
+    int xFocus = -1;
+    int yFocus = -1;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -180,6 +261,17 @@ int main(int argc, char **argv) {
                             break;
                     }
                     break;
+                case sf::Event::MouseButtonReleased:
+                    {
+                        sf::Vector2i mousePos =  sf::Mouse::getPosition(window);
+                        float xPos = ((float) mousePos.x) / ((float) window.getSize().x);
+                        float yPos = ((float) mousePos.y) / ((float) window.getSize().y);
+                        int xTmp = (int) (xPos * cortex.width);
+                        int yTmp = (int) (yPos * cortex.height);
+                        xFocus = xTmp == xFocus ? -1 : xTmp;
+                        yFocus = yTmp == yFocus ? -1 : yTmp;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -196,6 +288,23 @@ int main(int argc, char **argv) {
         // Draw neurons.
         if (nDraw) {
             drawNeurons(&cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+        }
+
+        if (xFocus != -1 && yFocus != -1) {
+            // Keep track of visited neurons.
+            int passedNeurons[cortex.width * cortex.height];
+            int* passedNeuronsSize = (int*) malloc(sizeof(int));
+            (*passedNeuronsSize) = 0;
+
+            highlightNeuron(&cortex,
+                            &window,
+                            desktopMode,
+                            passedNeurons,
+                            passedNeuronsSize,
+                            xNeuronPositions,
+                            yNeuronPositions,
+                            xFocus,
+                            yFocus);
         }
 
         // End the current frame.
