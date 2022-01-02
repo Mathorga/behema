@@ -153,7 +153,7 @@ void highlightNeuron(cortex2d_t* cortex,
                     }
                 }
 
-                if (acMask & 0x01U && !passed) {
+                if (acMask & 0x01U && !passed && *passedNeuronsSize < 100) {
                     if ((xFocus + (x - cortex->nh_radius)) >= 0 &&
                         (xFocus + (x - cortex->nh_radius)) < cortex->width &&
                         (yFocus + (y - cortex->nh_radius)) >= 0 &&
@@ -220,13 +220,14 @@ int main(int argc, char **argv) {
     // Create the window
     sf::ContextSettings settings;
     settings.antialiasingLevel = 8;
-    sf::RenderWindow window(desktopMode, "Inspect", sf::Style::Default, settings);
+    sf::RenderWindow window(desktopMode, cortexFileName, sf::Style::Default, settings);
     
     bool showInfo = false;
     bool nDraw = true;
     bool sDraw = true;
     int xFocus = -1;
     int yFocus = -1;
+    bool mouseIn = false;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -261,15 +262,21 @@ int main(int argc, char **argv) {
                             break;
                     }
                     break;
-                case sf::Event::MouseButtonReleased:
+                case sf::Event::MouseEntered:
+                    mouseIn = true;
+                    break;
+                case sf::Event::MouseLeft:
+                    mouseIn = false;
+                    break;
+                case sf::Event::MouseMoved:
                     {
                         sf::Vector2i mousePos =  sf::Mouse::getPosition(window);
                         float xPos = ((float) mousePos.x) / ((float) window.getSize().x);
                         float yPos = ((float) mousePos.y) / ((float) window.getSize().y);
                         int xTmp = (int) (xPos * cortex.width);
                         int yTmp = (int) (yPos * cortex.height);
-                        xFocus = xTmp == xFocus ? -1 : xTmp;
-                        yFocus = yTmp == yFocus ? -1 : yTmp;
+                        xFocus = xTmp;
+                        yFocus = yTmp;
                     }
                     break;
                 default:
@@ -290,7 +297,7 @@ int main(int argc, char **argv) {
             drawNeurons(&cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
         }
 
-        if (xFocus != -1 && yFocus != -1) {
+        if (mouseIn && xFocus != -1 && yFocus != -1) {
             // Keep track of visited neurons.
             int passedNeurons[cortex.width * cortex.height];
             int* passedNeuronsSize = (int*) malloc(sizeof(int));

@@ -83,6 +83,14 @@ typedef enum {
     PULSE_MAPPING_RPROP = 0x10002,
 } pulse_mapping_t;
 
+typedef struct {
+    cortex_size_t x0;
+    cortex_size_t y0;
+    cortex_size_t x1;
+    cortex_size_t y1;
+    ticks_count_t sample_window;
+} input2d_t;
+
 /// Neuron.
 typedef struct {
     // Neighborhood connections pattern (SYNapse ACtivation state):

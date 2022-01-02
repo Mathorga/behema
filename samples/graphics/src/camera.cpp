@@ -179,9 +179,9 @@ int main(int argc, char **argv) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    c2d_set_evol_step(&even_cortex, 0x0AU);
+    c2d_set_evol_step(&even_cortex, 0x01U);
     c2d_set_pulse_window(&even_cortex, 0x3AU);
-    c2d_set_syngen_pulses_count(&even_cortex, 0x01U);
+    c2d_set_syngen_pulses_count(&even_cortex, 0x02U);
     c2d_set_max_touch(&even_cortex, 0.3F);
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);

@@ -26,6 +26,9 @@ extern "C" {
 
 // Initialization functions:
 
+error_code_t i2d_init(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_window);
+// error_code_t i2d_
+
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
@@ -49,6 +52,11 @@ void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
 
 /// Sets the fire threshold for all neurons in the cortex.
 void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
+
+/// Sets the maximum number of (input) synapses for the neurons of the cortex.
+/// @param cortex The cortex to edit.
+/// @param syn_count The max number of allowable synapses.
+void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count);
 
 /// Sets the maximum allowable touch for each neuron in the network.
 /// A neuron touch is defined as its synapses count divided by its total neighbors count.

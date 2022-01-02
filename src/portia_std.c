@@ -108,6 +108,10 @@ void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold) {
     cortex->fire_threshold = threshold;
 }
 
+void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count) {
+    cortex->max_syn_count = syn_count;
+}
+
 void c2d_set_max_touch(cortex2d_t* cortex, float touch) {
     // Only set touch if a valid value is provided.
     if (touch <= 1 && touch >= 0) {
@@ -272,7 +276,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 next_neuron->synac_mask = ~mask;
                             } else if (!(prev_ac_mask & 0x01U) &&
-                                       neighbor.pulse > prev_cortex->syngen_pulses_count &&
+                                       neighbor.pulse >= prev_cortex->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_cortex->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
