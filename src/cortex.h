@@ -89,6 +89,8 @@ typedef struct {
     cortex_size_t x1;
     cortex_size_t y1;
     ticks_count_t sample_window;
+    pulse_mapping_t pulse_mapping;
+    ticks_count_t* values;
 } input2d_t;
 
 /// Neuron.
