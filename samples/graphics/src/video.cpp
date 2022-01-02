@@ -111,6 +111,7 @@ int main(int argc, char **argv) {
             // }
 
             if (frameCount % 100 == 0) {
+                c2d_to_file(&even_cortex, (char *) "out/video.c2d");
                 printf("Frame %d\n", frameCount);
             }
 
