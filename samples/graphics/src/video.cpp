@@ -16,6 +16,7 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
 
 int main(int argc, char **argv) {
     cv::Mat frame;
+    cv::Mat resized;
     cv::VideoCapture cap;
     char* fileName;
 
@@ -85,8 +86,6 @@ int main(int argc, char **argv) {
                 c2d_to_file(&even_cortex, (char *) "out/video.c2d");
                 break;
             }
-
-            cv::Mat resized;
             cv::resize(frame, resized, inputSize);
             
             cv::cvtColor(resized, frame, cv::COLOR_BGR2GRAY);
