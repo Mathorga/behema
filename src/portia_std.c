@@ -260,7 +260,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                                       prev_cortex->width)];
                         
                         // Compute the current synapse strength.
-                        uint8_t syn_strength = prev_str_mask_a & (prev_str_mask_b << 0x01U) & (prev_str_mask_c << 0x02U);
+                        uint8_t syn_strength = (prev_str_mask_a & 0x01U) | ((prev_str_mask_b & 0x01U) << 0x01U) | ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
@@ -304,9 +304,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         }
                     }
 
-                    // Shift the mask to check for the next neighbor.
+                    // Shift the masks to check for the next neighbor.
                     prev_ac_mask >>= 0x01U;
                     prev_exc_mask >>= 0x01U;
+                    prev_str_mask_a >>= 0x01U;
+                    prev_str_mask_b >>= 0x01U;
+                    prev_str_mask_c >>= 0x01U;
                 }
             }
 
