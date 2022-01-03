@@ -30,6 +30,9 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
         for (cortex_size_t x = 0; x < cortex->width; x++) {
             cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = DEFAULT_NH_MASK;
             cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = ~DEFAULT_NH_MASK;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
             cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00u;
             cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = DEFAULT_PULSE_MASK;
@@ -242,6 +245,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
             nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
+            nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
+            nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
+            nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -252,6 +258,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(x + (i - prev_cortex->nh_radius), prev_cortex->width),
                                                                       WRAP(y + (j - prev_cortex->nh_radius), prev_cortex->height),
                                                                       prev_cortex->width)];
+                        
+                        // Compute the current synapse strength.
+                        uint8_t syn_strength = prev_str_mask_a & (prev_str_mask_b << 0x01U) & (prev_str_mask_c << 0x02U);
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
