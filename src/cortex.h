@@ -95,15 +95,20 @@ typedef struct {
 
 /// Neuron.
 typedef struct {
-    // Neighborhood connections pattern (SYNapse ACtivation state):
+    // Neighborhood connections pattern (SYNapses ACtivation state):
     // 1|1|0
     // 0|x|1 => 1100x1100
     // 1|0|0
     nh_mask_t synac_mask;
 
-    // Neighborhood excitatory states pattern (SYNapse EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
+    // Neighborhood excitatory states pattern (SYNapses EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
     // Only values corresponding to active synapses are used.
     nh_mask_t synex_mask;
+    
+    // Neighborhood synapses strength pattern (SYNapses STRength). Defines a 3 bit value defined as [cba].
+    nh_mask_t synstr_mask_a;
+    nh_mask_t synstr_mask_b;
+    nh_mask_t synstr_mask_c;
 
     // Activation history pattern:
     //           |<--pulse_window-->|
