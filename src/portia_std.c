@@ -264,12 +264,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                     cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
 
                     // Exclude the central neuron from the list of neighbors.
-                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
-                        (!prev_cortex->wrapped &&
-                        neighbor_x >= 0 &&
-                        neighbor_y >= 0 &&
-                        neighbor_x < prev_cortex->width &&
-                        neighbor_y < prev_cortex->height)) {
+                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) ||
+                        prev_cortex->wrapped ||
+                        (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // Fetch the current neighbor.
                         neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(neighbor_x, prev_cortex->width),
                                                                        WRAP(neighbor_y, prev_cortex->height),
