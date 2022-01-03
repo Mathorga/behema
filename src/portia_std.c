@@ -24,6 +24,8 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
     cortex->pulse_mapping = PULSE_MAPPING_FPROP;
 
+    cortex->wrapped = FALSE;
+
     cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
 
     for (cortex_size_t y = 0; y < cortex->height; y++) {
@@ -43,6 +45,8 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     return NO_ERROR;
 }
 
+// TODO Update signature to:
+// error_code_t c2d_copy(cortex2d_t* from, cortex2d_t* to);
 cortex2d_t* c2d_copy(cortex2d_t* other) {
     cortex2d_t* cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
     cortex->width = other->width;
@@ -139,6 +143,10 @@ void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
 
 void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio) {
     cortex->inhexc_ratio = inhexc_ratio;
+}
+
+void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped) {
+    cortex->wrapped = wrapped;
 }
 
 
@@ -252,20 +260,33 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
                 for (nh_radius_t i = 0; i < nh_diameter; i++) {
+                    cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
+                    cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
+
                     // Exclude the central neuron from the list of neighbors.
-                    if (!(j == prev_cortex->nh_radius && i == prev_cortex->nh_radius)) {
+                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
+                        (!prev_cortex->wrapped &&
+                        neighbor_x >= 0 &&
+                        neighbor_y >= 0 &&
+                        neighbor_x < prev_cortex->width &&
+                        neighbor_y < prev_cortex->height)) {
                         // Fetch the current neighbor.
-                        neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(x + (i - prev_cortex->nh_radius), prev_cortex->width),
-                                                                      WRAP(y + (j - prev_cortex->nh_radius), prev_cortex->height),
-                                                                      prev_cortex->width)];
+                        neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(neighbor_x, prev_cortex->width),
+                                                                       WRAP(neighbor_y, prev_cortex->height),
+                                                                       prev_cortex->width)];
                         
                         // Compute the current synapse strength.
                         uint8_t syn_strength = (prev_str_mask_a & 0x01U) | ((prev_str_mask_b & 0x01U) << 0x01U) | ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
+                            neuron_value_t nb_increment = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (syn_strength + 1);
                             if (neighbor.value > prev_cortex->fire_threshold) {
-                                next_neuron->value += prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE;
+                                if (next_neuron->value + nb_increment < prev_cortex->recovery_value) {
+                                    next_neuron->value = prev_cortex->recovery_value;
+                                } else {
+                                    next_neuron->value += nb_increment;
+                                }
                             }
                             next_neuron->syn_count++;
                         }

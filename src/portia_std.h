@@ -32,6 +32,8 @@ error_code_t i2d_map(input2d_t* input, uint32_t src_min, uint32_t src_max, uint3
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
+// TODO Update signature to:
+// error_code_t c2d_copy(cortex2d_t* from, cortex2d_t* to);
 /// Returns a cortex with the same properties as the given one.
 cortex2d_t* c2d_copy(cortex2d_t* other);
 
@@ -78,6 +80,8 @@ void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 
 /// Sets the proportion between excitatory and inhibitory generated synapses.
 void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio);
+
+void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 
 
 // Execution functions:

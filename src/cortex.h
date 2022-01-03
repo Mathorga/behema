@@ -42,7 +42,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_RECOVERY_VALUE -0x22
 #define DEFAULT_MAX_TOUCH 0.1F
 #define DEFAULT_EXCITING_VALUE 0x20U
-#define DEFAULT_INHIBITING_VALUE -0x20U
+#define DEFAULT_INHIBITING_VALUE -0x04U
 #define DEFAULT_DECAY_RATE 0x01U
 
 #define DEFAULT_SYNGEN_BEAT 0.01F
@@ -59,6 +59,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_INHEXC_RATIO 0x0AU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 
+typedef uint8_t byte;
+
 typedef int16_t neuron_value_t;
 
 // A mask made of 8 bytes can hold up to 48 neighbors (i.e. radius = 3).
@@ -72,6 +74,11 @@ typedef uint64_t pulse_mask_t;
 typedef int8_t pulses_count_t;
 
 typedef int32_t cortex_size_t;
+
+typedef enum {
+    FALSE = 0,
+    TRUE = 1
+} bool_t;
 
 typedef enum {
     // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
@@ -151,6 +158,8 @@ typedef struct {
 
     ticks_count_t sample_window;
     pulse_mapping_t pulse_mapping;
+
+    bool_t wrapped;
 
     neuron_t* neurons;
 } cortex2d_t;

@@ -10,13 +10,6 @@
 extern "C" {
 #endif
 
-typedef uint8_t byte;
-
-typedef enum {
-    FALSE = 0,
-    TRUE = 1
-} bool_t;
-
 // Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
 unsigned long xorshf96(void);
 
