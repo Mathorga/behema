@@ -37,25 +37,18 @@ Copyright (C) 2021 Luka Micheletti
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
+// Completely arbitrary values used to define a sort of acceptable cortex right away.
 #define DEFAULT_THRESHOLD 0x88U
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
-#define DEFAULT_MAX_TOUCH 0.1F
+#define DEFAULT_MAX_TOUCH 0.3F
 #define DEFAULT_EXCITING_VALUE 0x20U
 #define DEFAULT_INHIBITING_VALUE -0x04U
 #define DEFAULT_DECAY_RATE 0x01U
-
 #define DEFAULT_SYNGEN_BEAT 0.01F
-
-// Default mask is 1010101010101010101010101010101010101010101010101010101010101010 (AAAAAAAAAAAAAAAA in hex), meaning 50% of neighbors are connected.
-// #define DEFAULT_NH_MASK 0xAAAAAAAAAAAAAAAAu
-#define DEFAULT_NH_MASK 0x0000000000000000U
-#define DEFAULT_PULSE_MASK 0x0000000000000000U
-
-#define DEFAULT_PULSE_WINDOW 0x0AU
+#define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x00000001U
 #define EVOL_STEP_NEVER 0x0000FFFFU
-
 #define DEFAULT_INHEXC_RATIO 0x0AU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 

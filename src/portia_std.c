@@ -30,15 +30,15 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
 
     for (cortex_size_t y = 0; y < cortex->height; y++) {
         for (cortex_size_t x = 0; x < cortex->width; x++) {
-            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = DEFAULT_NH_MASK;
-            cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = ~DEFAULT_NH_MASK;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
-            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00u;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = DEFAULT_PULSE_MASK;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse = 0x00u;
+            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].pulse = 0x00U;
         }
     }
 
@@ -102,7 +102,8 @@ void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
 }
 
 void c2d_set_pulse_window(cortex2d_t* cortex, pulses_count_t window) {
-    if (window >= 0x00u && window < 0x3Fu) {
+    // The given window size must be between 0 and the pulse mask size (in bits).
+    if (window >= 0x00u && window < (sizeof(pulse_mask_t) * 8)) {
         cortex->pulse_window = window;
     }
 }

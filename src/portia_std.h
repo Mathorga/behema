@@ -81,6 +81,7 @@ void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 /// Sets the proportion between excitatory and inhibitory generated synapses.
 void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio);
 
+/// Sets whether the tick pass should wrap around the edges (pacman effect).
 void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 
 
