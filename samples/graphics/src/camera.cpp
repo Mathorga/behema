@@ -179,14 +179,7 @@ int main(int argc, char **argv) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    // c2d_set_evol_step(&even_cortex, 0x0AU);
-    // c2d_set_pulse_window(&even_cortex, 0x3AU);
-    c2d_set_syngen_pulses_count(&even_cortex, 0x02U);
-    c2d_set_max_touch(&even_cortex, 0.3F);
     c2d_set_sample_window(&even_cortex, sampleWindow);
-    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
-    c2d_set_inhexc_ratio(&even_cortex, 0x0FU);
-    c2d_set_wrapped(&even_cortex, TRUE);
     odd_cortex = *c2d_copy(&even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -207,10 +200,13 @@ int main(int argc, char **argv) {
     int renderingInterval = 1;
 
     // Coordinates for input neurons.
-    cortex_size_t lInputsCoords[] = {cortex_width / 4, cortex_height / 4, (cortex_width / 4) * 3, (cortex_height / 4) * 3};
-    ticks_count_t* lInputs = (ticks_count_t*) malloc((lInputsCoords[2] - lInputsCoords[0]) * (lInputsCoords[3] - lInputsCoords[1]) * sizeof(ticks_count_t));
+    cortex_size_t rInputsCoords[] = {cortex_width / 10, cortex_height / 10, (cortex_width / 10) * 3, (cortex_height / 10) * 3};
+    ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
+    cv::Size rInputSize = cv::Size(rInputsCoords[2] - rInputsCoords[0], rInputsCoords[3] - rInputsCoords[1]);
 
-    cv::Size inputSize = cv::Size(lInputsCoords[2] - lInputsCoords[0], lInputsCoords[3] - lInputsCoords[1]);
+    cortex_size_t bInputsCoords[] = {(cortex_width / 10) * 7, cortex_height / 10, (cortex_width / 10) * 9, (cortex_height / 10) * 3};
+    ticks_count_t* bInputs = (ticks_count_t*) malloc((bInputsCoords[2] - bInputsCoords[0]) * (bInputsCoords[3] - bInputsCoords[1]) * sizeof(ticks_count_t));
+    cv::Size bInputSize = cv::Size(bInputsCoords[2] - bInputsCoords[0], bInputsCoords[3] - bInputsCoords[1]);
 
     ticks_count_t sample_step = samplingBound;
 
@@ -274,28 +270,33 @@ int main(int argc, char **argv) {
                 }
 
                 cv::Mat resized;
-                cv::resize(frame, resized, inputSize);
+                cv::resize(frame, resized, rInputSize);
                 
-                cv::cvtColor(resized, frame, cv::COLOR_BGR2GRAY);
+                // cv::cvtColor(resized, frame, cv::COLOR_BGR2GRAY);
 
                 resized.at<uint8_t>(cv::Point(0, 0));
-                for (cortex_size_t y = 0; y < lInputsCoords[3] - lInputsCoords[1]; y++) {
-                    for (cortex_size_t x = 0; x < lInputsCoords[2] - lInputsCoords[0]; x++) {
-                        uint8_t val = frame.at<uint8_t>(cv::Point(x, y));
-                        lInputs[IDX2D(x, y, lInputsCoords[2] - lInputsCoords[0])] = map(val,
-                                                                                        0, 255,
-                                                                                        0, even_cortex.sample_window - 1);
+                for (cortex_size_t y = 0; y < rInputSize.height; y++) {
+                    for (cortex_size_t x = 0; x < rInputSize.width; x++) {
+                        cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
+                        rInputs[IDX2D(x, y, rInputSize.width)] = map(val[2],
+                                                                     0, 255,
+                                                                     0, even_cortex.sample_window - 1);
+                        bInputs[IDX2D(x, y, rInputSize.width)] = map(val[0],
+                                                                     0, 255,
+                                                                     0, even_cortex.sample_window - 1);
                     }
                 }
+
                 sample_step = 0;
 
-                cv::resize(frame, resized, inputSize * 10, 0, 0, cv::INTER_NEAREST);
-                cv::imshow("Preview", resized);
+                cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
+                cv::imshow("Preview", frame);
                 cv::waitKey(1);
             }
 
             // Feed the cortex.
-            c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
+            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE);
+            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXCITING_VALUE);
 
             sample_step++;
         }
@@ -305,24 +306,24 @@ int main(int argc, char **argv) {
             window.clear(sf::Color(31, 31, 31, 255));
 
             // Highlight input neurons.
-            for (cortex_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
-                for (cortex_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
-                    sf::CircleShape neuronCircle;
+            // for (cortex_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
+            //     for (cortex_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
+            //         sf::CircleShape neuronCircle;
 
-                    float radius = 6.0f;
-                    neuronCircle.setRadius(radius);
-                    neuronCircle.setOutlineThickness(1);
-                    neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 32));
+            //         float radius = 6.0f;
+            //         neuronCircle.setRadius(radius);
+            //         neuronCircle.setOutlineThickness(1);
+            //         neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 32));
 
-                    neuronCircle.setFillColor(sf::Color::Transparent);
+            //         neuronCircle.setFillColor(sf::Color::Transparent);
                     
-                    neuronCircle.setPosition(xNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.width, yNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.height);
+            //         neuronCircle.setPosition(xNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.width, yNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.height);
 
-                    // Center the spot.
-                    neuronCircle.setOrigin(radius, radius);
-                    window.draw(neuronCircle);
-                }
-            }
+            //         // Center the spot.
+            //         neuronCircle.setOrigin(radius, radius);
+            //         window.draw(neuronCircle);
+            //     }
+            // }
 
             // Draw synapses.
             if (sDraw) {
