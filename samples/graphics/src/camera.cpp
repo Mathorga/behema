@@ -289,9 +289,9 @@ int main(int argc, char **argv) {
 
                 sample_step = 0;
 
-                cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
-                cv::imshow("Preview", frame);
-                cv::waitKey(1);
+                // cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
+                // cv::imshow("Preview", frame);
+                // cv::waitKey(1);
             }
 
             // Feed the cortex.
@@ -304,26 +304,6 @@ int main(int argc, char **argv) {
         if (counter % renderingInterval == 0) {
             // Clear the window with black color.
             window.clear(sf::Color(31, 31, 31, 255));
-
-            // Highlight input neurons.
-            // for (cortex_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
-            //     for (cortex_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
-            //         sf::CircleShape neuronCircle;
-
-            //         float radius = 6.0f;
-            //         neuronCircle.setRadius(radius);
-            //         neuronCircle.setOutlineThickness(1);
-            //         neuronCircle.setOutlineColor(sf::Color(255, 255, 255, 32));
-
-            //         neuronCircle.setFillColor(sf::Color::Transparent);
-                    
-            //         neuronCircle.setPosition(xNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.width, yNeuronPositions[IDX2D(x, y, prev_cortex->width)] * desktopMode.height);
-
-            //         // Center the spot.
-            //         neuronCircle.setOrigin(radius, radius);
-            //         window.draw(neuronCircle);
-            //     }
-            // }
 
             // Draw synapses.
             if (sDraw) {

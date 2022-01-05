@@ -67,6 +67,8 @@ cortex2d_t* c2d_copy(cortex2d_t* other) {
     cortex->sample_window = other->sample_window;
     cortex->pulse_mapping = other->pulse_mapping;
 
+    cortex->wrapped = other->wrapped;
+
     cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
 
     for (cortex_size_t y = 0; y < other->height; y++) {
@@ -265,14 +267,13 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                     cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
 
                     // Exclude the central neuron from the list of neighbors.
-                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) ||
-                        prev_cortex->wrapped ||
-                        (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
+                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
+                        (prev_cortex->wrapped || (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height))) {
                         // Fetch the current neighbor.
                         neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(neighbor_x, prev_cortex->width),
                                                                        WRAP(neighbor_y, prev_cortex->height),
                                                                        prev_cortex->width)];
-                        
+
                         // Compute the current synapse strength.
                         uint8_t syn_strength = (prev_str_mask_a & 0x01U) | ((prev_str_mask_b & 0x01U) << 0x01U) | ((prev_str_mask_c & 0x01U) << 0x02U);
 
