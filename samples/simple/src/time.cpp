@@ -5,8 +5,8 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 150;
-    cortex_size_t cortex_height = 80;
+    cortex_size_t cortex_width = 200;
+    cortex_size_t cortex_height = 120;
     nh_radius_t nh_radius = 2;
     cortex_size_t inputs_count = 151;
 
@@ -54,21 +54,21 @@ int main(int argc, char **argv) {
         cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
         cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
-        // Only get new inputs according to the sample rate.
-        if (i % sample_rate == 0) {
-            // Fetch input.
-            for (cortex_size_t j = 0; j < inputs_count; j++) {
-                inputs[j] = 1 + (rand() % (sample_rate - 1));
-            }
-            samples_count = 0;
-        }
+        // // Only get new inputs according to the sample rate.
+        // if (i % sample_rate == 0) {
+        //     // Fetch input.
+        //     for (cortex_size_t j = 0; j < inputs_count; j++) {
+        //         inputs[j] = 1 + (rand() % (sample_rate - 1));
+        //     }
+        //     samples_count = 0;
+        // }
 
-        // Feed the cortex.
-        for (cortex_size_t k = 0; k < inputs_count; k++) {
-            if (samples_count % inputs[k]) {
-                prev_cortex->neurons[k].value += DEFAULT_EXCITING_VALUE;
-            }
-        }
+        // // Feed the cortex.
+        // for (cortex_size_t k = 0; k < inputs_count; k++) {
+        //     if (samples_count % inputs[k]) {
+        //         prev_cortex->neurons[k].value += DEFAULT_EXCITING_VALUE;
+        //     }
+        // }
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);

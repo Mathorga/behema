@@ -26,13 +26,19 @@ terminal: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
-	@printf "\nCreated terminal!\n"
+	@printf "\nCreated $@!\n"
 
 sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
-	@printf "\nCreated sampled!\n"
+	@printf "\nCreated $@!\n"
+
+time: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
+	@printf "\nCreated $@!\n"
 
 create:
 	$(MKDIR) $(BLD_DIR)
