@@ -246,7 +246,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
               +-|-|-|-|-|-|-+
               |             |
               |             |
-              |      @      |
+              |      X      |
               |             |
               |             |
               +-|-|-|-|-|-|-+
@@ -268,20 +268,27 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                     // Exclude the central neuron from the list of neighbors.
                     if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
                         (prev_cortex->wrapped || (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height))) {
+                        // The index of the current neighbor in the current neuron neighborhood.
+                        cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
+
                         // Fetch the current neighbor.
                         neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(neighbor_x, prev_cortex->width),
                                                                        WRAP(neighbor_y, prev_cortex->height),
                                                                        prev_cortex->width)];
 
                         // Compute the current synapse strength.
-                        uint8_t syn_strength = (prev_str_mask_a & 0x01U) | ((prev_str_mask_b & 0x01U) << 0x01U) | ((prev_str_mask_c & 0x01U) << 0x02U);
+                        uint64_t syn_strength = (prev_str_mask_a & 0x01U) |
+                                                ((prev_str_mask_b & 0x01U) << 0x01U) |
+                                                ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Defines whether to evolve or not.
                         bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
+                        random = xorshf96();
+
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
-                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (syn_strength + 1);
+                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (/*syn_strength*/ + 1);
                             if (neighbor.value > prev_cortex->fire_threshold) {
                                 if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
                                     next_neuron->value = prev_cortex->recovery_value;
@@ -291,43 +298,51 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                             }
                         }
 
-                        if (prev_neuron.syn_count > 100) {
-                            printf("SYN_COUTN %d\n", prev_neuron.syn_count);
-                        }
-
-                        random = xorshf96();
-
                         // Perform the evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-                        if (evolve && random % 10000 < 10) {
+                        if (evolve) {
                             if (prev_ac_mask & 0x01U &&
-                                neighbor.pulse < prev_cortex->syngen_pulses_count) {
+                                neighbor.pulse < prev_cortex->syngen_pulses_count &&
+                                random % (10000 * (/*syn_strength*/ + 1)) < 10) {
                                 // Delete synapse.
-                                nh_mask_t mask = ~(prev_neuron.synac_mask);
-                                mask |= (0x01UL << IDX2D(i, j, nh_diameter));
-                                next_neuron->synac_mask = ~mask;
+                                next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
 
                                 next_neuron->syn_count--;
                             } else if (!(prev_ac_mask & 0x01U) &&
                                        neighbor.pulse >= prev_cortex->syngen_pulses_count &&
-                                       prev_neuron.syn_count < prev_cortex->max_syn_count) {
+                                       prev_neuron.syn_count < prev_cortex->max_syn_count &&
+                                       random % 10000 < 10) {
                                 // Add synapse.
-                                next_neuron->synac_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
+                                next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
                                 // Define whether the new synapse is excitatory or inhibitory.
                                 if (random % prev_cortex->inhexc_ratio == 0) {
                                     // Inhibitory.
-                                    nh_mask_t mask = ~(prev_neuron.synex_mask);
-                                    mask |= (0x01UL << IDX2D(i, j, nh_diameter));
-                                    next_neuron->synex_mask = ~mask;
+                                    next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
                                 } else {
                                     // Excitatory.
-                                    next_neuron->synex_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
+                                    next_neuron->synex_mask |= (0x01UL << neighbor_nh_index);
                                 }
 
                                 next_neuron->syn_count++;
+                            }
+
+                            // Increment synapse strength if very active.
+                            if (prev_ac_mask & 0x01U) {
+                                if (syn_strength < MAX_SYN_STRENGTH /*&& random % 100 < 10*/) {
+                                    syn_strength++;
+                                    // next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    // next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    // next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_a &= ~(0x01UL << neighbor_nh_index);
+                                    next_neuron->synstr_mask_a |= ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_b &= ~(0x01UL << neighbor_nh_index);
+                                    next_neuron->synstr_mask_b |= (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
+                                    next_neuron->synstr_mask_c |= (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                }
                             }
 
                             // Increment evolutions count.

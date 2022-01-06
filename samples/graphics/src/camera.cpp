@@ -82,8 +82,11 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
 
             cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            nh_mask_t synMask = currentNeuron->synac_mask;
+            nh_mask_t acMask = currentNeuron->synac_mask;
             nh_mask_t excMask = currentNeuron->synex_mask;
+            nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
+            nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
+            nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
             
             for (nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (nh_radius_t l = 0; l < nh_diameter; l++) {
@@ -99,15 +102,26 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                                                            WRAP(i + (k - cortex->nh_radius), cortex->height),
                                                            cortex->width);
 
+                        // Compute the current synapse strength.
+                        uint8_t syn_strength = (str_mask_a & 0x01U) |
+                                               ((str_mask_b & 0x01U) << 0x01U) |
+                                               ((str_mask_c & 0x01U) << 0x02U);
+
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
-                        if (synMask & 1) {
+                        if (acMask & 1) {
                             sf::Vertex line[] = {
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(31, 100, 127, 200) : sf::Color(127, 100, 31, 200)),
+                                    excMask & 1
+                                        ? sf::Color(31, 100, 127, 25 * syn_strength)
+                                        : sf::Color(127, 100, 31, 25 * syn_strength)
+                                ),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
-                                    excMask & 1 ? sf::Color(31, 100, 127, 50) : sf::Color(127, 100, 31, 50))
+                                    excMask & 1
+                                        ? sf::Color(31, 100, 127, 5 * syn_strength)
+                                        : sf::Color(127, 100, 31, 5 * syn_strength)
+                                )
                             };
 
                             window->draw(line, 2, sf::Lines);
@@ -115,7 +129,7 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                     }
 
                     // Shift the mask to check for the next neighbor.
-                    synMask >>= 1;
+                    acMask >>= 1;
                     excMask >>= 1;
                 }
             }
@@ -332,7 +346,7 @@ int main(int argc, char **argv) {
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);
 
-        printf("Value %f\n", ((float) next_cortex->neurons[500].pulse) / ((float) next_cortex->pulse_window));
+        // printf("Value %f\n", ((float) next_cortex->neurons[500].pulse) / ((float) next_cortex->pulse_window));
     }
     
     return 0;

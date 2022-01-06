@@ -38,7 +38,12 @@ Copyright (C) 2021 Luka Micheletti
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
 #define EVOL_STEP_NEVER 0x0000FFFFU
-#define PULSE_WINDOW_LARGE 0x39U
+
+#define PULSE_WINDOW_LARGE 0x3FU
+#define PULSE_WINDOW_MID 0x1FU
+#define PULSE_WINDOW_SMALL 0x0AU
+
+#define MAX_SYN_STRENGTH 0x07U
 
 // Completely arbitrary values used to define a sort of acceptable cortex right away.
 #define DEFAULT_THRESHOLD 0x88U
@@ -49,7 +54,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_INHIBITING_VALUE -0x04U
 #define DEFAULT_DECAY_RATE 0x01U
 #define DEFAULT_SYNGEN_BEAT 0.05F
-#define DEFAULT_PULSE_WINDOW PULSE_WINDOW_LARGE
+#define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
