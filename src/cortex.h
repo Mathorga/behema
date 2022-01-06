@@ -75,7 +75,7 @@ typedef enum {
     TRUE = 1
 } bool_t;
 
-typedef enum pulse_mapping {
+typedef enum {
     // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
     // Linear.
     PULSE_MAPPING_LINEAR = 0x10000,
@@ -96,7 +96,7 @@ typedef struct input2d {
 } input2d_t;
 
 /// Neuron.
-typedef struct neuron {
+typedef struct {
     // Neighborhood connections pattern (SYNapses ACtivation state):
     // 1|1|0
     // 0|x|1 => 1100x1100
@@ -129,7 +129,7 @@ typedef struct neuron {
 } neuron_t;
 
 /// 2D cortex of neurons.
-typedef struct cortex2d {
+typedef struct {
     // Width of the cortex.
     cortex_size_t width;
 

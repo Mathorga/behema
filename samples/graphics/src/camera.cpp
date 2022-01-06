@@ -198,7 +198,6 @@ int main(int argc, char **argv) {
     bool sDraw = true;
 
     int counter = 0;
-    int renderingInterval = 1;
 
     // Coordinates for input neurons.
     cortex_size_t rInputsCoords[] = {0, 0, (cortex_width / 10) * 3, 1};
@@ -290,9 +289,9 @@ int main(int argc, char **argv) {
 
                 sample_step = 0;
 
-                cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
-                cv::imshow("Preview", frame);
-                cv::waitKey(1);
+                // cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
+                // cv::imshow("Preview", frame);
+                // cv::waitKey(1);
             }
 
             // Feed the cortex.
@@ -302,38 +301,38 @@ int main(int argc, char **argv) {
             sample_step++;
         }
 
-        if (counter % renderingInterval == 0) {
-            // Clear the window with black color.
-            window.clear(sf::Color(31, 31, 31, 255));
+        // Clear the window with black color.
+        window.clear(sf::Color(31, 31, 31, 255));
 
-            // Draw synapses.
-            if (sDraw) {
-                drawSynapses(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions);
-            }
-
-            // Draw neurons.
-            if (nDraw) {
-                drawNeurons(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
-            }
-
-            sf::Text text;
-            text.setPosition(10.0, 10.0);
-            text.setFont(font);
-            char string[100];
-            snprintf(string, 100, "%d", sample_step);
-            text.setString(string);
-            text.setCharacterSize(12);
-            text.setFillColor(sf::Color::White);
-            window.draw(text);
-
-            // End the current frame.
-            window.display();
-            
-            usleep(5000);
+        // Draw synapses.
+        if (sDraw) {
+            drawSynapses(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions);
         }
+
+        // Draw neurons.
+        if (nDraw) {
+            drawNeurons(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+        }
+
+        sf::Text text;
+        text.setPosition(10.0, 10.0);
+        text.setFont(font);
+        char string[100];
+        snprintf(string, 100, "%d", sample_step);
+        text.setString(string);
+        text.setCharacterSize(12);
+        text.setFillColor(sf::Color::White);
+        window.draw(text);
+
+        // End the current frame.
+        window.display();
+
+        usleep(5000);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);
+
+        printf("Value %f\n", ((float) next_cortex->neurons[500].pulse) / ((float) next_cortex->pulse_window));
     }
     
     return 0;
