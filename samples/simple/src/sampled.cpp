@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     c2d_set_syngen_beat(&even_cortex, 0.1F);
     c2d_set_max_touch(&even_cortex, 0.2F);
     c2d_set_sample_window(&even_cortex, sampleWindow);
-    odd_cortex = *c2d_copy(&even_cortex);
+    c2d_copy(&odd_cortex, &even_cortex);
 
     cortex_size_t lInputsCoords[] = {10, 5, 40, 20};
     cortex_size_t rInputsCoords[] = {even_cortex.width - 40, 5, even_cortex.width - 10, 20};

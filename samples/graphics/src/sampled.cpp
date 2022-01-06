@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
     c2d_set_syngen_beat(&even_cortex, 0.1F);
     c2d_set_max_touch(&even_cortex, 0.2F);
     c2d_set_sample_window(&even_cortex, 100);
-    odd_cortex = *c2d_copy(&even_cortex);
+    c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));

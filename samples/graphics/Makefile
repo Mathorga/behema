@@ -22,7 +22,7 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
-all: clean graphics sampled plotter
+all: clean graphics sampled plotter camera video inspect
 
 graphics: create
 	@printf "\n"

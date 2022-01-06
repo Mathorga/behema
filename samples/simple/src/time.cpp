@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     srand(time(NULL));
 
     c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    odd_cortex = *c2d_copy(&even_cortex);
+    c2d_copy(&odd_cortex, &even_cortex);
 
     for (int i = 0; i < 1000; i++) {
         cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;

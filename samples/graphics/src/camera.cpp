@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
-    odd_cortex = *c2d_copy(&even_cortex);
+    c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));

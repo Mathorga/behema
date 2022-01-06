@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
     cortex2d_t even_cortex;
     cortex2d_t odd_cortex;
     c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    odd_cortex = *c2d_copy(&even_cortex);
+    c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));

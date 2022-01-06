@@ -8,7 +8,8 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
 
     cortex->width = width;
     cortex->height = height;
-    cortex->ticks_count = 0x00;
+    cortex->ticks_count = 0x00U;
+    cortex->evols_count = 0x00U;
     cortex->evol_step = DEFAULT_EVOL_STEP;
     cortex->pulse_window = DEFAULT_PULSE_WINDOW;
 
@@ -45,39 +46,37 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     return NO_ERROR;
 }
 
-// TODO Update signature to:
-// error_code_t c2d_copy(cortex2d_t* from, cortex2d_t* to);
-cortex2d_t* c2d_copy(cortex2d_t* other) {
-    cortex2d_t* cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
-    cortex->width = other->width;
-    cortex->height = other->height;
-    cortex->ticks_count = other->ticks_count;
-    cortex->evol_step = other->evol_step;
-    cortex->pulse_window = other->pulse_window;
+error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
+    to->width = from->width;
+    to->height = from->height;
+    to->ticks_count = from->ticks_count;
+    to->evols_count = from->evols_count;
+    to->evol_step = from->evol_step;
+    to->pulse_window = from->pulse_window;
 
-    cortex->nh_radius = other->nh_radius;
-    cortex->fire_threshold = other->fire_threshold;
-    cortex->recovery_value = other->recovery_value;
-    cortex->charge_value = other->charge_value;
-    cortex->decay_value = other->decay_value;
-    cortex->syngen_pulses_count = other->syngen_pulses_count;
-    cortex->max_syn_count = other->max_syn_count;
-    cortex->inhexc_ratio = other->inhexc_ratio;
+    to->nh_radius = from->nh_radius;
+    to->fire_threshold = from->fire_threshold;
+    to->recovery_value = from->recovery_value;
+    to->charge_value = from->charge_value;
+    to->decay_value = from->decay_value;
+    to->syngen_pulses_count = from->syngen_pulses_count;
+    to->max_syn_count = from->max_syn_count;
+    to->inhexc_ratio = from->inhexc_ratio;
 
-    cortex->sample_window = other->sample_window;
-    cortex->pulse_mapping = other->pulse_mapping;
+    to->sample_window = from->sample_window;
+    to->pulse_mapping = from->pulse_mapping;
 
-    cortex->wrapped = other->wrapped;
+    to->wrapped = from->wrapped;
 
-    cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
+    to->neurons = (neuron_t*) malloc(to->width * to->height * sizeof(neuron_t));
 
-    for (cortex_size_t y = 0; y < other->height; y++) {
-        for (cortex_size_t x = 0; x < other->width; x++) {
-            cortex->neurons[IDX2D(x, y, other->width)] = other->neurons[IDX2D(x, y, other->width)];
+    for (cortex_size_t y = 0; y < from->height; y++) {
+        for (cortex_size_t x = 0; x < from->width; x++) {
+            to->neurons[IDX2D(x, y, from->width)] = from->neurons[IDX2D(x, y, from->width)];
         }
     }
 
-    return cortex;
+    return NO_ERROR;
 }
 
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
