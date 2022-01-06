@@ -236,7 +236,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
 
-            next_neuron->syn_count = 0x00u;
+            // next_neuron->syn_count = 0x00u;
 
             /* Compute the neighborhood diameter:
                    d = 7
@@ -276,33 +276,40 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         // Compute the current synapse strength.
                         uint8_t syn_strength = (prev_str_mask_a & 0x01U) | ((prev_str_mask_b & 0x01U) << 0x01U) | ((prev_str_mask_c & 0x01U) << 0x02U);
 
+                        // Defines whether to evolve or not.
+                        bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
+
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
-                            neuron_value_t nb_increment = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (syn_strength + 1);
+                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (syn_strength + 1);
                             if (neighbor.value > prev_cortex->fire_threshold) {
-                                if (next_neuron->value + nb_increment < prev_cortex->recovery_value) {
+                                if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
                                     next_neuron->value = prev_cortex->recovery_value;
                                 } else {
-                                    next_neuron->value += nb_increment;
+                                    next_neuron->value += neighbor_influence;
                                 }
                             }
-                            next_neuron->syn_count++;
+                        }
+
+                        if (prev_neuron.syn_count > 100) {
+                            printf("SYN_COUTN %d\n", prev_neuron.syn_count);
                         }
 
                         random = xorshf96();
 
-                        // Perform evolution phase if allowed.
+                        // Perform the evolution phase if allowed.
                         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
                         // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
                         // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-                        if ((prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0 &&
-                            random % 10000 < 10) {
+                        if (evolve && random % 10000 < 10) {
                             if (prev_ac_mask & 0x01U &&
                                 neighbor.pulse < prev_cortex->syngen_pulses_count) {
                                 // Delete synapse.
                                 nh_mask_t mask = ~(prev_neuron.synac_mask);
                                 mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 next_neuron->synac_mask = ~mask;
+
+                                next_neuron->syn_count--;
                             } else if (!(prev_ac_mask & 0x01U) &&
                                        neighbor.pulse >= prev_cortex->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_cortex->max_syn_count) {
@@ -319,7 +326,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                     // Excitatory.
                                     next_neuron->synex_mask |= (0x01UL << IDX2D(i, j, nh_diameter));
                                 }
+
+                                next_neuron->syn_count++;
                             }
+
+                            // Increment evolutions count.
+                            next_cortex->evols_count++;
                         }
                     }
 

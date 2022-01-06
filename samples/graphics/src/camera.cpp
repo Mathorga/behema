@@ -180,6 +180,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
+    c2d_set_evol_step(&even_cortex, 0x01U);
     c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -200,11 +201,11 @@ int main(int argc, char **argv) {
     int renderingInterval = 1;
 
     // Coordinates for input neurons.
-    cortex_size_t rInputsCoords[] = {cortex_width / 10, cortex_height / 10, (cortex_width / 10) * 3, (cortex_height / 10) * 3};
+    cortex_size_t rInputsCoords[] = {0, 0, (cortex_width / 10) * 3, 1};
     ticks_count_t* rInputs = (ticks_count_t*) malloc((rInputsCoords[2] - rInputsCoords[0]) * (rInputsCoords[3] - rInputsCoords[1]) * sizeof(ticks_count_t));
     cv::Size rInputSize = cv::Size(rInputsCoords[2] - rInputsCoords[0], rInputsCoords[3] - rInputsCoords[1]);
 
-    cortex_size_t bInputsCoords[] = {(cortex_width / 10) * 7, cortex_height / 10, (cortex_width / 10) * 9, (cortex_height / 10) * 3};
+    cortex_size_t bInputsCoords[] = {(cortex_width / 10) * 7, 0, cortex_width - 1, 1};
     ticks_count_t* bInputs = (ticks_count_t*) malloc((bInputsCoords[2] - bInputsCoords[0]) * (bInputsCoords[3] - bInputsCoords[1]) * sizeof(ticks_count_t));
     cv::Size bInputSize = cv::Size(bInputsCoords[2] - bInputsCoords[0], bInputsCoords[3] - bInputsCoords[1]);
 
@@ -289,9 +290,9 @@ int main(int argc, char **argv) {
 
                 sample_step = 0;
 
-                // cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
-                // cv::imshow("Preview", frame);
-                // cv::waitKey(1);
+                cv::resize(resized, frame, rInputSize * 15, 0, 0, cv::INTER_NEAREST);
+                cv::imshow("Preview", frame);
+                cv::waitKey(1);
             }
 
             // Feed the cortex.
