@@ -337,11 +337,11 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                     // next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
                                     // next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_a &= ~(0x01UL << neighbor_nh_index);
-                                    next_neuron->synstr_mask_a |= ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_a |= (((uint64_t) (syn_strength & 0x01U)) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b &= ~(0x01UL << neighbor_nh_index);
-                                    next_neuron->synstr_mask_b |= (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_b |= ((((uint64_t) (syn_strength >> 0x01U)) & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
-                                    next_neuron->synstr_mask_c |= (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_c |= ((((uint64_t) (syn_strength >> 0x02U)) & 0x01U) << neighbor_nh_index);
                                 }
                             }
 
