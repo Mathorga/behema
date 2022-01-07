@@ -99,13 +99,13 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
                         cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
-                                                           WRAP(i + (k - cortex->nh_radius), cortex->height),
-                                                           cortex->width);
+                                                            WRAP(i + (k - cortex->nh_radius), cortex->height),
+                                                            cortex->width);
 
                         // Compute the current synapse strength.
-                        uint8_t syn_strength = (str_mask_a & 0x01U) |
-                                               ((str_mask_b & 0x01U) << 0x01U) |
-                                               ((str_mask_c & 0x01U) << 0x02U);
+                        uint64_t syn_strength = (str_mask_a & 0x01U) |
+                                                ((str_mask_b & 0x01U) << 0x01U) |
+                                                ((str_mask_c & 0x01U) << 0x02U);
 
                         // Check if the last bit of the mask is 1 or zero, 1 = active input, 0 = inactive input.
                         if (acMask & 1) {
@@ -131,6 +131,9 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                     // Shift the mask to check for the next neighbor.
                     acMask >>= 1;
                     excMask >>= 1;
+                    str_mask_a >>= 1;
+                    str_mask_b >>= 1;
+                    str_mask_c >>= 1;
                 }
             }
         }
