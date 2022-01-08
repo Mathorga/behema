@@ -40,7 +40,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
-            float radius = 2.0F + 5.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
+            float radius = 2.0F + 5.0F * ((float) currentNeuron->tick_pulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -60,11 +60,11 @@ void drawNeurons(cortex2d_t* cortex,
             if (drawInfo) {
                 sf::Text pulseText;
                 pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
-                pulseText.setString(std::to_string(currentNeuron->pulse));
+                pulseText.setString(std::to_string(currentNeuron->tick_pulse));
                 pulseText.setFont(font);
                 pulseText.setCharacterSize(8);
                 pulseText.setFillColor(sf::Color::White);
-                if (currentNeuron->pulse != 0) {
+                if (currentNeuron->tick_pulse != 0) {
                     window->draw(pulseText);
                 }
             }
@@ -113,14 +113,14 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
                                     excMask & 1
-                                        ? sf::Color(31, 100, 127, 25 * syn_strength)
-                                        : sf::Color(127, 100, 31, 25 * syn_strength)
+                                        ? sf::Color(31, 100, 127, 25 * (syn_strength + 1))
+                                        : sf::Color(127, 100, 31, 25 * (syn_strength + 1))
                                 ),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
                                     excMask & 1
-                                        ? sf::Color(31, 100, 127, 5 * syn_strength)
-                                        : sf::Color(127, 100, 31, 5 * syn_strength)
+                                        ? sf::Color(31, 100, 127, 5 * (syn_strength + 1))
+                                        : sf::Color(127, 100, 31, 5 * (syn_strength + 1))
                                 )
                             };
 
@@ -349,7 +349,7 @@ int main(int argc, char **argv) {
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);
 
-        // printf("Value %f\n", ((float) next_cortex->neurons[500].pulse) / ((float) next_cortex->pulse_window));
+        // printf("Value %f\n", ((float) next_cortex->neurons[500].tick_pulse) / ((float) next_cortex->pulse_window));
     }
     
     return 0;

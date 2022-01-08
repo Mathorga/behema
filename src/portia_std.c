@@ -19,6 +19,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->charge_value = DEFAULT_EXCITING_VALUE;
     cortex->decay_value = DEFAULT_DECAY_RATE;
     cortex->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
+    cortex->synstr_pulses_count = DEFAULT_SYNSTR_BEAT * DEFAULT_PULSE_WINDOW;
     cortex->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
     cortex->inhexc_ratio = DEFAULT_INHEXC_RATIO;
 
@@ -38,8 +39,10 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
             cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].tick_pulse_mask = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].tick_pulse = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse_mask = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse = 0x00U;
         }
     }
 
@@ -60,6 +63,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->charge_value = from->charge_value;
     to->decay_value = from->decay_value;
     to->syngen_pulses_count = from->syngen_pulses_count;
+    to->synstr_pulses_count = from->synstr_pulses_count;
     to->max_syn_count = from->max_syn_count;
     to->inhexc_ratio = from->inhexc_ratio;
 
@@ -103,7 +107,7 @@ void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
 }
 
 void c2d_set_pulse_window(cortex2d_t* cortex, pulses_count_t window) {
-    // The given window size must be between 0 and the pulse mask size (in bits).
+    // The given window size must be between 0 and the tick_pulse mask size (in bits).
     if (window >= 0x00u && window < (sizeof(pulse_mask_t) * 8)) {
         cortex->pulse_window = window;
     }
@@ -259,6 +263,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
             nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
 
+            // Defines whether to evolve or not.
+            // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+            // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
+            // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
+            bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
+
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
                 for (nh_radius_t i = 0; i < nh_diameter; i++) {
@@ -281,14 +291,11 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                 ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                        // Defines whether to evolve or not.
-                        bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
-
                         random = xorshf96();
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
-                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * (/*syn_strength*/ + 1);
+                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? DEFAULT_EXCITING_VALUE : DEFAULT_INHIBITING_VALUE) * ((syn_strength / 4) + 1);
                             if (neighbor.value > prev_cortex->fire_threshold) {
                                 if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
                                     next_neuron->value = prev_cortex->recovery_value;
@@ -299,21 +306,20 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         }
 
                         // Perform the evolution phase if allowed.
-                        // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-                        // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
-                        // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
                         if (evolve) {
                             if (prev_ac_mask & 0x01U &&
-                                neighbor.pulse < prev_cortex->syngen_pulses_count &&
-                                random % (10000 * (/*syn_strength*/ + 1)) < 10) {
+                                neighbor.tick_pulse < prev_cortex->syngen_pulses_count &&
+                                // Only 0-strength synapses can be deleted.
+                                syn_strength <= 0x00U &&
+                                random % 10000 < 10) {
                                 // Delete synapse.
                                 next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
 
                                 next_neuron->syn_count--;
                             } else if (!(prev_ac_mask & 0x01U) &&
-                                       neighbor.pulse >= prev_cortex->syngen_pulses_count &&
+                                       neighbor.tick_pulse >= prev_cortex->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_cortex->max_syn_count &&
-                                       random % 10000 < 10) {
+                                       random % 10000 < 15) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -331,8 +337,17 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                             // Increment synapse strength if very active.
                             if (prev_ac_mask & 0x01U) {
-                                if (syn_strength < MAX_SYN_STRENGTH && random % 1000 < 10) {
+                                if (syn_strength < MAX_SYN_STRENGTH &&
+                                    neighbor.evol_pulse >= prev_cortex->synstr_pulses_count &&
+                                    random % 10000 < 10) {
                                     syn_strength++;
+                                    next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                } else if (syn_strength > 0x00U &&
+                                           neighbor.evol_pulse < prev_cortex->syngen_pulses_count &&
+                                           random % 10000 < 10) {
+                                    syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
@@ -365,17 +380,32 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 // Fired at the previous step.
                 next_neuron->value = DEFAULT_RECOVERY_VALUE;
 
-                // Store pulse.
-                next_neuron->pulse_mask |= 0x01;
-                next_neuron->pulse++;
+                // Store tick_pulse.
+                next_neuron->tick_pulse_mask |= 0x01;
+                next_neuron->tick_pulse++;
             }
 
-            if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01) {
-                // Decrease pulse if the oldest recorded pulse is active.
-                next_neuron->pulse--;
+            if ((prev_neuron.tick_pulse_mask >> prev_cortex->pulse_window) & 0x01) {
+                // Decrease tick_pulse if the oldest recorded tick_pulse is active.
+                next_neuron->tick_pulse--;
             }
 
-            next_neuron->pulse_mask <<= 0x01;
+            next_neuron->tick_pulse_mask <<= 0x01;
+
+            if (evolve) {
+                // Update evol pulse mask.
+                if (prev_neuron.tick_pulse > prev_cortex->syngen_pulses_count) {
+                    next_neuron->evol_pulse_mask |= 0x01;
+                    next_neuron->evol_pulse++;
+                }
+
+                if ((prev_neuron.evol_pulse_mask >> prev_cortex->pulse_window) & 0x01) {
+                    // Decrease evol_pulse if the oldest recorded evol_pulse is active.
+                    next_neuron->evol_pulse--;
+                }
+
+                next_neuron->evol_pulse_mask <<= 0x01;
+            }
         }
     }
 

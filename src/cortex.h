@@ -50,10 +50,11 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
 #define DEFAULT_MAX_TOUCH 0.3F
-#define DEFAULT_EXCITING_VALUE 0x20U
+#define DEFAULT_EXCITING_VALUE 0x10U
 #define DEFAULT_INHIBITING_VALUE -0x04U
 #define DEFAULT_DECAY_RATE 0x01U
 #define DEFAULT_SYNGEN_BEAT 0.05F
+#define DEFAULT_SYNSTR_BEAT 0.5F
 #define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
@@ -117,14 +118,25 @@ typedef struct {
     nh_mask_t synstr_mask_b;
     nh_mask_t synstr_mask_c;
 
+
     // Activation history pattern:
     //           |<--pulse_window-->|
     // xxxxxxxxxx01001010001010001001--------> t
     //                              ^
-    pulse_mask_t pulse_mask;
+    // Used to know the pulse frequency in a given moment (e.g. for syngen).
+    pulse_mask_t tick_pulse_mask;
 
-    // Amount of activations in the cortex's pulse window.
-    pulses_count_t pulse;
+    // Amount of activations in the cortex's tick_pulse window.
+    pulses_count_t tick_pulse;
+
+    // Activation history pattern.
+    // Used to know the pulse frequency over long periods of time (e.g. for synaptic plasticity).
+    // evol_pulse is just tick_pulse, but only updated every [evol_step] ticks (and with a different logic, but that's not crucial).
+    pulse_mask_t evol_pulse_mask;
+
+    // Amount of activations in the cortex's tick_pulse window.
+    pulses_count_t evol_pulse;
+
 
     // Current internal value.
     neuron_value_t value;
@@ -150,7 +162,8 @@ typedef struct {
     // Amount of ticks between each evolution.
     ticks_count_t evol_step;
 
-    // Length of the window used to count for pulses in the cortex' neurons.
+    // Length of the window used to count pulses in the cortex' neurons.
+    // TODO Switch "beat" and "pulse".
     pulses_count_t pulse_window;
 
 
@@ -160,7 +173,12 @@ typedef struct {
     neuron_value_t recovery_value;
     neuron_value_t charge_value;
     neuron_value_t decay_value;
+
+    // Pulses count (tick_pulse) needed to generate (or delete, if possible) a synapse between neurons.
     pulses_count_t syngen_pulses_count;
+
+    // Pulses count (evol_pulse) needed to strengthen an existing synapse between two neurons.
+    pulses_count_t synstr_pulses_count;
 
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
