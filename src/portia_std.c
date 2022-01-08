@@ -37,12 +37,13 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
-            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].tick_pulse_mask = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].tick_pulse = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse_mask = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
+            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].tot_syn_strength = 0x00U;
         }
     }
 
@@ -287,7 +288,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                                        prev_cortex->width)];
 
                         // Compute the current synapse strength.
-                        uint64_t syn_strength = (prev_str_mask_a & 0x01U) |
+                        syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
                                                 ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 

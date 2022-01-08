@@ -103,7 +103,7 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                                                             cortex->width);
 
                         // Compute the current synapse strength.
-                        uint64_t syn_strength = (str_mask_a & 0x01U) |
+                        syn_strength_t syn_strength = (str_mask_a & 0x01U) |
                                                 ((str_mask_b & 0x01U) << 0x01U) |
                                                 ((str_mask_c & 0x01U) << 0x02U);
 

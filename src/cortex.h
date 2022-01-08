@@ -69,6 +69,7 @@ typedef int16_t neuron_value_t;
 typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
 typedef uint8_t syn_count_t;
+typedef uint16_t syn_strength_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
@@ -143,6 +144,9 @@ typedef struct {
 
     // Amount of connected neighbors.
     syn_count_t syn_count;
+
+    // Total amount of syn strength from input neurons.
+    syn_strength_t tot_syn_strength;
 } neuron_t;
 
 /// 2D cortex of neurons.
