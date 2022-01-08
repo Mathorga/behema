@@ -59,6 +59,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
+#define DEFAULT_MAX_TOT_STRENGTH 0x0FU
 
 typedef uint8_t byte;
 
@@ -183,6 +184,8 @@ typedef struct {
 
     // Pulses count (evol_pulse) needed to strengthen an existing synapse between two neurons.
     pulses_count_t synstr_pulses_count;
+
+    syn_strength_t max_tot_strength;
 
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;

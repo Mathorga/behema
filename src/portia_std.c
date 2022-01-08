@@ -20,6 +20,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->decay_value = DEFAULT_DECAY_RATE;
     cortex->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     cortex->synstr_pulses_count = DEFAULT_SYNSTR_BEAT * DEFAULT_PULSE_WINDOW;
+    cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
     cortex->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
     cortex->inhexc_ratio = DEFAULT_INHEXC_RATIO;
 
@@ -65,6 +66,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->decay_value = from->decay_value;
     to->syngen_pulses_count = from->syngen_pulses_count;
     to->synstr_pulses_count = from->synstr_pulses_count;
+    to->max_tot_strength = from->max_tot_strength;
     to->max_syn_count = from->max_syn_count;
     to->inhexc_ratio = from->inhexc_ratio;
 
