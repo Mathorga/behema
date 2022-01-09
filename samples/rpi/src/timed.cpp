@@ -64,15 +64,22 @@ int main(int argc, char **argv) {
 
     initPositions(&even_cortex, xNeuronPositions, yNeuronPositions);
     
+    time_t startTime = time(NULL);
+    time_t endTime = time(NULL);
+    
     for (int i = 0;; i++) {
         cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
         cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         if (i % 1000 == 0) {
+            endTime = time(NULL);
+ 
             char fileName[100];
             snprintf(fileName, 100, "out/%lu.c2d", (unsigned long) time(NULL));
             c2d_to_file(prev_cortex, fileName);
-            printf("Saved file %s\n", fileName);
+            printf("Time passed: %ld, saved file %s\n", endTime - startTime, fileName);
+
+            // startTime = time(NULL);
         }
 
         c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
