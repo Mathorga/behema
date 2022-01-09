@@ -22,7 +22,6 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_width = 100;
     cortex_size_t cortex_height = 60;
     nh_radius_t nh_radius = 2;
-    ticks_count_t sampleWindow = 10;
 
     // Input handling.
     switch (argc) {
@@ -40,19 +39,11 @@ int main(int argc, char **argv) {
             cortex_height = atoi(argv[2]);
             nh_radius = atoi(argv[3]);
             break;
-        case 5:
-            cortex_width = atoi(argv[1]);
-            cortex_height = atoi(argv[2]);
-            nh_radius = atoi(argv[3]);
-            sampleWindow = atoi(argv[4]);
-            break;
         default:
-            printf("USAGE: sampled <width> <height> <nh_radius> <inputs_count>\n");
+            printf("USAGE: timed <width> <height> <nh_radius>\n");
             exit(0);
             break;
     }
-
-    ticks_count_t samplingBound = sampleWindow - 1;
 
     srand(time(NULL));
 
@@ -64,7 +55,6 @@ int main(int argc, char **argv) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
     c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_LINEAR);
     c2d_copy(&odd_cortex, &even_cortex);
@@ -74,23 +64,20 @@ int main(int argc, char **argv) {
 
     initPositions(&even_cortex, xNeuronPositions, yNeuronPositions);
     
-    bool feeding = false;
-    bool showInfo = false;
-    bool nDraw = true;
-    bool sDraw = true;
-
-    int counter = 0;
-
     for (int i = 0;; i++) {
-        counter++;
-
         cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
         cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
+
+        if (i % 1000 == 0) {
+            char fileName[100];
+            snprintf(fileName, 100, "out/%lu.c2d", (unsigned long) time(NULL));
+            c2d_to_file(prev_cortex, fileName);
+        }
 
         c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
         c2d_sqfeed(prev_cortex, cortex_width - 1, 20, cortex_width, 30, DEFAULT_EXCITING_VALUE / 2);
 
-        usleep(5000);
+        // usleep(5000);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);
