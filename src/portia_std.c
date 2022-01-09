@@ -16,7 +16,8 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->nh_radius = nh_radius;
     cortex->fire_threshold = DEFAULT_THRESHOLD;
     cortex->recovery_value = DEFAULT_RECOVERY_VALUE;
-    cortex->charge_value = DEFAULT_EXCITING_VALUE;
+    cortex->exc_value = DEFAULT_EXCITING_VALUE;
+    cortex->inh_value = DEFAULT_INHIBITING_VALUE;
     cortex->decay_value = DEFAULT_DECAY_RATE;
     cortex->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     cortex->synstr_pulses_count = DEFAULT_SYNSTR_BEAT * DEFAULT_PULSE_WINDOW;
@@ -62,7 +63,8 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->nh_radius = from->nh_radius;
     to->fire_threshold = from->fire_threshold;
     to->recovery_value = from->recovery_value;
-    to->charge_value = from->charge_value;
+    to->exc_value = from->exc_value;
+    to->inh_value = from->inh_value;
     to->decay_value = from->decay_value;
     to->syngen_pulses_count = from->syngen_pulses_count;
     to->synstr_pulses_count = from->synstr_pulses_count;
@@ -170,7 +172,7 @@ void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t co
 
 void c2d_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t value) {
     // Make sure the provided values are within the cortex size.
-    if (x0 >= 0 && y0 >= 0 && x1 < cortex->width && y1 < cortex->height) {
+    if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
         for (cortex_size_t y = y0; y < y1; y++) {
             for (cortex_size_t x = x0; x < x1; x++) {
                 cortex->neurons[IDX2D(x, y, cortex->width)].value += value;
@@ -181,7 +183,7 @@ void c2d_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_s
 
 void c2d_sample_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
     // Make sure the provided values are within the cortex size.
-    if (x0 >= 0 && y0 >= 0 && x1 < cortex->width && y1 < cortex->height) {
+    if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
         #pragma omp parallel for
         for (cortex_size_t y = y0; y < y1; y++) {
             for (cortex_size_t x = x0; x < x1; x++) {
@@ -322,7 +324,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                             } else if (!(prev_ac_mask & 0x01U) &&
                                        neighbor.tick_pulse >= prev_cortex->syngen_pulses_count &&
                                        prev_neuron.syn_count < prev_cortex->max_syn_count &&
-                                       random % 10000 < 15) {
+                                       random % 1000 < 10) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -341,19 +343,22 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                             // Increment synapse strength if very active.
                             if (prev_ac_mask & 0x01U) {
                                 if (syn_strength < MAX_SYN_STRENGTH &&
+                                    prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
                                     neighbor.evol_pulse >= prev_cortex->synstr_pulses_count &&
-                                    random % 10000 < 10) {
+                                    random % 1000 < 10) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
-                                           neighbor.evol_pulse < prev_cortex->syngen_pulses_count &&
-                                           random % 10000 < 10) {
+                                           neighbor.evol_pulse < prev_cortex->synstr_pulses_count &&
+                                           random % (10000 * syn_strength) < 10) {
                                     syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_neuron->tot_syn_strength--;
                                 }
                             }
 

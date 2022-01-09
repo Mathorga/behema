@@ -50,8 +50,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
 #define DEFAULT_MAX_TOUCH 0.3F
-#define DEFAULT_EXCITING_VALUE 0x10U
-#define DEFAULT_INHIBITING_VALUE -0x04U
+#define DEFAULT_EXCITING_VALUE 0x14U
+#define DEFAULT_INHIBITING_VALUE -0x06
 #define DEFAULT_DECAY_RATE 0x01U
 #define DEFAULT_SYNGEN_BEAT 0.05F
 #define DEFAULT_SYNSTR_BEAT 0.5F
@@ -59,7 +59,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
-#define DEFAULT_MAX_TOT_STRENGTH 0x0FU
+#define DEFAULT_MAX_TOT_STRENGTH 0x20U
 
 typedef uint8_t byte;
 
@@ -176,7 +176,8 @@ typedef struct {
     nh_radius_t nh_radius;
     neuron_value_t fire_threshold;
     neuron_value_t recovery_value;
-    neuron_value_t charge_value;
+    neuron_value_t exc_value;
+    neuron_value_t inh_value;
     neuron_value_t decay_value;
 
     // Pulses count (tick_pulse) needed to generate (or delete, if possible) a synapse between neurons.
