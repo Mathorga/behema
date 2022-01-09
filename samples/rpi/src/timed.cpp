@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
             char fileName[100];
             snprintf(fileName, 100, "out/%lu.c2d", (unsigned long) time(NULL));
             c2d_to_file(prev_cortex, fileName);
+            printf("Saved file %s\n", fileName);
         }
 
         c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
