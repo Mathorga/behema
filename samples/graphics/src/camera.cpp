@@ -316,10 +316,11 @@ int main(int argc, char **argv) {
             c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE * 2);
             c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXCITING_VALUE * 2);
 
+            c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
+            c2d_sqfeed(prev_cortex, cortex_width - 1, 20, cortex_width, 30, DEFAULT_EXCITING_VALUE / 2);
+
             sample_step++;
         }
-        c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
-        c2d_sqfeed(prev_cortex, cortex_width - 1, 20, cortex_width, 30, DEFAULT_EXCITING_VALUE / 2);
 
         // Clear the window with black color.
         window.clear(sf::Color(31, 31, 31, 255));
