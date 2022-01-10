@@ -233,9 +233,6 @@ void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t 
 }
 
 void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
-    uint32_t random_abs;
-    uint32_t random_rel;
-
     #pragma omp parallel for
     for (cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (cortex_size_t x = 0; x < prev_cortex->width; x++) {
@@ -297,8 +294,8 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                       ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                        random_abs = (prev_cortex->evols_count + prev_cortex->ticks_count + prev_neuron.value) % 0xFFFFU;
-                        random_rel = (random_abs + neighbor_nh_index) % 0xFFFFU;
+                        uint32_t random_abs = (prev_cortex->evols_count + prev_cortex->ticks_count + prev_neuron.value) % 0xFFFFU;
+                        uint32_t random_rel = (random_abs + neighbor_nh_index) % 0xFFFFU;
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
