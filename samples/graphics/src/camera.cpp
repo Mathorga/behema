@@ -113,14 +113,14 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                                 sf::Vertex(
                                     {xNeuronPositions[neighborIndex] * videoMode.width, yNeuronPositions[neighborIndex] * videoMode.height},
                                     excMask & 1
-                                        ? sf::Color(31, 100, 127, 25 * (syn_strength + 1))
-                                        : sf::Color(127, 100, 31, 25 * (syn_strength + 1))
+                                        ? sf::Color(31, 100, 127, 5 * (syn_strength + 1))
+                                        : sf::Color(127, 100, 31, 5 * (syn_strength + 1))
                                 ),
                                 sf::Vertex(
                                     {xNeuronPositions[neuronIndex] * videoMode.width, yNeuronPositions[neuronIndex] * videoMode.height},
                                     excMask & 1
-                                        ? sf::Color(31, 100, 127, 5 * (syn_strength + 1))
-                                        : sf::Color(127, 100, 31, 5 * (syn_strength + 1))
+                                        ? sf::Color(31, 100, 127, 25 * (syn_strength + 1))
+                                        : sf::Color(127, 100, 31, 25 * (syn_strength + 1))
                                 )
                             };
 
@@ -197,8 +197,8 @@ int main(int argc, char **argv) {
         exit(1);
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
-    c2d_set_evol_step(&even_cortex, 0x01U);
-    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_LINEAR);
+    c2d_set_evol_step(&even_cortex, 0x03U);
+    // c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_LINEAR);
     c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -348,12 +348,10 @@ int main(int argc, char **argv) {
         // End the current frame.
         window.display();
 
-        usleep(5000);
+        // usleep(5000);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);
-
-        // printf("Value %f\n", ((float) next_cortex->neurons[500].tick_pulse) / ((float) next_cortex->pulse_window));
     }
     
     return 0;
