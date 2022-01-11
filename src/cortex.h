@@ -60,6 +60,10 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 #define DEFAULT_MAX_TOT_STRENGTH 0x20U
+#define DEFAULT_SYNGEN_CHANCE 0x0A00U
+#define DEFAULT_SYNDEL_CHANCE 0x0A00U
+#define DEFAULT_SYNSTR_CHANCE 0x0F00U
+#define DEFAULT_SYNWK_CHANCE 0x0A00U
 
 typedef uint8_t byte;
 
@@ -75,6 +79,7 @@ typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
 typedef int8_t pulses_count_t;
+typedef uint16_t chance_t;
 
 typedef int32_t cortex_size_t;
 
@@ -110,11 +115,9 @@ typedef struct {
     // 0|x|1 => 1100x1100
     // 1|0|0
     nh_mask_t synac_mask;
-
     // Neighborhood excitatory states pattern (SYNapses EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
     // Only values corresponding to active synapses are used.
     nh_mask_t synex_mask;
-    
     // Neighborhood synapses strength pattern (SYNapses STRength). Defines a 3 bit value defined as [cba].
     nh_mask_t synstr_mask_a;
     nh_mask_t synstr_mask_b;
@@ -127,25 +130,20 @@ typedef struct {
     //                              ^
     // Used to know the pulse frequency in a given moment (e.g. for syngen).
     pulse_mask_t tick_pulse_mask;
-
     // Amount of activations in the cortex's tick_pulse window.
     pulses_count_t tick_pulse;
-
     // Activation history pattern.
     // Used to know the pulse frequency over long periods of time (e.g. for synaptic plasticity).
     // evol_pulse is just tick_pulse, but only updated every [evol_step] ticks (and with a different logic, but that's not crucial).
     pulse_mask_t evol_pulse_mask;
-
     // Amount of activations in the cortex's tick_pulse window.
     pulses_count_t evol_pulse;
 
 
     // Current internal value.
     neuron_value_t value;
-
     // Amount of connected neighbors.
     syn_count_t syn_count;
-
     // Total amount of syn strength from input neurons.
     syn_strength_t tot_syn_strength;
 } neuron_t;
@@ -154,19 +152,14 @@ typedef struct {
 typedef struct {
     // Width of the cortex.
     cortex_size_t width;
-
     // Height of the cortex.
     cortex_size_t height;
-
     // Ticks performed since cortex creation.
     ticks_count_t ticks_count;
-
     // Evolutions performed since cortex creation.
     ticks_count_t evols_count;
-
     // Amount of ticks between each evolution.
     ticks_count_t evol_step;
-
     // Length of the window used to count pulses in the cortex' neurons.
     // TODO Switch "beat" and "pulse".
     pulses_count_t pulse_window;
@@ -180,17 +173,24 @@ typedef struct {
     neuron_value_t inh_value;
     neuron_value_t decay_value;
 
+
+    // Chance of synapse generation (out of 0xFFFFU).
+    chance_t syngen_chance;
+    // Chance of synapse deletion (out of 0xFFFFU).
+    chance_t syndel_chance;
+    // Chance of synapse strengthening (out of 0xFFFFU).
+    chance_t synstr_chance;
+    // Chance of synapse weakening (out of 0xFFFFU).
+    chance_t synwk_chance;
+
+
     // Pulses count (tick_pulse) needed to generate (or delete, if possible) a synapse between neurons.
     pulses_count_t syngen_pulses_count;
-
     // Pulses count (evol_pulse) needed to strengthen an existing synapse between two neurons.
     pulses_count_t synstr_pulses_count;
-
     syn_strength_t max_tot_strength;
-
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
-
     // Proportion between excitatory and inhibitory generated synapses (e.g. inhexc_ratio = 10 => 9 exc, 1 inh).
     ticks_count_t inhexc_ratio;
 

@@ -19,6 +19,10 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->exc_value = DEFAULT_EXCITING_VALUE;
     cortex->inh_value = DEFAULT_INHIBITING_VALUE;
     cortex->decay_value = DEFAULT_DECAY_RATE;
+    cortex->syngen_chance = DEFAULT_SYNGEN_CHANCE;
+    cortex->syndel_chance = DEFAULT_SYNDEL_CHANCE;
+    cortex->synstr_chance = DEFAULT_SYNSTR_CHANCE;
+    cortex->synwk_chance = DEFAULT_SYNWK_CHANCE;
     cortex->syngen_pulses_count = DEFAULT_SYNGEN_BEAT * DEFAULT_PULSE_WINDOW;
     cortex->synstr_pulses_count = DEFAULT_SYNSTR_BEAT * DEFAULT_PULSE_WINDOW;
     cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
@@ -66,6 +70,10 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->exc_value = from->exc_value;
     to->inh_value = from->inh_value;
     to->decay_value = from->decay_value;
+    to->syngen_chance = from->syngen_chance;
+    to->syndel_chance = from->syndel_chance;
+    to->synstr_chance = from->synstr_chance;
+    to->synwk_chance = from->synwk_chance;
     to->syngen_pulses_count = from->syngen_pulses_count;
     to->synstr_pulses_count = from->synstr_pulses_count;
     to->max_tot_strength = from->max_tot_strength;
@@ -237,8 +245,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     for (cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (cortex_size_t x = 0; x < prev_cortex->width; x++) {
             // Retrieve the involved neurons.
-            neuron_t prev_neuron = prev_cortex->neurons[IDX2D(x, y, prev_cortex->width)];
-            neuron_t* next_neuron = &(next_cortex->neurons[IDX2D(x, y, prev_cortex->width)]);
+            cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
+            neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
+            neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
 
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
@@ -283,19 +292,26 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         (prev_cortex->wrapped || (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height))) {
                         // The index of the current neighbor in the current neuron neighborhood.
                         cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
+                        cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
+                                                             WRAP(neighbor_y, prev_cortex->height),
+                                                             prev_cortex->width);
 
                         // Fetch the current neighbor.
-                        neuron_t neighbor = prev_cortex->neurons[IDX2D(WRAP(neighbor_x, prev_cortex->width),
-                                                                       WRAP(neighbor_y, prev_cortex->height),
-                                                                       prev_cortex->width)];
+                        neuron_t neighbor = prev_cortex->neurons[neighbor_index];
 
                         // Compute the current synapse strength.
                         syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
                                                       ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                        uint32_t random_abs = (prev_cortex->evols_count + prev_cortex->ticks_count + prev_neuron.value) % 0xFFFFU;
-                        uint32_t random_rel = (random_abs + neighbor_nh_index) % 0xFFFFU;
+                        // uint32_t random_abs = ((prev_cortex->ticks_count + prev_cortex->evols_count) ^
+                        //                        (prev_cortex->ticks_count << prev_cortex->width)) % 0xFFFFU;
+                        chance_t random_abs = xorshf32() % 0xFFFFU;
+                        chance_t random_rel = random_abs;
+                        // uint32_t random_rel = (random_abs +
+                        //                        (neuron_index << neighbor_nh_index)) % 0xFFFFU;
+
+                        // printf("randoms %d %d\n", random_abs, random_rel);
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
@@ -313,7 +329,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         if (evolve) {
                             if (prev_ac_mask & 0x01U &&
                                 neighbor.tick_pulse < prev_cortex->syngen_pulses_count &&
-                                random_rel % 0xA0U == 0 &&
+                                random_rel < prev_cortex->syndel_chance &&
                                 // Only 0-strength synapses can be deleted.
                                 syn_strength <= 0x00U) {
                                 // Delete synapse.
@@ -322,7 +338,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->syn_count--;
                             } else if (!(prev_ac_mask & 0x01U) &&
                                        neighbor.tick_pulse >= prev_cortex->syngen_pulses_count &&
-                                       random_rel % 0x10U == 0 &&
+                                       random_rel < prev_cortex->syngen_chance &&
                                        prev_neuron.syn_count < prev_cortex->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
@@ -339,11 +355,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->syn_count++;
                             }
 
-                            // Increment synapse strength if very active.
+                            // Increment synapse strength if it's persistently active.
                             if (prev_ac_mask & 0x01U) {
                                 if (syn_strength < MAX_SYN_STRENGTH &&
                                     prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
-                                    random_rel % 0x20U == 0 &&
+                                    random_rel * (syn_strength + 1) < prev_cortex->synstr_chance &&
+                                    // prev_cortex->ticks_count % prev_cortex->evols_count == 0x00U &&
                                     neighbor.evol_pulse >= prev_cortex->synstr_pulses_count) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
@@ -352,7 +369,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                                     next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
-                                           random_rel % (0x20U * (syn_strength + 1)) == 0 &&
+                                           neighbor_index % (neighbor.evol_pulse + 1) == 0 &&
+                                           random_rel * (syn_strength + 1) < prev_cortex->synwk_chance &&
+                                        //    prev_cortex->ticks_count % prev_cortex->evols_count == 0x00U &&
                                            neighbor.evol_pulse < prev_cortex->synstr_pulses_count) {
                                     syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
