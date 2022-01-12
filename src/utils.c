@@ -1,34 +1,15 @@
 #include "utils.h"
 
-static uint32_t a = 0x01U;
-
-/* The state word must be initialized to non-zero */
+// The state word must be initialized to non-zero.
+static uint32_t state = 0x01U;
 uint32_t xorshf32() {
-    /* Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs" */
-    uint32_t x = a;
+    // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
+    uint32_t x = state;
     x ^= x << 13;
     x ^= x >> 17;
     x ^= x << 5;
-    return a = x;
+    return state = x;
 }
-
-static unsigned long x = 123456789;
-static unsigned long y = 362436069;
-static unsigned long z = 521288629;
-unsigned long xorshf96() {
-    unsigned long t;
-    x ^= x << 16;
-    x ^= x >> 5;
-    x ^= x << 1;
-
-    t = x;
-    x = y;
-    y = z;
-    z = t ^ x ^ y;
-
-    return z;
-}
-
 
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
     uint32_t slope = (output_end - output_start) / (input_end - input_start);

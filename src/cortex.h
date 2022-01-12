@@ -49,7 +49,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_THRESHOLD 0x88U
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
-#define DEFAULT_MAX_TOUCH 0.22F
+#define DEFAULT_MAX_TOUCH 0.3F
 #define DEFAULT_EXCITING_VALUE 0x14U
 #define DEFAULT_INHIBITING_VALUE -0x06
 #define DEFAULT_DECAY_RATE 0x01U
@@ -59,11 +59,11 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
-#define DEFAULT_MAX_TOT_STRENGTH 0x20U
+#define DEFAULT_MAX_TOT_STRENGTH 0x10U
 #define DEFAULT_SYNGEN_CHANCE 0x0A00U
 #define DEFAULT_SYNDEL_CHANCE 0x0A00U
-#define DEFAULT_SYNSTR_CHANCE 0x0F00U
-#define DEFAULT_SYNWK_CHANCE 0x0A00U
+#define DEFAULT_SYNSTR_CHANCE 0x00A0U
+#define DEFAULT_SYNWK_CHANCE 0x00A0U
 
 typedef uint8_t byte;
 
@@ -98,7 +98,7 @@ typedef enum {
     PULSE_MAPPING_RPROP = 0x10002,
 } pulse_mapping_t;
 
-typedef struct input2d {
+typedef struct {
     cortex_size_t x0;
     cortex_size_t y0;
     cortex_size_t x1;

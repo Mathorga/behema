@@ -82,9 +82,14 @@ void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio);
 /// Sets whether the tick pass should wrap around the edges (pacman effect).
 void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 
+/// Enables self connections whithin the specified bounds.
+void c2d_syn_enable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
+
+/// Disables self connections whithin the specified bounds.
+void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
+
 
 // Execution functions:
-
 /// Feeds external spikes to the specified neurons.
 void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values);
 
