@@ -198,7 +198,7 @@ int main(int argc, char **argv) {
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
-    // c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_LINEAR);
+    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_LINEAR);
     c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -226,8 +226,8 @@ int main(int argc, char **argv) {
     ticks_count_t* bInputs = (ticks_count_t*) malloc((bInputsCoords[2] - bInputsCoords[0]) * (bInputsCoords[3] - bInputsCoords[1]) * sizeof(ticks_count_t));
     cv::Size bInputSize = cv::Size(bInputsCoords[2] - bInputsCoords[0], bInputsCoords[3] - bInputsCoords[1]);
 
-    cortex_size_t lTimedInputsCoords[] = {0, 20, 1, 30};
-    cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, 20, cortex_width, 30};
+    cortex_size_t lTimedInputsCoords[] = {0, 20, 1, 25};
+    cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, 20, cortex_width, 25};
 
     // Disable synapses between input neurons.
     c2d_syn_disable(&even_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3]);
@@ -322,11 +322,11 @@ int main(int argc, char **argv) {
             }
 
             // Feed the cortex.
-            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE * 2);
-            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXCITING_VALUE * 2);
+            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXCITING_VALUE * 4);
+            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXCITING_VALUE * 4);
 
-            c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXCITING_VALUE / 2);
-            c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXCITING_VALUE / 2);
+            c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXCITING_VALUE);
+            c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXCITING_VALUE);
 
             sample_step++;
         }

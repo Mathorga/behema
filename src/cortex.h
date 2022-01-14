@@ -44,26 +44,25 @@ Copyright (C) 2021 Luka Micheletti
 #define PULSE_WINDOW_SMALL 0x0AU
 
 #define MAX_SYN_STRENGTH 0x07U
+#define MAX_CHANCE 0xFFFFU
 
 // Completely arbitrary values used to define a sort of acceptable cortex right away.
 #define DEFAULT_THRESHOLD 0x88U
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
-#define DEFAULT_MAX_TOUCH 0.3F
-#define DEFAULT_EXCITING_VALUE 0x14U
-#define DEFAULT_INHIBITING_VALUE -0x06
+#define DEFAULT_MAX_TOUCH 0.25F
+#define DEFAULT_EXCITING_VALUE 0x1B
+#define DEFAULT_INHIBITING_VALUE -0x0A
 #define DEFAULT_DECAY_RATE 0x01U
-#define DEFAULT_SYNGEN_BEAT 0.05F
-#define DEFAULT_SYNSTR_BEAT 0.5F
 #define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x0000000AU
 #define DEFAULT_INHEXC_RATIO 0x0FU
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
-#define DEFAULT_MAX_TOT_STRENGTH 0x10U
+#define DEFAULT_MAX_TOT_STRENGTH 0x15U
 #define DEFAULT_SYNGEN_CHANCE 0x0A00U
-#define DEFAULT_SYNDEL_CHANCE 0x0A00U
-#define DEFAULT_SYNSTR_CHANCE 0x00A0U
-#define DEFAULT_SYNWK_CHANCE 0x00A0U
+#define DEFAULT_SYNDEL_CHANCE 0x0200U
+#define DEFAULT_SYNSTR_CHANCE 0x0100U
+#define DEFAULT_SYNWK_CHANCE 0x0100U
 
 typedef uint8_t byte;
 
@@ -184,10 +183,7 @@ typedef struct {
     chance_t synwk_chance;
 
 
-    // Pulses count (tick_pulse) needed to generate (or delete, if possible) a synapse between neurons.
-    pulses_count_t syngen_pulses_count;
-    // Pulses count (evol_pulse) needed to strengthen an existing synapse between two neurons.
-    pulses_count_t synstr_pulses_count;
+    // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.
     syn_strength_t max_tot_strength;
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;

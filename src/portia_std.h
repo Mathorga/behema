@@ -63,16 +63,6 @@ void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count);
 /// @param touch The touch to assign the cortex. Only values between 0 and 1 are allowed.
 void c2d_set_max_touch(cortex2d_t* cortex, float touch);
 
-/// Sets the minimum amount of pulses needed to create a synapse.
-/// @param cortex The cortex to set the value to.
-/// @param tick_pulse The minimum amount of pulses count to generate a synapse.
-void c2d_set_syngen_pulses_count(cortex2d_t* cortex, pulses_count_t pulses_count);
-
-/// Sets the tick_pulse needed to allow synapse generation.
-/// A neuron beat is defined as its pulses count divided by the size of the cortex's tick_pulse window (aka the max possible pulses count).
-/// @param beat The beat to assign the cortex. Only values between 0 and 1 are allowed.
-void c2d_set_syngen_beat(cortex2d_t* cortex, float beat);
-
 /// Sets the preferred input mapping for the given cortex.
 void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 
