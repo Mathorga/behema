@@ -28,7 +28,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->inhexc_ratio = DEFAULT_INHEXC_RATIO;
 
     cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
-    cortex->pulse_mapping = PULSE_MAPPING_FPROP;
+    cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
 
     cortex->wrapped = FALSE;
 
