@@ -198,6 +198,7 @@ int main(int argc, char **argv) {
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
+    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
     c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));

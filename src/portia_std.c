@@ -496,7 +496,7 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     // sample_window = 10;
     // upper = sample_window - 1 = 9;
     // x = input;
-    // | | | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | | | -> x = 0;
     // |@| | | | | | | | |@| -> x = 1;
     // |@| | | |@| | | |@| | -> x = 2;
     // |@| | |@| | |@| | |@| -> x = 3;
@@ -505,13 +505,15 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     // | |@|@| |@|@| |@|@| | -> x = 6;
     // | |@|@|@| |@|@|@| |@| -> x = 7;
     // | |@|@|@|@|@|@|@|@| | -> x = 8;
-    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    // | |@|@|@|@|@|@|@|@|@| -> x = 9;
     if (input < sample_window / 2) {
-        if (input > 0 && sample_step % (upper / input) == 0) {
+        if ((sample_step <= 0) ||
+            (input > 0 && sample_step % (upper / input) == 0)) {
             result = TRUE;
         }
     } else {
-        if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
+        if ((sample_step >= 0) &&
+            (input >= upper || sample_step % (upper / (upper - input)) != 0)) {
             result = TRUE;
         }
     }
@@ -526,7 +528,7 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
 
     // sample_window = 10;
     // upper = sample_window - 1 = 9;
-    // | | | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | | | -> x = 0;
     // |@| | | | | | | | |@| -> x = 1;
     // |@| | | | |@| | | | | -> x = 2;
     // |@| | |@| | |@| | |@| -> x = 3;
@@ -535,13 +537,15 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     // | |@|@| |@|@| |@|@| | -> x = 6;
     // | |@|@|@|@| |@|@|@|@| -> x = 7;
     // | |@|@|@|@|@|@|@|@| | -> x = 8;
-    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    // | |@|@|@|@|@|@|@|@|@| -> x = 9;
     if ((double) input < ((double) sample_window) / 2) {
-        if (input > 0 && sample_step % (ticks_count_t) round(upper / d_input) == 0) {
+        if ((sample_step <= 0) ||
+            (input > 0 && sample_step % (ticks_count_t) round(upper / d_input) == 0)) {
             result = TRUE;
         }
     } else {
-        if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
+        if ((sample_step >= 0) &&
+            (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0)) {
             result = TRUE;
         }
     }
