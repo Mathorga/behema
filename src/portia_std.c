@@ -1,7 +1,7 @@
 #include "portia_std.h"
 
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
-    if (SQNH_COUNT(SQNH_DIAM(nh_radius)) > sizeof(nh_mask_t) * 8) {
+    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(nh_mask_t) * 8) {
         // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
         return ERROR_NH_RADIUS_TOO_BIG;
     }
@@ -24,8 +24,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->synstr_chance = DEFAULT_SYNSTR_CHANCE;
     cortex->synwk_chance = DEFAULT_SYNWK_CHANCE;
     cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
-    cortex->max_syn_count = DEFAULT_MAX_TOUCH * SQNH_COUNT(SQNH_DIAM(nh_radius));
-    cortex->inhexc_ratio = DEFAULT_INHEXC_RATIO;
+    cortex->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
 
     cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
     cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
@@ -46,8 +45,10 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
             cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse_mask = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].evol_pulse = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
+            cortex->neurons[IDX2D(x, y, cortex->width)].max_syn_count = cortex->max_syn_count;
             cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
             cortex->neurons[IDX2D(x, y, cortex->width)].tot_syn_strength = 0x00U;
+            cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
         }
     }
 
@@ -74,7 +75,6 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->synwk_chance = from->synwk_chance;
     to->max_tot_strength = from->max_tot_strength;
     to->max_syn_count = from->max_syn_count;
-    to->inhexc_ratio = from->inhexc_ratio;
 
     to->sample_window = from->sample_window;
     to->pulse_mapping = from->pulse_mapping;
@@ -94,7 +94,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
 
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
     // Make sure the provided radius is valid.
-    if (radius <= 0 || SQNH_COUNT(SQNH_DIAM(radius)) > sizeof(nh_mask_t) * 8) {
+    if (radius <= 0 || NH_COUNT_2D(NH_DIAM_2D(radius)) > sizeof(nh_mask_t) * 8) {
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
@@ -137,7 +137,7 @@ void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count) {
 void c2d_set_max_touch(cortex2d_t* cortex, float touch) {
     // Only set touch if a valid value is provided.
     if (touch <= 1 && touch >= 0) {
-        cortex->max_syn_count = touch * SQNH_COUNT(SQNH_DIAM(cortex->nh_radius));
+        cortex->max_syn_count = touch * NH_COUNT_2D(NH_DIAM_2D(cortex->nh_radius));
     }
 }
 
@@ -146,27 +146,15 @@ void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
 }
 
 void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio) {
-    cortex->inhexc_ratio = inhexc_ratio;
+    for (cortex_size_t y = 0; y < cortex->height; y++) {
+        for (cortex_size_t x = 0; x < cortex->width; x++) {
+            cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = inhexc_ratio;
+        }
+    }
 }
 
 void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped) {
     cortex->wrapped = wrapped;
-}
-
-void c2d_syn_enable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
-    // Make sure the provided values are within the cortex size.
-    if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
-        for (cortex_size_t y = y0; y < y1; y++) {
-            for (cortex_size_t x = x0; x < x1; x++) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
-            }
-        }
-    }
 }
 
 void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
@@ -174,12 +162,7 @@ void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cor
     if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
         for (cortex_size_t y = y0; y < y1; y++) {
             for (cortex_size_t x = x0; x < x1; x++) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
-                cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = SQNH_COUNT(SQNH_DIAM(cortex->nh_radius));
+                cortex->neurons[IDX2D(x, y, cortex->width)].max_syn_count = 0x00U;
             }
         }
     }
@@ -284,7 +267,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
               |             |
               +-|-|-|-|-|-|-+
             */
-            cortex_size_t nh_diameter = SQNH_DIAM(prev_cortex->nh_radius);
+            cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
 
             nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
@@ -307,7 +290,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                     // Exclude the central neuron from the list of neighbors.
                     if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
                         (prev_cortex->wrapped || (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height))) {
-                        // The index of the current neighbor in the current neuron neighborhood.
+                        // The index of the current neighbor in the current neuron's neighborhood.
                         cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
                         cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
                                                              WRAP(neighbor_y, prev_cortex->height),
@@ -348,7 +331,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->syn_count--;
                             } else if (!(prev_ac_mask & 0x01U) &&
                                        random < prev_cortex->syngen_chance * neighbor.tick_pulse &&
-                                       prev_neuron.syn_count < prev_cortex->max_syn_count) {
+                                       prev_neuron.syn_count < next_neuron->max_syn_count) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -358,7 +341,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (random % prev_cortex->inhexc_ratio == 0) {
+                                if (random % next_neuron->inhexc_ratio == 0) {
                                     // Inhibitory.
                                     next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
                                 } else {

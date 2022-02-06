@@ -18,10 +18,10 @@ Copyright (C) 2021 Luka Micheletti
 #define WRAP(i, n) ((i) >= 0 ? ((i) % (n)) : ((n) + ((i) % (n))))
 
 // Computes the diameter of a square neighborhood given its radius.
-#define SQNH_DIAM(r) (2 * (r) + 1)
+#define NH_DIAM_2D(r) (2 * (r) + 1)
 
 // Computes the number of neighbors in a square neighborhood given its diameter.
-#define SQNH_COUNT(d) ((d) * (d) - 1)
+#define NH_COUNT_2D(d) ((d) * (d) - 1)
 
 // Translates bidimensional indexes to a monodimensional one.
 // |i| is the row index.
@@ -141,10 +141,14 @@ typedef struct {
 
     // Current internal value.
     neuron_value_t value;
+    // Maximum number of synapses to the neuron. Cannot be greater than the cortex' max_syn_count.
+    syn_count_t max_syn_count;
     // Amount of connected neighbors.
     syn_count_t syn_count;
     // Total amount of syn strength from input neurons.
     syn_strength_t tot_syn_strength;
+    // Proportion between excitatory and inhibitory generated synapses (e.g. [10 => 9 exc, 1 inh], [5 => 4 exc, 1 inh]).
+    ticks_count_t inhexc_ratio;
 } neuron_t;
 
 /// 2D cortex of neurons.
@@ -187,8 +191,6 @@ typedef struct {
     syn_strength_t max_tot_strength;
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
-    // Proportion between excitatory and inhibitory generated synapses (e.g. inhexc_ratio = 10 => 9 exc, 1 inh).
-    ticks_count_t inhexc_ratio;
 
 
     ticks_count_t sample_window;

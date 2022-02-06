@@ -235,6 +235,8 @@ int main(int argc, char **argv) {
     c2d_syn_disable(&even_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3]);
     c2d_syn_disable(&even_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3]);
 
+    c2d_syn_disable(&even_cortex, 20, 10, 30, 12);
+
     ticks_count_t sample_step = samplingBound;
 
     sf::Font font;

@@ -34,7 +34,6 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->decay_value), sizeof(neuron_value_t), 1, out_file);
     fwrite(&(cortex->max_syn_count), sizeof(syn_count_t), 1, out_file);
 
-    fwrite(&(cortex->inhexc_ratio), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->sample_window), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, out_file);
 
@@ -66,7 +65,6 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->decay_value), sizeof(neuron_value_t), 1, in_file);
     fread(&(cortex->max_syn_count), sizeof(syn_count_t), 1, in_file);
 
-    fread(&(cortex->inhexc_ratio), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->sample_window), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, in_file);
 
