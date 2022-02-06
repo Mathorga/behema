@@ -63,6 +63,7 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->width), sizeof(cortex_size_t), 1, in_file);
     fread(&(cortex->height), sizeof(cortex_size_t), 1, in_file);
     fread(&(cortex->ticks_count), sizeof(ticks_count_t), 1, in_file);
+    fread(&(cortex->evols_count), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->evol_step), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_window), sizeof(pulses_count_t), 1, in_file);
 
@@ -71,6 +72,13 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->recovery_value), sizeof(neuron_value_t), 1, in_file);
     fread(&(cortex->exc_value), sizeof(neuron_value_t), 1, in_file);
     fread(&(cortex->decay_value), sizeof(neuron_value_t), 1, in_file);
+
+    fread(&(cortex->syngen_chance), sizeof(chance_t), 1, in_file);
+    fread(&(cortex->syndel_chance), sizeof(chance_t), 1, in_file);
+    fread(&(cortex->synstr_chance), sizeof(chance_t), 1, in_file);
+    fread(&(cortex->synwk_chance), sizeof(chance_t), 1, in_file);
+
+    fread(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, in_file);
     fread(&(cortex->max_syn_count), sizeof(syn_count_t), 1, in_file);
 
     fread(&(cortex->sample_window), sizeof(ticks_count_t), 1, in_file);
