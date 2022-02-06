@@ -26,6 +26,10 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name);
 /// @param file_name The file to read the cortex from.
 void c2d_from_file(cortex2d_t* cortex, char* file_name);
 
+void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
+
+void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
+
 #ifdef __cplusplus
 }
 #endif

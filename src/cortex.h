@@ -196,8 +196,6 @@ typedef struct {
     ticks_count_t sample_window;
     pulse_mapping_t pulse_mapping;
 
-    bool_t wrapped;
-
     neuron_t* neurons;
 } cortex2d_t;
 

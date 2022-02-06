@@ -29,8 +29,6 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
     cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
 
-    cortex->wrapped = FALSE;
-
     cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
 
     for (cortex_size_t y = 0; y < cortex->height; y++) {
@@ -78,8 +76,6 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
 
     to->sample_window = from->sample_window;
     to->pulse_mapping = from->pulse_mapping;
-
-    to->wrapped = from->wrapped;
 
     to->neurons = (neuron_t*) malloc(to->width * to->height * sizeof(neuron_t));
 
@@ -151,10 +147,6 @@ void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio) {
             cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = inhexc_ratio;
         }
     }
-}
-
-void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped) {
-    cortex->wrapped = wrapped;
 }
 
 void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
@@ -289,7 +281,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                     // Exclude the central neuron from the list of neighbors.
                     if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
-                        (prev_cortex->wrapped || (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height))) {
+                        (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // The index of the current neighbor in the current neuron's neighborhood.
                         cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
                         cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
