@@ -4,11 +4,22 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
 #include "cortex.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define DATA_OFFSET_OFFSET 0x000A
+#define WIDTH_OFFSET 0x0012
+#define HEIGHT_OFFSET 0x0016
+#define BITS_PER_PIXEL_OFFSET 0x001C
+#define HEADER_SIZE 14
+#define INFO_HEADER_SIZE 40
+#define NO_COMPRESION 0
+#define MAX_NUMBER_OF_COLORS 0
+#define ALL_COLORS_REQUIRED 0
 
 // Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
 uint32_t xorshf32();
