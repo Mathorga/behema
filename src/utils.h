@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 #include <math.h>
 #include "cortex.h"
 
@@ -11,15 +13,15 @@
 extern "C" {
 #endif
 
-#define DATA_OFFSET_OFFSET 0x000A
-#define WIDTH_OFFSET 0x0012
-#define HEIGHT_OFFSET 0x0016
-#define BITS_PER_PIXEL_OFFSET 0x001C
-#define HEADER_SIZE 14
-#define INFO_HEADER_SIZE 40
-#define NO_COMPRESION 0
-#define MAX_NUMBER_OF_COLORS 0
-#define ALL_COLORS_REQUIRED 0
+// Structure for storing the
+// image data
+typedef struct pgm_content_t {
+    char pgmType[3];
+    uint8_t* data;
+    uint32_t width;
+    uint32_t height;
+    uint32_t maxValue;
+} pgm_content_t;
 
 // Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
 uint32_t xorshf32();
@@ -40,6 +42,9 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name);
 void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
 
 void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
+
+
+void pgm_read_bin(pgm_content_t* pgm, const char* filename);
 
 #ifdef __cplusplus
 }
