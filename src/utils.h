@@ -44,7 +44,8 @@ void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
 void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
 
 
-void pgm_read_bin(pgm_content_t* pgm, const char* filename);
+void pgmb_read(pgm_content_t* pgm, const char* filename);
+void pgma_read(pgm_content_t* pgm, const char* filename);
 
 #ifdef __cplusplus
 }

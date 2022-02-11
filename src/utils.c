@@ -128,15 +128,11 @@ void ignoreComments(FILE* fp) {
  
 // Function to open the input a PGM
 // file and process it
-void pgm_read_bin(pgm_content_t* pgm, const char* filename) {
-
-    printf("\nFilename: %s\n", filename);
-    // Open the image file in the
-    // 'read binary' mode
+void pgmb_read(pgm_content_t* pgm, const char* filename) {
+    // Open the image file in the 'read binary' mode.
     FILE* pgmfile = fopen(filename, "r");
  
-    // If file does not exist,
-    // then return
+    // If file does not exist, then return.
     if (pgmfile == NULL) {
         printf("File does not exist\n");
         return;
@@ -146,8 +142,7 @@ void pgm_read_bin(pgm_content_t* pgm, const char* filename) {
 
     fscanf(pgmfile, "%s", pgm->pgmType);
  
-    // Check for correct PGM Binary
-    // file type
+    // Check for correct PGM Binary file type.
     if (strcmp(pgm->pgmType, "P5")) {
         printf("Wrong file type!\n");
         exit(EXIT_FAILURE);
@@ -167,14 +162,70 @@ void pgm_read_bin(pgm_content_t* pgm, const char* filename) {
 
     ignoreComments(pgmfile);
  
-    // Allocating memory to store
-    // img info in defined struct
+    // Allocating memory to store img info in defined struct.
     pgm->data = (unsigned char*) malloc(pgm->width * pgm->height * sizeof(unsigned char));
  
-    // Storing the pixel info in
-    // the struct
+    // Storing the pixel info in the struct.
     // fgetc(pgmfile);
     fread(pgm->data, sizeof(uint8_t), pgm->width * pgm->height, pgmfile);
+ 
+    // Close the file
+    fclose(pgmfile);
+ 
+    return;
+}
+
+void pgma_read(pgm_content_t* pgm, const char* filename) {
+    // Open the image file in the 'read binary' mode.
+    FILE* pgmfile = fopen(filename, "r");
+ 
+    // If file does not exist, then return.
+    if (pgmfile == NULL) {
+        printf("File does not exist\n");
+        return;
+    }
+ 
+    ignoreComments(pgmfile);
+
+    fscanf(pgmfile, "%s", pgm->pgmType);
+ 
+    // Check for correct PGM Binary file type.
+    if (strcmp(pgm->pgmType, "P2")) {
+        printf("Wrong file type!\n");
+        exit(EXIT_FAILURE);
+    }
+ 
+    ignoreComments(pgmfile);
+ 
+    // Read the image dimensions
+    fscanf(pgmfile, "%u %u", &(pgm->width), &(pgm->height));
+
+    printf("\nWIDTH %u\n", pgm->width);
+    printf("\nHEIGHT %u\n", pgm->height);
+ 
+    ignoreComments(pgmfile);
+ 
+    // Read maximum gray value
+    fscanf(pgmfile, "%u", &(pgm->maxValue));
+
+    printf("\nMAX %u\n", pgm->maxValue);
+
+    ignoreComments(pgmfile);
+ 
+    // Allocating memory to store img info in defined struct.
+    pgm->data = (unsigned char*) malloc(pgm->width * pgm->height * sizeof(unsigned char));
+ 
+    // Storing the pixel info in the struct.
+    for (uint32_t y = 0; y < pgm->height; y++) {
+        for (uint32_t x = 0; x < pgm->width; x++) {
+            uint8_t value;
+
+            fscanf(pgmfile, "%hhu", &value);
+            // printf("%hhu ", value);
+            pgm->data[IDX2D(x, y, pgm->width)] = value;
+        }
+        // printf("\n");
+    }
  
     // Close the file
     fclose(pgmfile);

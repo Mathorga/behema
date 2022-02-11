@@ -176,18 +176,6 @@ int main(int argc, char **argv) {
             break;
     }
 
-    pgm_content_t pgm_content;
-
-    pgm_read_bin(&pgm_content, "/home/luka/Desktop/new.pgm");
-
-    for (uint32_t y = 0; y < pgm_content.height; y++) {
-        for (uint32_t x = 0; x < pgm_content.width; x++) {
-            uint8_t val = pgm_content.data[IDX2D(x, y, pgm_content.width)];
-            printf("%c ", val < 50 ? ' ' : val < 100 ? '.' : val < 150 ? 'c' : val < 200 ? 'O' : '@');
-        }
-        printf("\n");
-    }
-
     ticks_count_t samplingBound = sampleWindow - 1;
 
     cam.open(0);
