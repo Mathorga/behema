@@ -313,6 +313,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                         // Perform the evolution phase if allowed.
                         if (evolve) {
+                            // Structural plasticity: create or destroy synapse.
                             if (prev_ac_mask & 0x01U &&
                                 random < prev_cortex->syndel_chance / (neighbor.tick_pulse + 1) &&
                                 // Only 0-strength synapses can be deleted.
@@ -344,10 +345,13 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->syn_count++;
                             }
 
-                            // Increment synapse strength if it's persistently active.
+                            // Functional plasticity: strengthen or weaken synapse.
                             if (prev_ac_mask & 0x01U) {
                                 if (syn_strength < MAX_SYN_STRENGTH &&
+                                    // Neighbor fired right before the current neuron.
+                                    (prev_neuron.tick_pulse_mask & 0x01U && neighbor.tick_pulse_mask >> 0x01U & 0x01U) &&
                                     prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
+                                    // Random component.
                                     random < prev_cortex->synstr_chance * (syn_strength + 1 + neighbor.evol_pulse + next_neuron->evol_pulse)) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
@@ -356,6 +360,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                                     next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
+                                           // Neighbor fired right after the current neuron.
+                                           (prev_neuron.tick_pulse_mask >> 0x01U & 0x01U && neighbor.tick_pulse_mask & 0x01U) &&
+                                           // Random component.
                                            random < prev_cortex->synwk_chance / (syn_strength + 1 + neighbor.evol_pulse + next_neuron->evol_pulse)) {
                                     syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);

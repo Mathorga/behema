@@ -221,10 +221,8 @@ void pgma_read(pgm_content_t* pgm, const char* filename) {
             uint8_t value;
 
             fscanf(pgmfile, "%hhu", &value);
-            // printf("%hhu ", value);
             pgm->data[IDX2D(x, y, pgm->width)] = value;
         }
-        // printf("\n");
     }
  
     // Close the file
