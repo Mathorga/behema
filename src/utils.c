@@ -96,7 +96,19 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
 }
 
 void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
-    // FILE* in_file = fopen(map_file_name, "r");
+    pgm_content_t pgm_content;
+
+    // Read file.
+    pgm_read(&pgm_content, map_file_name);
+
+    // Make sure sizes are correct.
+    if (cortex->width == pgm_content.width && cortex->height == pgm_content.height && cortex->max_syn_count == pgm_content.max_value) {
+        for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+            cortex->neurons[i].max_syn_count = pgm_content.data[i];
+        }
+    } else {
+        printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
+    }
 }
 
 
@@ -145,7 +157,7 @@ void pgm_read(pgm_content_t* pgm, const char* filename) {
     ignoreComments(pgmfile);
  
     // Read maximum value.
-    fscanf(pgmfile, "%u", &(pgm->maxValue));
+    fscanf(pgmfile, "%u", &(pgm->max_value));
 
     ignoreComments(pgmfile);
  

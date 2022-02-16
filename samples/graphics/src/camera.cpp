@@ -178,17 +178,17 @@ int main(int argc, char **argv) {
 
     ticks_count_t samplingBound = sampleWindow - 1;
 
-    pgm_content_t pgm_content;
+    // pgm_content_t pgm_content;
 
-    pgm_read(&pgm_content, "/home/luka/Desktop/pgmtest.pgm");
+    // pgm_read(&pgm_content, "/home/luka/Desktop/pgmtest.pgm");
 
-    for (uint32_t y = 0; y < pgm_content.height; y++) {
-        for (uint32_t x = 0; x < pgm_content.width; x++) {
-            uint8_t val = pgm_content.data[IDX2D(x, y, pgm_content.width)];
-            printf("%hhu ", val);
-        }
-        printf("\n");
-    }
+    // for (uint32_t y = 0; y < pgm_content.height; y++) {
+    //     for (uint32_t x = 0; x < pgm_content.width; x++) {
+    //         uint8_t val = pgm_content.data[IDX2D(x, y, pgm_content.width)];
+    //         printf("%hhu ", val);
+    //     }
+    //     printf("\n");
+    // }
 
     cam.open(0);
     if (!cam.isOpened()) {
@@ -211,6 +211,7 @@ int main(int argc, char **argv) {
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
     c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
+    c2d_set_max_syn_count(&even_cortex, 24);
     c2d_copy(&odd_cortex, &even_cortex);
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -242,12 +243,14 @@ int main(int argc, char **argv) {
     cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
 
     // Disable synapses between input neurons.
-    c2d_syn_disable(&even_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3]);
-    c2d_syn_disable(&even_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3]);
-    c2d_syn_disable(&even_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3]);
-    c2d_syn_disable(&even_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3]);
+    // c2d_syn_disable(&even_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3]);
+    // c2d_syn_disable(&even_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3]);
+    // c2d_syn_disable(&even_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3]);
+    // c2d_syn_disable(&even_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3]);
 
-    c2d_syn_disable(&even_cortex, 20, 10, 30, 12);
+    // c2d_syn_disable(&even_cortex, 20, 10, 40, 20);
+
+    c2d_touch_from_map(&even_cortex, "/home/luka/Desktop/pgmtest.pgm");
 
     ticks_count_t sample_step = samplingBound;
 

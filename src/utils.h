@@ -20,7 +20,7 @@ typedef struct pgm_content_t {
     uint8_t* data;
     uint32_t width;
     uint32_t height;
-    uint32_t maxValue;
+    uint32_t max_value;
 } pgm_content_t;
 
 // Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
