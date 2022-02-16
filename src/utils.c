@@ -105,9 +105,6 @@ void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
 
 
  
- 
-// Function to ignore any comments
-// in file
 void ignoreComments(FILE* fp) {
     int ch;
     char line[100];
@@ -115,9 +112,8 @@ void ignoreComments(FILE* fp) {
     // Ignore any blank lines
     while ((ch = fgetc(fp)) != EOF && isspace(ch)) {}
  
-    // Recursively ignore comments
-    // in a PGM image commented lines
-    // start with a '#'
+    // Recursively ignore comments.
+    // In a PGM image commented lines start with '#'.
     if (ch == '#') {
         fgets(line, sizeof(line), fp);
         ignoreComments(fp);
@@ -125,11 +121,9 @@ void ignoreComments(FILE* fp) {
         fseek(fp, -1, SEEK_CUR);
     }
 }
- 
-// Function to open the input a PGM
-// file and process it
-void pgmb_read(pgm_content_t* pgm, const char* filename) {
-    // Open the image file in the 'read binary' mode.
+
+void pgm_read(pgm_content_t* pgm, const char* filename) {
+    // Open the image file in read mode.
     FILE* pgmfile = fopen(filename, "r");
  
     // If file does not exist, then return.
@@ -140,89 +134,40 @@ void pgmb_read(pgm_content_t* pgm, const char* filename) {
  
     ignoreComments(pgmfile);
 
+    // Read file type.
     fscanf(pgmfile, "%s", pgm->pgmType);
  
-    // Check for correct PGM Binary file type.
-    if (strcmp(pgm->pgmType, "P5")) {
-        printf("Wrong file type!\n");
-        exit(EXIT_FAILURE);
-    }
- 
     ignoreComments(pgmfile);
  
-    // Read the image dimensions
-    fscanf(pgmfile, "%u %u", &(pgm->width), &(pgm->height));
- 
-    ignoreComments(pgmfile);
- 
-    // Read maximum gray value
-    fscanf(pgmfile, "%u", &(pgm->maxValue));
-
-    printf("\nMAX %u\n", pgm->maxValue);
-
-    ignoreComments(pgmfile);
- 
-    // Allocating memory to store img info in defined struct.
-    pgm->data = (unsigned char*) malloc(pgm->width * pgm->height * sizeof(unsigned char));
- 
-    // Storing the pixel info in the struct.
-    // fgetc(pgmfile);
-    fread(pgm->data, sizeof(uint8_t), pgm->width * pgm->height, pgmfile);
- 
-    // Close the file
-    fclose(pgmfile);
- 
-    return;
-}
-
-void pgma_read(pgm_content_t* pgm, const char* filename) {
-    // Open the image file in the 'read binary' mode.
-    FILE* pgmfile = fopen(filename, "r");
- 
-    // If file does not exist, then return.
-    if (pgmfile == NULL) {
-        printf("File does not exist\n");
-        return;
-    }
- 
-    ignoreComments(pgmfile);
-
-    fscanf(pgmfile, "%s", pgm->pgmType);
- 
-    // Check for correct PGM Binary file type.
-    if (strcmp(pgm->pgmType, "P2")) {
-        printf("Wrong file type!\n");
-        exit(EXIT_FAILURE);
-    }
- 
-    ignoreComments(pgmfile);
- 
-    // Read the image dimensions
+    // Read data size.
     fscanf(pgmfile, "%u %u", &(pgm->width), &(pgm->height));
 
-    printf("\nWIDTH %u\n", pgm->width);
-    printf("\nHEIGHT %u\n", pgm->height);
- 
     ignoreComments(pgmfile);
  
-    // Read maximum gray value
+    // Read maximum value.
     fscanf(pgmfile, "%u", &(pgm->maxValue));
 
-    printf("\nMAX %u\n", pgm->maxValue);
-
     ignoreComments(pgmfile);
  
-    // Allocating memory to store img info in defined struct.
-    pgm->data = (unsigned char*) malloc(pgm->width * pgm->height * sizeof(unsigned char));
- 
-    // Storing the pixel info in the struct.
-    for (uint32_t y = 0; y < pgm->height; y++) {
-        for (uint32_t x = 0; x < pgm->width; x++) {
-            uint8_t value;
+    // Allocate memory to store data in the struct.
+    pgm->data = (uint8_t*) malloc(pgm->width * pgm->height * sizeof(uint8_t));
 
-            fscanf(pgmfile, "%hhu", &value);
-            pgm->data[IDX2D(x, y, pgm->width)] = value;
+ 
+    // Store data in the struct.
+    if (!strcmp(pgm->pgmType, "P2")) {
+        // Plain data.
+        for (uint32_t y = 0; y < pgm->height; y++) {
+            for (uint32_t x = 0; x < pgm->width; x++) {
+                fscanf(pgmfile, "%hhu", &(pgm->data[IDX2D(x, y, pgm->width)]));
+            }
         }
+    } else if (!strcmp(pgm->pgmType, "P5")) {
+        // Raw data.
+        fread(pgm->data, sizeof(uint8_t), pgm->width * pgm->height, pgmfile);
+    } else {
+        // Wrong file type.
+        printf("Wrong file type!\n");
+        exit(EXIT_FAILURE);
     }
  
     // Close the file

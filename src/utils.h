@@ -39,13 +39,15 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name);
 /// @param file_name The file to read the cortex from.
 void c2d_from_file(cortex2d_t* cortex, char* file_name);
 
+/// Sets each neurons's touch from a pgm map file
 void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
 
 void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
 
 
-void pgmb_read(pgm_content_t* pgm, const char* filename);
-void pgma_read(pgm_content_t* pgm, const char* filename);
+// Function to open the input a PGM
+// file and process it
+void pgm_read(pgm_content_t* pgm, const char* filename);
 
 #ifdef __cplusplus
 }

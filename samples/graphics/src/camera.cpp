@@ -178,6 +178,18 @@ int main(int argc, char **argv) {
 
     ticks_count_t samplingBound = sampleWindow - 1;
 
+    pgm_content_t pgm_content;
+
+    pgm_read(&pgm_content, "/home/luka/Desktop/pgmtest.pgm");
+
+    for (uint32_t y = 0; y < pgm_content.height; y++) {
+        for (uint32_t x = 0; x < pgm_content.width; x++) {
+            uint8_t val = pgm_content.data[IDX2D(x, y, pgm_content.width)];
+            printf("%hhu ", val);
+        }
+        printf("\n");
+    }
+
     cam.open(0);
     if (!cam.isOpened()) {
         printf("ERROR! Unable to open camera\n");
