@@ -66,8 +66,11 @@ void c2d_set_max_touch(cortex2d_t* cortex, float touch);
 /// Sets the preferred input mapping for the given cortex.
 void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 
+/// Sets the range for excitatory to inhibitory ratios in single neurons.
+void c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range);
+
 /// Sets the proportion between excitatory and inhibitory generated synapses.
-void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio);
+void c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio);
 
 /// Sets whether the tick pass should wrap around the edges (pacman effect).
 void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);

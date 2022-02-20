@@ -113,6 +113,24 @@ void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
 
 
 
+void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
+    pgm_content_t pgm_content;
+
+    // Read file.
+    pgm_read(&pgm_content, map_file_name);
+
+    // Make sure sizes are correct.
+    if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
+        for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+            cortex->neurons[i].inhexc_ratio = map(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
+        }
+    } else {
+        printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");
+    }
+}
+
+
+
 
 
 

@@ -25,6 +25,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
     cortex->synwk_chance = DEFAULT_SYNWK_CHANCE;
     cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
     cortex->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    cortex->inhexc_range = DEFAULT_INHEXC_RANGE;
 
     cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
     cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
@@ -73,6 +74,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
     to->synwk_chance = from->synwk_chance;
     to->max_tot_strength = from->max_tot_strength;
     to->max_syn_count = from->max_syn_count;
+    to->inhexc_range = from->inhexc_range;
 
     to->sample_window = from->sample_window;
     to->pulse_mapping = from->pulse_mapping;
@@ -141,10 +143,16 @@ void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
     cortex->pulse_mapping = pulse_mapping;
 }
 
-void c2d_set_inhexc_ratio(cortex2d_t* cortex, ticks_count_t inhexc_ratio) {
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
-            cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = inhexc_ratio;
+void c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range) {
+    cortex->inhexc_range = inhexc_range;
+}
+
+void c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio) {
+    if (inhexc_ratio <= cortex->inhexc_range) {
+        for (cortex_size_t y = 0; y < cortex->height; y++) {
+            for (cortex_size_t x = 0; x < cortex->width; x++) {
+                cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = inhexc_ratio;
+            }
         }
     }
 }
@@ -334,7 +342,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (random % next_neuron->inhexc_ratio == 0) {
+                                if (random % next_cortex->inhexc_range < next_neuron->inhexc_ratio) {
                                     // Inhibitory.
                                     next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
                                 } else {

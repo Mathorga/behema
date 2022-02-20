@@ -56,7 +56,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_DECAY_RATE 0x01U
 #define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x0000000AU
-#define DEFAULT_INHEXC_RATIO 0x0FU
+#define DEFAULT_INHEXC_RANGE 0x64U
+#define DEFAULT_INHEXC_RATIO 0x06U
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 #define DEFAULT_MAX_TOT_STRENGTH 0x20U
 #define DEFAULT_SYNGEN_CHANCE 0x0200U
@@ -147,8 +148,10 @@ typedef struct neuron_t {
     syn_count_t syn_count;
     // Total amount of syn strength from input neurons.
     syn_strength_t tot_syn_strength;
-    // Proportion between excitatory and inhibitory generated synapses (e.g. [10 => 9 exc, 1 inh], [5 => 4 exc, 1 inh]).
-    ticks_count_t inhexc_ratio;
+    // Proportion between excitatory and inhibitory generated synapses. Can vary between 0 and cortex.inhexc_range.
+    // inhexc_ratio = 0 -> all synapses are excitatory.
+    // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
+    chance_t inhexc_ratio;
 } neuron_t;
 
 /// 2D cortex of neurons.
@@ -191,6 +194,8 @@ typedef struct cortex2d_t {
     syn_strength_t max_tot_strength;
     // Maximum number of synapses between a neuron and its neighbors.
     syn_count_t max_syn_count;
+    // Maximum range for inhexc chance: single neurons' inhexc ratio will vary between 0 and inhexc_range. 0 means all excitatory, inhexc_range means all inhibitory.
+    chance_t inhexc_range;
 
 
     ticks_count_t sample_window;
