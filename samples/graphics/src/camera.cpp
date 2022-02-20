@@ -250,7 +250,8 @@ int main(int argc, char **argv) {
 
     // c2d_syn_disable(&even_cortex, 20, 10, 40, 20);
 
-    c2d_touch_from_map(&even_cortex, "/home/luka/Desktop/100_60_touch.pgm");
+    c2d_touch_from_map(&even_cortex, "./res/100_60_touch.pgm");
+    c2d_inhexc_from_map(&even_cortex, "./res/100_60_inhexc.pgm");
 
     ticks_count_t sample_step = samplingBound;
 
