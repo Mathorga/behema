@@ -11,10 +11,82 @@ uint32_t xorshf32() {
     return state = x;
 }
 
+void ignoreComments(FILE* fp) {
+    int ch;
+    char line[100];
+ 
+    // Ignore any blank lines
+    while ((ch = fgetc(fp)) != EOF && isspace(ch)) {}
+ 
+    // Recursively ignore comments.
+    // In a PGM image commented lines start with '#'.
+    if (ch == '#') {
+        fgets(line, sizeof(line), fp);
+        ignoreComments(fp);
+    } else {
+        fseek(fp, -1, SEEK_CUR);
+    }
+}
+
+void pgm_read(pgm_content_t* pgm, const char* filename) {
+    // Open the image file in read mode.
+    FILE* pgmfile = fopen(filename, "r");
+ 
+    // If file does not exist, then return.
+    if (pgmfile == NULL) {
+        printf("File does not exist\n");
+        return;
+    }
+ 
+    ignoreComments(pgmfile);
+
+    // Read file type.
+    fscanf(pgmfile, "%s", pgm->pgmType);
+ 
+    ignoreComments(pgmfile);
+ 
+    // Read data size.
+    fscanf(pgmfile, "%u %u", &(pgm->width), &(pgm->height));
+
+    ignoreComments(pgmfile);
+ 
+    // Read maximum value.
+    fscanf(pgmfile, "%u", &(pgm->max_value));
+
+    ignoreComments(pgmfile);
+ 
+    // Allocate memory to store data in the struct.
+    pgm->data = (uint8_t*) malloc(pgm->width * pgm->height * sizeof(uint8_t));
+
+ 
+    // Store data in the struct.
+    if (!strcmp(pgm->pgmType, "P2")) {
+        // Plain data.
+        for (uint32_t y = 0; y < pgm->height; y++) {
+            for (uint32_t x = 0; x < pgm->width; x++) {
+                fscanf(pgmfile, "%hhu", &(pgm->data[IDX2D(x, y, pgm->width)]));
+            }
+        }
+    } else if (!strcmp(pgm->pgmType, "P5")) {
+        // Raw data.
+        fread(pgm->data, sizeof(uint8_t), pgm->width * pgm->height, pgmfile);
+    } else {
+        // Wrong file type.
+        printf("Wrong file type!\n");
+        exit(EXIT_FAILURE);
+    }
+ 
+    // Close the file
+    fclose(pgmfile);
+ 
+    return;
+}
+
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
     uint32_t slope = (output_end - output_start) / (input_end - input_start);
     return output_start + slope * (input - input_start);
 }
+
 
 void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
@@ -111,8 +183,6 @@ void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
     }
 }
 
-
-
 void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
     pgm_content_t pgm_content;
 
@@ -127,81 +197,4 @@ void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
     } else {
         printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");
     }
-}
-
-
-
-
-
-
- 
-void ignoreComments(FILE* fp) {
-    int ch;
-    char line[100];
- 
-    // Ignore any blank lines
-    while ((ch = fgetc(fp)) != EOF && isspace(ch)) {}
- 
-    // Recursively ignore comments.
-    // In a PGM image commented lines start with '#'.
-    if (ch == '#') {
-        fgets(line, sizeof(line), fp);
-        ignoreComments(fp);
-    } else {
-        fseek(fp, -1, SEEK_CUR);
-    }
-}
-
-void pgm_read(pgm_content_t* pgm, const char* filename) {
-    // Open the image file in read mode.
-    FILE* pgmfile = fopen(filename, "r");
- 
-    // If file does not exist, then return.
-    if (pgmfile == NULL) {
-        printf("File does not exist\n");
-        return;
-    }
- 
-    ignoreComments(pgmfile);
-
-    // Read file type.
-    fscanf(pgmfile, "%s", pgm->pgmType);
- 
-    ignoreComments(pgmfile);
- 
-    // Read data size.
-    fscanf(pgmfile, "%u %u", &(pgm->width), &(pgm->height));
-
-    ignoreComments(pgmfile);
- 
-    // Read maximum value.
-    fscanf(pgmfile, "%u", &(pgm->max_value));
-
-    ignoreComments(pgmfile);
- 
-    // Allocate memory to store data in the struct.
-    pgm->data = (uint8_t*) malloc(pgm->width * pgm->height * sizeof(uint8_t));
-
- 
-    // Store data in the struct.
-    if (!strcmp(pgm->pgmType, "P2")) {
-        // Plain data.
-        for (uint32_t y = 0; y < pgm->height; y++) {
-            for (uint32_t x = 0; x < pgm->width; x++) {
-                fscanf(pgmfile, "%hhu", &(pgm->data[IDX2D(x, y, pgm->width)]));
-            }
-        }
-    } else if (!strcmp(pgm->pgmType, "P5")) {
-        // Raw data.
-        fread(pgm->data, sizeof(uint8_t), pgm->width * pgm->height, pgmfile);
-    } else {
-        // Wrong file type.
-        printf("Wrong file type!\n");
-        exit(EXIT_FAILURE);
-    }
- 
-    // Close the file
-    fclose(pgmfile);
- 
-    return;
 }

@@ -44,11 +44,6 @@ void c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
 
 void c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
 
-
-// Function to open the input a PGM
-// file and process it
-void pgm_read(pgm_content_t* pgm, const char* filename);
-
 #ifdef __cplusplus
 }
 #endif
