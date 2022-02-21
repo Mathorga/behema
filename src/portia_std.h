@@ -80,6 +80,7 @@ void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cor
 
 
 // Execution functions:
+
 /// Feeds external spikes to the specified neurons.
 void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values);
 
@@ -119,6 +120,9 @@ void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t 
 
 /// Performs a full run cycle over the network cortex.
 void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
+
+
+// Mapping functions.
 
 /// Maps a value to a tick_pulse pattern according to the specified input mapping.
 /// @param sample_window The width of the sampling window.
