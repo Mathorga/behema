@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
         cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         if (rand() % 100 > 50) {
-            c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXCITING_VALUE, 2);
+            c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXC_VALUE, 2);
         }
 
         c2d_tick(prev_cortex, next_cortex);

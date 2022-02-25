@@ -107,9 +107,7 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->decay_value), sizeof(neuron_value_t), 1, out_file);
 
     fwrite(&(cortex->syngen_chance), sizeof(chance_t), 1, out_file);
-    fwrite(&(cortex->syndel_chance), sizeof(chance_t), 1, out_file);
     fwrite(&(cortex->synstr_chance), sizeof(chance_t), 1, out_file);
-    fwrite(&(cortex->synwk_chance), sizeof(chance_t), 1, out_file);
 
     fwrite(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, out_file);
     fwrite(&(cortex->max_syn_count), sizeof(syn_count_t), 1, out_file);
@@ -146,9 +144,7 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->decay_value), sizeof(neuron_value_t), 1, in_file);
 
     fread(&(cortex->syngen_chance), sizeof(chance_t), 1, in_file);
-    fread(&(cortex->syndel_chance), sizeof(chance_t), 1, in_file);
     fread(&(cortex->synstr_chance), sizeof(chance_t), 1, in_file);
-    fread(&(cortex->synwk_chance), sizeof(chance_t), 1, in_file);
 
     fread(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, in_file);
     fread(&(cortex->max_syn_count), sizeof(syn_count_t), 1, in_file);

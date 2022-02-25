@@ -51,8 +51,7 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_STARTING_VALUE 0x00U
 #define DEFAULT_RECOVERY_VALUE -0x22
 #define DEFAULT_MAX_TOUCH 0.25F
-#define DEFAULT_EXCITING_VALUE 0x1B
-#define DEFAULT_INHIBITING_VALUE -0x0A
+#define DEFAULT_EXC_VALUE 0x24
 #define DEFAULT_DECAY_RATE 0x01U
 #define DEFAULT_PULSE_WINDOW 0x39U
 #define DEFAULT_EVOL_STEP 0x0000000AU
@@ -60,10 +59,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_INHEXC_RATIO 0x06U
 #define DEFAULT_SAMPLE_WINDOW 0x0AU
 #define DEFAULT_MAX_TOT_STRENGTH 0x20U
-#define DEFAULT_SYNGEN_CHANCE 0x0200U
-#define DEFAULT_SYNDEL_CHANCE 0x0200U
-#define DEFAULT_SYNSTR_CHANCE 0x0020U
-#define DEFAULT_SYNWK_CHANCE 0x0200U
+#define DEFAULT_SYNGEN_CHANCE 0x00F0U
+#define DEFAULT_SYNSTR_CHANCE 0x0200U
 
 typedef uint8_t byte;
 
@@ -132,12 +129,6 @@ typedef struct neuron_t {
     pulse_mask_t tick_pulse_mask;
     // Amount of activations in the cortex's tick_pulse window.
     pulses_count_t tick_pulse;
-    // Activation history pattern.
-    // Used to know the pulse frequency over long periods of time (e.g. for synaptic plasticity).
-    // evol_pulse is just tick_pulse, but only updated every [evol_step] ticks (and with a different logic, but that's not crucial).
-    pulse_mask_t evol_pulse_mask;
-    // Amount of activations in the cortex's tick_pulse window.
-    pulses_count_t evol_pulse;
 
 
     // Current internal value.
@@ -176,18 +167,13 @@ typedef struct cortex2d_t {
     neuron_value_t fire_threshold;
     neuron_value_t recovery_value;
     neuron_value_t exc_value;
-    neuron_value_t inh_value;
     neuron_value_t decay_value;
 
 
-    // Chance of synapse generation (out of 0xFFFFU).
+    // Chance (out of 0xFFFFU) of synapse generation or deletion (structural plasticity).
     chance_t syngen_chance;
-    // Chance of synapse deletion (out of 0xFFFFU).
-    chance_t syndel_chance;
-    // Chance of synapse strengthening (out of 0xFFFFU).
+    // Chance (out of 0xFFFFU) of synapse strengthening or weakening (functional plasticity).
     chance_t synstr_chance;
-    // Chance of synapse weakening (out of 0xFFFFU).
-    chance_t synwk_chance;
 
 
     // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.

@@ -226,7 +226,7 @@ int main(int argc, char **argv) {
 
         // Feed the cortex.
         if (feeding && rand() % 100 > 10) {
-            c2d_rsfeed(prev_cortex, 0, inputs_count, 2 * DEFAULT_EXCITING_VALUE, inputs_spread);
+            c2d_rsfeed(prev_cortex, 0, inputs_count, 2 * DEFAULT_EXC_VALUE, inputs_spread);
         }
 
         if (counter % renderingInterval == 0) {

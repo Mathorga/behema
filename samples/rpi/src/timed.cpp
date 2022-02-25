@@ -82,8 +82,8 @@ int main(int argc, char **argv) {
             // startTime = time(NULL);
         }
 
-        c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXCITING_VALUE / 2);
-        c2d_sqfeed(prev_cortex, cortex_width - 1, 20, cortex_width, 30, DEFAULT_EXCITING_VALUE / 2);
+        c2d_sqfeed(prev_cortex, 0, 20, 1, 30, DEFAULT_EXC_VALUE / 2);
+        c2d_sqfeed(prev_cortex, cortex_width - 1, 20, cortex_width, 30, DEFAULT_EXC_VALUE / 2);
 
         // usleep(5000);
 

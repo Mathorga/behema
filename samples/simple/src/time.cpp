@@ -66,7 +66,7 @@ int main(int argc, char **argv) {
         // // Feed the cortex.
         // for (cortex_size_t k = 0; k < inputs_count; k++) {
         //     if (samples_count % inputs[k]) {
-        //         prev_cortex->neurons[k].value += DEFAULT_EXCITING_VALUE;
+        //         prev_cortex->neurons[k].value += DEFAULT_EXC_VALUE;
         //     }
         // }
 

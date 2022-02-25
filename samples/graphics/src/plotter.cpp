@@ -215,7 +215,7 @@ int main(int argc, char **argv) {
 
         // Feed the cortex.
         if (feeding) {
-            c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXCITING_VALUE);
+            c2d_sample_sqfeed(prev_cortex, lInputsCoords[0], lInputsCoords[1], lInputsCoords[2], lInputsCoords[3], sample_step, lInputs, DEFAULT_EXC_VALUE);
         }
 
         if (counter % plotInterval == 0) {
