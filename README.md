@@ -2,7 +2,7 @@
 <p align="center" width="100%">
     <img width="33%" src="/meta/portia.png"> 
 </p>
-Spiking neural network implementation through cellular automata.<br/>
+Spiking neural network inspired by cellular automata.<br/>
 
 ## Shared library installation (Linux)
 ### Standard
