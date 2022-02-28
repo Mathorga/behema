@@ -38,21 +38,33 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + currentNeuron->tick_pulse);
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) currentNeuron->tick_pulse);
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
+
+            bool fired = currentNeuron->tick_pulse_mask & 0x01U;
 
             float radius = 2.0F + 5.0F * ((float) currentNeuron->tick_pulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
-            if (neuronValue < 0) {
-                neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            // } else if (currentNeuron->value > cortex->fire_threshold + currentNeuron->tick_pulse) {
-            } else if (currentNeuron->value > cortex->fire_threshold) {
+            if (fired) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
-                neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
+                if (neuronValue < 0) {
+                    neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
+                } else {
+                    neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
+                }
             }
+
+            // if (neuronValue < 0) {
+            //     neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
+            // } else if (fired) {
+            // // } else if (currentNeuron->value > cortex->fire_threshold) {
+            //     neuronSpot.setFillColor(sf::Color::White);
+            // } else {
+            //     neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
+            // }
             
             neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.height);
 
