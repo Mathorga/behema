@@ -38,6 +38,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + currentNeuron->tick_pulse);
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             float radius = 2.0F + 5.0F * ((float) currentNeuron->tick_pulse) / ((float) cortex->pulse_window);
@@ -46,6 +47,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
+            // } else if (currentNeuron->value > cortex->fire_threshold + currentNeuron->tick_pulse) {
             } else if (currentNeuron->value > cortex->fire_threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {

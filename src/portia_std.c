@@ -349,11 +349,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                             if (prev_ac_mask & 0x01U) {
                                 if (syn_strength < MAX_SYN_STRENGTH &&
                                     prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
+                                    // Random component.
+                                    random < prev_cortex->synstr_chance / (syn_strength + 1) &&
                                     // Neighbor fired right before the current neuron.
                                     ((prev_neuron.tick_pulse_mask & 0x01U && neighbor.tick_pulse_mask >> 0x01U & 0x01U) ||
-                                    // Random component.
-                                    // TODO Change to inversely proportional: synapses should be less likely to strengthen when they're already strong.
-                                    random < prev_cortex->synstr_chance * (syn_strength + 1 + neighbor.tick_pulse + next_neuron->tick_pulse))) {
+                                    // Frequency component.
+                                    prev_neuron.tick_pulse - neighbor.tick_pulse < 10)) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
@@ -361,10 +362,12 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                                     next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
+                                           // Random component.
+                                           random < prev_cortex->synstr_chance / (syn_strength + 1) &&
                                            // Neighbor fired right after the current neuron.
                                            ((prev_neuron.tick_pulse_mask >> 0x01U & 0x01U && neighbor.tick_pulse_mask & 0x01U) ||
-                                           // Random component.
-                                           random < prev_cortex->synstr_chance / (syn_strength + 1 + neighbor.tick_pulse + next_neuron->tick_pulse))) {
+                                           // Frequency component.
+                                           prev_neuron.tick_pulse - neighbor.tick_pulse < 10)) {
                                     syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
@@ -395,8 +398,11 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 next_neuron->value += next_cortex->decay_value;
             }
 
+            next_neuron->tick_pulse_mask <<= 0x01;
+
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
             // TODO Increase fire threshold for very active neurons.
+            // if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.tick_pulse)) {
             if (prev_neuron.value > prev_cortex->fire_threshold) {
                 // Fired at the previous step.
                 next_neuron->value = next_cortex->recovery_value;
@@ -410,8 +416,6 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 // Decrease tick_pulse if the oldest recorded tick_pulse is active.
                 next_neuron->tick_pulse--;
             }
-
-            next_neuron->tick_pulse_mask <<= 0x01;
         }
     }
 
