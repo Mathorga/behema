@@ -315,7 +315,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         if (evolve) {
                             // Structural plasticity: create or destroy synapse.
                             if (prev_ac_mask & 0x01U &&
-                                random < prev_cortex->syngen_chance / (2 * neighbor.tick_pulse + 1) &&
+                                random < prev_cortex->syngen_chance / (POS_CHANCE_MULTIPLIER * (neighbor.tick_pulse + 1)) &&
                                 // Only 0-strength synapses can be deleted.
                                 syn_strength <= 0x00U) {
                                 // Delete synapse.
@@ -364,7 +364,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                     next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
                                            // Random component.
-                                           random < prev_cortex->synstr_chance / (syn_strength + 1) &&
+                                           random < prev_cortex->synstr_chance / (POS_CHANCE_MULTIPLIER * (syn_strength + 1)) &&
                                            // Neighbor fired right after the current neuron.
                                            ((prev_neuron.tick_pulse_mask >> 0x01U & 0x01U && neighbor.tick_pulse_mask & 0x01U) ||
                                            // Frequency component.
@@ -393,9 +393,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             }
 
             // Push to equilibrium by decaying to zero, both from above and below.
-            if (prev_neuron.value > 0x00U) {
+            if (prev_neuron.value > 0x00) {
                 next_neuron->value -= next_cortex->decay_value;
-            } else if (prev_neuron.value < 0x00U) {
+            } else if (prev_neuron.value < 0x00) {
                 next_neuron->value += next_cortex->decay_value;
             }
 
