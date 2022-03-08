@@ -38,12 +38,12 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) currentNeuron->tick_pulse);
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) currentNeuron->pulse);
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
-            bool fired = currentNeuron->tick_pulse_mask & 0x01U;
+            bool fired = currentNeuron->pulse_mask & 0x01U;
 
-            float radius = 2.0F + 5.0F * ((float) currentNeuron->tick_pulse) / ((float) cortex->pulse_window);
+            float radius = 2.0F + 5.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -158,7 +158,7 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_width = 100;
     cortex_size_t cortex_height = 60;
     nh_radius_t nh_radius = 2;
-    ticks_count_t sampleWindow = 10;
+    ticks_count_t sampleWindow = SAMPLE_WINDOW_MID;
     cv::Mat frame;
     cv::VideoCapture cam;
 
@@ -334,11 +334,11 @@ int main(int argc, char **argv) {
             }
 
             // Feed the cortex.
-            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 4);
-            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 4);
+            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 2);
+            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 2);
 
-            c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], 0x14);
-            c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], 0x14);
+            c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
+            c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
 
             sample_step++;
         }

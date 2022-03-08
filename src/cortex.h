@@ -81,7 +81,7 @@ typedef uint16_t syn_strength_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
-typedef int8_t pulses_count_t;
+typedef int8_t spikes_count_t;
 typedef uint16_t chance_t;
 
 typedef int32_t cortex_size_t;
@@ -132,9 +132,9 @@ typedef struct neuron_t {
     // xxxxxxxxxx01001010001010001001--------> t
     //                              ^
     // Used to know the pulse frequency in a given moment (e.g. for syngen).
-    pulse_mask_t tick_pulse_mask;
-    // Amount of activations in the cortex's tick_pulse window.
-    pulses_count_t tick_pulse;
+    pulse_mask_t pulse_mask;
+    // Amount of activations in the cortex' pulse window.
+    spikes_count_t pulse;
 
 
     // Current internal value.
@@ -165,7 +165,7 @@ typedef struct cortex2d_t {
     ticks_count_t evol_step;
     // Length of the window used to count pulses in the cortex' neurons.
     // TODO Switch "beat" and "pulse".
-    pulses_count_t pulse_window;
+    spikes_count_t pulse_window;
 
 
     // Radius of each neuron's neighborhood.
@@ -190,6 +190,7 @@ typedef struct cortex2d_t {
     chance_t inhexc_range;
 
 
+    // Length of the window used to sample inputs.
     ticks_count_t sample_window;
     pulse_mapping_t pulse_mapping;
 

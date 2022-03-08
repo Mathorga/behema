@@ -44,8 +44,8 @@ void c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask);
 /// Sets the evolution step for the cortex.
 void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step);
 
-/// Sets the tick_pulse window width for the cortex.
-void c2d_set_pulse_window(cortex2d_t* cortex, pulses_count_t window);
+/// Sets the pulse window width for the cortex.
+void c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window);
 
 /// Sets the sample window for the cortex.
 void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
@@ -124,10 +124,10 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 
 // Mapping functions.
 
-/// Maps a value to a tick_pulse pattern according to the specified input mapping.
+/// Maps a value to a pulse pattern according to the specified input mapping.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
-/// @param input The actual input to map to a tick_pulse (must be in range 0..sample_window).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 /// @param pulse_mapping The mapping algorithm to apply for mapping.
 bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
 
@@ -135,7 +135,7 @@ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_c
 /// Linear mapping always fire at least once, even if input is 0.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
-/// @param input The actual input to map to a tick_pulse (must be in range 0..sample_window).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 /// Computes a proportional mapping for the given input and sample step.
@@ -143,7 +143,7 @@ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, 
 /// This is to be preferred if a narrow window is being used or an even distribution is not critical.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
-/// @param input The actual input to map to a tick_pulse (must be in range 0..sample_window).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 /// Computes a proportional mapping for the given input and sample step.
@@ -151,7 +151,7 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
 /// This is to be preferred if a wide window is being used and an even distribution are critical, otherwise go for fprop.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
-/// @param input The actual input to map to a tick_pulse (must be in range 0..sample_window).
+/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 

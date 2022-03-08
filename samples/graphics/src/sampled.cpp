@@ -29,7 +29,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
-            float radius = 2.0F + 5.0F * ((float) currentNeuron->tick_pulse) / ((float) cortex->pulse_window);
+            float radius = 2.0F + 5.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -49,11 +49,11 @@ void drawNeurons(cortex2d_t* cortex,
             if (drawInfo) {
                 sf::Text pulseText;
                 pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
-                pulseText.setString(std::to_string(currentNeuron->tick_pulse));
+                pulseText.setString(std::to_string(currentNeuron->pulse));
                 pulseText.setFont(font);
                 pulseText.setCharacterSize(8);
                 pulseText.setFillColor(sf::Color::White);
-                if (currentNeuron->tick_pulse != 0) {
+                if (currentNeuron->pulse != 0) {
                     window->draw(pulseText);
                 }
             }
