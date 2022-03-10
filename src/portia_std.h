@@ -26,8 +26,9 @@ extern "C" {
 
 // Initialization functions:
 
-error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_window);
-error_code_t i2d_map(input2d_t* input, uint32_t src_min, uint32_t src_max, uint32_t* values);
+// Is this really needed?
+// TODO Try and implement inputs and outputs as entities of their own in order to see if it's useful.
+// error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_window);
 
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);

@@ -43,7 +43,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             bool fired = currentNeuron->pulse_mask & 0x01U;
 
-            float radius = 2.0F + 5.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
+            float radius = 1.0F + 6.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -244,8 +244,13 @@ int main(int argc, char **argv) {
     cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
     cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
 
-    c2d_touch_from_map(&even_cortex, "./res/100_60_touch.pgm");
-    c2d_inhexc_from_map(&even_cortex, "./res/100_60_inhexc.pgm");
+    char touchFileName[40];
+    char inhexcFileName[40];
+    sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
+    sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+
+    c2d_touch_from_map(&even_cortex, touchFileName);
+    c2d_inhexc_from_map(&even_cortex, inhexcFileName);
 
     ticks_count_t sample_step = samplingBound;
 

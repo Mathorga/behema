@@ -55,7 +55,7 @@ Copyright (C) 2021 Luka Micheletti
 // Completely arbitrary values used to define a sort of acceptable cortex right away.
 #define DEFAULT_THRESHOLD 0x88U
 #define DEFAULT_STARTING_VALUE 0x00U
-#define DEFAULT_RECOVERY_VALUE -0x22
+#define DEFAULT_RECOVERY_VALUE -0x2A
 #define DEFAULT_MAX_TOUCH 0.25F
 #define DEFAULT_EXC_VALUE 0x24
 #define DEFAULT_DECAY_RATE 0x01U

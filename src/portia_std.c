@@ -46,7 +46,7 @@ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t hei
         }
     }
 
-    return NO_ERROR;
+    return ERROR_NONE;
 }
 
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
@@ -79,7 +79,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
         }
     }
 
-    return NO_ERROR;
+    return ERROR_NONE;
 }
 
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
@@ -90,7 +90,7 @@ error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
 
     cortex->nh_radius = radius;
 
-    return NO_ERROR;
+    return ERROR_NONE;
 }
 
 void c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask) {
