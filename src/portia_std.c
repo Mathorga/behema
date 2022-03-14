@@ -403,6 +403,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
             // TODO Increase fire threshold for very active neurons.
+            // printf("threshold %d\n", prev_cortex->fire_threshold + prev_neuron.pulse);
             // if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.pulse)) {
             if (prev_neuron.value > prev_cortex->fire_threshold) {
                 // Fired at the previous step.

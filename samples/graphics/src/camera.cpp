@@ -38,7 +38,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) currentNeuron->pulse);
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             bool fired = currentNeuron->pulse_mask & 0x01U;
