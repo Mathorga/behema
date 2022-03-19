@@ -10,11 +10,6 @@
 #include <unistd.h>
 #include <iostream>
 
-uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
-    double slope = ((double) output_end - (double) output_start) / ((double) input_end - (double) input_start);
-    return (double) output_start + slope * ((double) input - (double) input_start);
-}
-
 void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
     for (cortex_size_t y = 0; y < cortex->height; y++) {
         for (cortex_size_t x = 0; x < cortex->width; x++) {
@@ -38,7 +33,7 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (10 * currentNeuron->pulse));
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             bool fired = currentNeuron->pulse_mask & 0x01U;
@@ -56,15 +51,6 @@ void drawNeurons(cortex2d_t* cortex,
                     neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
                 }
             }
-
-            // if (neuronValue < 0) {
-            //     neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            // } else if (fired) {
-            // // } else if (currentNeuron->value > cortex->fire_threshold) {
-            //     neuronSpot.setFillColor(sf::Color::White);
-            // } else {
-            //     neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
-            // }
             
             neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.height);
 
@@ -322,10 +308,10 @@ int main(int argc, char **argv) {
                 for (cortex_size_t y = 0; y < rInputSize.height; y++) {
                     for (cortex_size_t x = 0; x < rInputSize.width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        rInputs[IDX2D(x, y, rInputSize.width)] = map(val[2],
+                        rInputs[IDX2D(x, y, rInputSize.width)] = fmap(val[2],
                                                                      0, 255,
                                                                      0, even_cortex.sample_window - 1);
-                        bInputs[IDX2D(x, y, rInputSize.width)] = map(val[0],
+                        bInputs[IDX2D(x, y, rInputSize.width)] = fmap(val[0],
                                                                      0, 255,
                                                                      0, even_cortex.sample_window - 1);
                     }
@@ -339,11 +325,11 @@ int main(int argc, char **argv) {
             }
 
             // Feed the cortex.
-            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 2);
-            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 2);
+            c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 4);
+            c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 4);
 
-            c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
-            c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
+            // c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
+            // c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
 
             sample_step++;
         }
@@ -374,7 +360,7 @@ int main(int argc, char **argv) {
         // End the current frame.
         window.display();
 
-        // usleep(5000);
+        // usleep(10000);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);

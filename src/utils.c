@@ -87,6 +87,11 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
     return output_start + slope * (input - input_start);
 }
 
+uint32_t fmap(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
+    double slope = ((double) output_end - (double) output_start) / ((double) input_end - (double) input_start);
+    return (double) output_start + slope * ((double) input - (double) input_start);
+}
+
 
 void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
@@ -175,7 +180,7 @@ error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
         for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->neurons[i].max_syn_count = map(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
+            cortex->neurons[i].max_syn_count = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
         }
     } else {
         printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
@@ -197,7 +202,7 @@ error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
         for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->neurons[i].inhexc_ratio = map(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
+            cortex->neurons[i].inhexc_ratio = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
         }
     } else {
         printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");

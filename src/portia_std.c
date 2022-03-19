@@ -399,12 +399,14 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 next_neuron->value += next_cortex->decay_value;
             }
 
+            if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01U) {
+                // Decrease pulse if the oldest recorded pulse is active.
+                next_neuron->pulse--;
+            }
+
             next_neuron->pulse_mask <<= 0x01U;
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-            // TODO Increase fire threshold for very active neurons.
-            // printf("threshold %d\n", prev_cortex->fire_threshold + prev_neuron.pulse);
-            // if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.pulse)) {
             if (prev_neuron.value > prev_cortex->fire_threshold) {
                 // Fired at the previous step.
                 next_neuron->value = next_cortex->recovery_value;
@@ -412,11 +414,6 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 // Store pulse.
                 next_neuron->pulse_mask |= 0x01U;
                 next_neuron->pulse++;
-            }
-
-            if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01U) {
-                // Decrease pulse if the oldest recorded pulse is active.
-                next_neuron->pulse--;
             }
         }
     }
