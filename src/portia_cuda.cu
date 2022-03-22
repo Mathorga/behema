@@ -1,4 +1,32 @@
-#include "portia_cuda.cuh"
+#include "portia_cuda.h"
+
+error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
+    // TODO.
+}
+
+error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
+    // TODO.
+}
+
+error_code_t c2d_to_device(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
+    // TODO.
+}
+
+error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
+    // TODO.
+}
+
+
+__global__ void c2d_run(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
+    cortex2d_t* tmp_cortex;
+
+    for (ticks_count_t sample_step = 0; sample_step <= prev_cortex->sample_window; sample_step++) {
+        c2d_tick(prev_cortex, next_cortex);
+        tmp_cortex = prev_cortex;
+        prev_cortex = next_cortex;
+        next_cortex = tmp_cortex;
+    }
+}
 
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     cortex_size_t x = threadIdx.x;

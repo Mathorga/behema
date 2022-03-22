@@ -1,5 +1,17 @@
 #include "portia_std.h"
 
+error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+    input->x0 = x0;
+    input->y0 = y0;
+    input->x1 = x1;
+    input->y1 = y1;
+    input->exc_value = exc_value;
+    input->pulse_mapping = pulse_mapping;
+
+    // Allocate values.
+    input->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+}
+
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(nh_mask_t) * 8) {
         // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
@@ -166,6 +178,20 @@ void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t co
         // Loop through count.
         for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
             cortex->neurons[i].value += values[i];
+        }
+    }
+}
+
+void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
+    for (cortex_size_t y = input->y0; y < input->y1; y++) {
+        for (cortex_size_t x = input->x0; x < input->x1; x++) {
+            if (pulse_map(cortex->sample_window,
+                          cortex->ticks_count % cortex->sample_window,
+                          input->values[IDX2D(x - (input->x1 - input->x0), y - (input->y1 - input->y0), input->x1 - input->x0)],
+                          cortex->pulse_mapping)) {
+                cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
+            }
+            cortex->neurons[IDX2D(x, y, cortex->width)].value += input->values[IDX2D(x - (input->x1 - input->x0), y - (input->y1 - input->y0), input->x1 - input->x0)];
         }
     }
 }

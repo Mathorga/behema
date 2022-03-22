@@ -28,7 +28,7 @@ extern "C" {
 
 // Is this really needed?
 // TODO Try and implement inputs and outputs as entities of their own in order to see if it's useful.
-// error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_window);
+error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
@@ -85,6 +85,11 @@ void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cor
 /// Feeds external spikes to the specified neurons.
 void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values);
 
+/// Feeds a cortex with the provided input2d.
+/// @param cortex The cortex to feed.
+/// @param input The input to feed the cortex.
+void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
+
 /// Externally feeds the neurons inside the rectangle described by the given parameters.
 /// x0 and y0 cannot be less than 0, while x1 and y1 cannot be greater than the cortex's width and height respectively.
 /// @param cortex The target cortex to feed.
@@ -128,7 +133,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 /// Maps a value to a pulse pattern according to the specified input mapping.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
-/// @param input The actual input to map to a pulse (must be in range 0..sample_window).
+/// @param input The actual input to map to a pulse (must be in range 0..(sample_window - 1)).
 /// @param pulse_mapping The mapping algorithm to apply for mapping.
 bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
 

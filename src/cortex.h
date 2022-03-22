@@ -43,9 +43,9 @@ Copyright (C) 2021 Luka Micheletti
 #define PULSE_WINDOW_MID 0x1FU
 #define PULSE_WINDOW_SMALL 0x0AU
 
-#define SAMPLE_WINDOW_LARGE 0x3FU
-#define SAMPLE_WINDOW_MID 0x1FU
-#define SAMPLE_WINDOW_SMALL 0x0AU
+#define SAMPLE_WINDOW_LARGE 0x40U
+#define SAMPLE_WINDOW_MID 0x20U
+#define SAMPLE_WINDOW_SMALL 0x10U
 
 #define POS_CHANCE_MULTIPLIER 0x05U
 
@@ -106,10 +106,12 @@ typedef struct input2d_t {
     cortex_size_t y0;
     cortex_size_t x1;
     cortex_size_t y1;
-    ticks_count_t sample_window;
+    neuron_value_t exc_value;
     pulse_mapping_t pulse_mapping;
     ticks_count_t* values;
 } input2d_t;
+
+// TODO output2d.
 
 /// Neuron.
 typedef struct neuron_t {

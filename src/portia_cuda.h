@@ -16,13 +16,21 @@ Copyright (C) 2022 Luka Micheletti
 // Initialization functions:
 
 /// Initializes the given cortex with default values.
-__global__ error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
 /// Returns a cortex with the same properties as the given one.
-__global__ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
+error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
+
+/// Copies a cortex from host to device.
+error_code_t c2d_to_device(cortex2d_t* host_cortex, cortex2d_t* device_cortex);
+
+/// Copies a cortex from device to host.
+error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex);
 
 
 // Execution functions:
+
+__global__ void c2d_run(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 
 /// Performs a full run cycle over the network cortex.
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
