@@ -163,6 +163,9 @@ typedef struct cortex2d_t {
     cortex_size_t height;
     // Ticks performed since cortex creation.
     ticks_count_t ticks_count;
+    // Random state. The random state has to be consistent inside a cortex, so it qualifies as a property.
+    // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
+    uint32_t rand_state;
     // Evolutions performed since cortex creation.
     ticks_count_t evols_count;
     // Amount of ticks between each evolution.

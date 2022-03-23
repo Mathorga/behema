@@ -1,5 +1,15 @@
 #include "portia_std.h"
 
+// The state word must be initialized to non-zero.
+uint32_t xorshf32(uint32_t state) {
+    // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
+    uint32_t x = state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return x;
+}
+
 error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
     input->x0 = x0;
     input->y0 = y0;
@@ -14,49 +24,56 @@ error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cort
     return ERROR_NONE;
 }
 
-error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
+error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(nh_mask_t) * 8) {
         // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    cortex->width = width;
-    cortex->height = height;
-    cortex->ticks_count = 0x00U;
-    cortex->evols_count = 0x00U;
-    cortex->evol_step = DEFAULT_EVOL_STEP;
-    cortex->pulse_window = DEFAULT_PULSE_WINDOW;
+    // Allocate the cortex
+    (*cortex) = (cortex2d_t*) malloc(sizeof(cortex2d_t));
 
-    cortex->nh_radius = nh_radius;
-    cortex->fire_threshold = DEFAULT_THRESHOLD;
-    cortex->recovery_value = DEFAULT_RECOVERY_VALUE;
-    cortex->exc_value = DEFAULT_EXC_VALUE;
-    cortex->decay_value = DEFAULT_DECAY_RATE;
-    cortex->syngen_chance = DEFAULT_SYNGEN_CHANCE;
-    cortex->synstr_chance = DEFAULT_SYNSTR_CHANCE;
-    cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
-    cortex->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
-    cortex->inhexc_range = DEFAULT_INHEXC_RANGE;
+    // Setup cortex properties.
+    (*cortex)->width = width;
+    (*cortex)->height = height;
+    (*cortex)->ticks_count = 0x00U;
+    (*cortex)->rand_state = 0x01;
+    (*cortex)->evols_count = 0x00U;
+    (*cortex)->evol_step = DEFAULT_EVOL_STEP;
+    (*cortex)->pulse_window = DEFAULT_PULSE_WINDOW;
 
-    cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
-    cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
+    (*cortex)->nh_radius = nh_radius;
+    (*cortex)->fire_threshold = DEFAULT_THRESHOLD;
+    (*cortex)->recovery_value = DEFAULT_RECOVERY_VALUE;
+    (*cortex)->exc_value = DEFAULT_EXC_VALUE;
+    (*cortex)->decay_value = DEFAULT_DECAY_RATE;
+    (*cortex)->syngen_chance = DEFAULT_SYNGEN_CHANCE;
+    (*cortex)->synstr_chance = DEFAULT_SYNSTR_CHANCE;
+    (*cortex)->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
+    (*cortex)->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    (*cortex)->inhexc_range = DEFAULT_INHEXC_RANGE;
 
-    cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
+    (*cortex)->sample_window = DEFAULT_SAMPLE_WINDOW;
+    (*cortex)->pulse_mapping = PULSE_MAPPING_LINEAR;
 
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
-            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].synex_mask = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_a = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_b = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].synstr_mask_c = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse_mask = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].pulse = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].value = DEFAULT_STARTING_VALUE;
-            cortex->neurons[IDX2D(x, y, cortex->width)].max_syn_count = cortex->max_syn_count;
-            cortex->neurons[IDX2D(x, y, cortex->width)].syn_count = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].tot_syn_strength = 0x00U;
-            cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
+    // Allocate neurons.
+    (*cortex)->neurons = (neuron_t*) malloc((*cortex)->width * (*cortex)->height * sizeof(neuron_t));
+
+    // Setup neurons' properties.
+    for (cortex_size_t y = 0; y < (*cortex)->height; y++) {
+        for (cortex_size_t x = 0; x < (*cortex)->width; x++) {
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synac_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synex_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_a = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_b = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_c = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].value = DEFAULT_STARTING_VALUE;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].max_syn_count = (*cortex)->max_syn_count;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].syn_count = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].tot_syn_strength = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
         }
     }
 
@@ -84,8 +101,6 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
 
     to->sample_window = from->sample_window;
     to->pulse_mapping = from->pulse_mapping;
-
-    to->neurons = (neuron_t*) malloc(to->width * to->height * sizeof(neuron_t));
 
     for (cortex_size_t y = 0; y < from->height; y++) {
         for (cortex_size_t x = 0; x < from->width; x++) {
@@ -237,7 +252,8 @@ void c2d_rfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t c
     if (starting_index + count < cortex->width * cortex->height) {
         // Loop through count.
         for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i].value += xorshf32() % max_value;
+            cortex->rand_state = xorshf32(cortex->rand_state);
+            cortex->neurons[i].value += cortex->rand_state % max_value;
         }
     }
 }
@@ -255,7 +271,8 @@ void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t 
     if ((starting_index + count) * spread < cortex->width * cortex->height) {
         // Loop through count.
         for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i * spread].value += xorshf32() % max_value;
+            cortex->rand_state = xorshf32(cortex->rand_state);
+            cortex->neurons[i * spread].value += cortex->rand_state % max_value;
         }
     }
 }
@@ -325,7 +342,8 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Pick a random number for each neighbor, capped to the max uint16 value.
-                        chance_t random = xorshf32() % 0xFFFFU;
+                        next_cortex->rand_state = xorshf32(next_cortex->rand_state);
+                        chance_t random = next_cortex->rand_state % 0xFFFFU;
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
@@ -557,4 +575,5 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
 
 bool_t pulse_map_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // TODO
+    return FALSE;
 }

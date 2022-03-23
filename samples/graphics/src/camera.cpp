@@ -187,23 +187,31 @@ int main(int argc, char **argv) {
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
 
     // Create network model.
-    cortex2d_t even_cortex;
-    cortex2d_t odd_cortex;
+    cortex2d_t* even_cortex;
+    cortex2d_t* odd_cortex;
     error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != 0) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    c2d_set_sample_window(&even_cortex, sampleWindow);
-    c2d_set_evol_step(&even_cortex, 0x01U);
-    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_RPROP);
-    c2d_set_max_syn_count(&even_cortex, 24);
-    c2d_copy(&odd_cortex, &even_cortex);
+    error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    if (error != 0) {
+        printf("Error %d during init\n", error);
+        exit(1);
+    }
+
+    // Customize cortex properties.
+    c2d_set_sample_window(even_cortex, sampleWindow);
+    c2d_set_evol_step(even_cortex, 0x01U);
+    c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_max_syn_count(even_cortex, 24);
+    c2d_copy(odd_cortex, even_cortex);
+
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
 
-    initPositions(&even_cortex, xNeuronPositions, yNeuronPositions);
+    initPositions(even_cortex, xNeuronPositions, yNeuronPositions);
     
     // create the window
     sf::RenderWindow window(desktopMode, "Portia", sf::Style::Fullscreen);
@@ -218,10 +226,10 @@ int main(int argc, char **argv) {
 
     // Inputs.
     input2d_t leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 4, PULSE_MAPPING_FPROP);
+    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
 
     input2d_t rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 4, PULSE_MAPPING_FPROP);
+    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
 
     cv::Size eyeSize = cv::Size(leftEye.x1 - leftEye.x0, leftEye.y1 - leftEye.y0);
 
@@ -233,8 +241,8 @@ int main(int argc, char **argv) {
     sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
     sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
 
-    c2d_touch_from_map(&even_cortex, touchFileName);
-    c2d_inhexc_from_map(&even_cortex, inhexcFileName);
+    c2d_touch_from_map(even_cortex, touchFileName);
+    c2d_inhexc_from_map(even_cortex, inhexcFileName);
 
     ticks_count_t samplingBound = sampleWindow - 1;
     ticks_count_t sample_step = samplingBound;
@@ -247,8 +255,8 @@ int main(int argc, char **argv) {
     for (int i = 0; window.isOpen(); i++) {
         counter++;
 
-        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
+        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;

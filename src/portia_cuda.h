@@ -13,13 +13,19 @@ Copyright (C) 2022 Luka Micheletti
 #include "error.h"
 #include "utils.h"
 
+// Util functions:
+
+/// Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
+__device__ uint32_t xorshf32();
+
+
 // Initialization functions:
 
 /// Initializes the given input with the given values.
 error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
 /// Initializes the given cortex with default values.
-error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
 /// Returns a cortex with the same properties as the given one.
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);

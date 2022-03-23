@@ -24,9 +24,6 @@ typedef struct pgm_content_t {
     uint32_t max_value;
 } pgm_content_t;
 
-// Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
-uint32_t xorshf32();
-
 // Maps a value to the specified output domain.
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
 // Maps a value to the specified output domain while preserving decimal integrity.
