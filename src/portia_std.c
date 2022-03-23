@@ -32,6 +32,9 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
 
     // Allocate the cortex
     (*cortex) = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    if ((*cortex) == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
 
     // Setup cortex properties.
     (*cortex)->width = width;
@@ -58,6 +61,9 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
 
     // Allocate neurons.
     (*cortex)->neurons = (neuron_t*) malloc((*cortex)->width * (*cortex)->height * sizeof(neuron_t));
+    if ((*cortex)->neurons == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
 
     // Setup neurons' properties.
     for (cortex_size_t y = 0; y < (*cortex)->height; y++) {
