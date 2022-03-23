@@ -1,5 +1,9 @@
 #include "portia_cuda.h"
 
+error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+    // TODO.
+}
+
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     // TODO.
 }
@@ -17,20 +21,9 @@ error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
 }
 
 
-__global__ void c2d_run(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
-    cortex2d_t* tmp_cortex;
-
-    for (ticks_count_t sample_step = 0; sample_step <= prev_cortex->sample_window; sample_step++) {
-        c2d_tick(prev_cortex, next_cortex);
-        tmp_cortex = prev_cortex;
-        prev_cortex = next_cortex;
-        next_cortex = tmp_cortex;
-    }
-}
-
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
-    cortex_size_t x = threadIdx.x;
-    cortex_size_t y = threadIdx.y;
+    cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
+    cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
     // Retrieve the involved neurons.
     cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
@@ -198,9 +191,7 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     next_neuron->pulse_mask <<= 0x01U;
 
     // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-    // TODO Increase fire threshold for very active neurons.
-    // if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.pulse)) {
-    if (prev_neuron.value > prev_cortex->fire_threshold) {
+    if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.pulse)) {
         // Fired at the previous step.
         next_neuron->value = next_cortex->recovery_value;
 

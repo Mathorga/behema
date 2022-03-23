@@ -15,6 +15,9 @@ Copyright (C) 2022 Luka Micheletti
 
 // Initialization functions:
 
+/// Initializes the given input with the given values.
+error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
+
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
@@ -29,8 +32,6 @@ error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex);
 
 
 // Execution functions:
-
-__global__ void c2d_run(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 
 /// Performs a full run cycle over the network cortex.
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);

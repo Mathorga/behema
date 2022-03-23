@@ -99,6 +99,8 @@ typedef enum pulse_mapping_t {
     PULSE_MAPPING_FPROP = 0x10001,
     // Rounded proportional.
     PULSE_MAPPING_RPROP = 0x10002,
+    // Double floored proportional.
+    PULSE_MAPPING_DFPROP = 0x10003,
 } pulse_mapping_t;
 
 typedef struct input2d_t {

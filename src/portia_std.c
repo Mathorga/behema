@@ -10,6 +10,8 @@ error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cort
 
     // Allocate values.
     input->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+
+    return ERROR_NONE;
 }
 
 error_code_t c2d_init(cortex2d_t* cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
@@ -183,15 +185,15 @@ void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t co
 }
 
 void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
+    #pragma omp parallel for collapse(2)
     for (cortex_size_t y = input->y0; y < input->y1; y++) {
         for (cortex_size_t x = input->x0; x < input->x1; x++) {
             if (pulse_map(cortex->sample_window,
                           cortex->ticks_count % cortex->sample_window,
-                          input->values[IDX2D(x - (input->x1 - input->x0), y - (input->y1 - input->y0), input->x1 - input->x0)],
+                          input->values[IDX2D(x - input->x0, y - input->y0, input->x1 - input->x0)],
                           cortex->pulse_mapping)) {
                 cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
             }
-            cortex->neurons[IDX2D(x, y, cortex->width)].value += input->values[IDX2D(x - (input->x1 - input->x0), y - (input->y1 - input->y0), input->x1 - input->x0)];
         }
     }
 }
@@ -259,7 +261,7 @@ void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t 
 }
 
 void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
-    #pragma omp parallel for
+    #pragma omp parallel for collapse(2)
     for (cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (cortex_size_t x = 0; x < prev_cortex->width; x++) {
             // Retrieve the involved neurons.
@@ -433,7 +435,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             next_neuron->pulse_mask <<= 0x01U;
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-            if (prev_neuron.value > prev_cortex->fire_threshold) {
+            if (prev_neuron.value > prev_cortex->fire_threshold + prev_neuron.pulse) {
                 // Fired at the previous step.
                 next_neuron->value = next_cortex->recovery_value;
 
@@ -461,6 +463,9 @@ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_c
                 break;
             case PULSE_MAPPING_RPROP:
                 result = pulse_map_rprop(sample_window, sample_step, input);
+                break;
+            case PULSE_MAPPING_DFPROP:
+                result = pulse_map_dfprop(sample_window, sample_step, input);
                 break;
             default:
                 break;
@@ -548,4 +553,8 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     }
 
     return result;
+}
+
+bool_t pulse_map_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    // TODO
 }

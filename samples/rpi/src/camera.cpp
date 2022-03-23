@@ -142,12 +142,12 @@ int main(int argc, char **argv) {
         // c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
         // c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
 
-        sample_step++;
+        // Tick the cortex.
+        c2d_tick(prev_cortex, next_cortex);
 
         // usleep(10000);
 
-        // Tick the cortex.
-        c2d_tick(prev_cortex, next_cortex);
+        sample_step++;
     }
     
     return 0;

@@ -33,8 +33,8 @@ void drawNeurons(cortex2d_t* cortex,
 
             neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
-            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (10 * currentNeuron->pulse));
-            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
+            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
+            // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
             bool fired = currentNeuron->pulse_mask & 0x01U;
 
@@ -196,7 +196,7 @@ int main(int argc, char **argv) {
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
-    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
+    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(&even_cortex, 24);
     c2d_copy(&odd_cortex, &even_cortex);
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
     initPositions(&even_cortex, xNeuronPositions, yNeuronPositions);
     
     // create the window
-    sf::RenderWindow window(desktopMode, "Liath", sf::Style::Fullscreen);
+    sf::RenderWindow window(desktopMode, "Portia", sf::Style::Fullscreen);
     window.setMouseCursorVisible(false);
     
     bool feeding = false;
@@ -300,12 +300,12 @@ int main(int argc, char **argv) {
 
                 cv::Mat resized;
                 cv::resize(frame, resized, eyeSize);
-                
+
                 resized.at<uint8_t>(cv::Point(0, 0));
                 for (cortex_size_t y = 0; y < eyeSize.height; y++) {
                     for (cortex_size_t x = 0; x < eyeSize.width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        leftEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[2],
+                        leftEye.values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
                                                                           0, 255,
                                                                           0, samplingBound);
                         rightEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
@@ -313,6 +313,18 @@ int main(int argc, char **argv) {
                                                                            0, samplingBound);
                     }
                 }
+
+                // cv::resize(resized, frame, eyeSize * 15, 0, 0, cv::INTER_NEAREST);
+                // cv::imshow("Preview", frame);
+                // cv::waitKey(1);
+
+
+                // for (cortex_size_t y = 0; y < eyeSize.height; y++) {
+                //     for (cortex_size_t x = 0; x < eyeSize.width; x++) {
+                //         printf("%d ", leftEye.values[IDX2D(x, y, eyeSize.width)]);
+                //     }
+                //     printf("\n");
+                // }
 
                 sample_step = 0;
             }
@@ -357,7 +369,7 @@ int main(int argc, char **argv) {
         // End the current frame.
         window.display();
 
-        usleep(10000);
+        // usleep(10000);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);

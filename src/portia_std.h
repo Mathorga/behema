@@ -26,8 +26,7 @@ extern "C" {
 
 // Initialization functions:
 
-// Is this really needed?
-// TODO Try and implement inputs and outputs as entities of their own in order to see if it's useful.
+/// Initializes the given input with the given values.
 error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
 /// Initializes the given cortex with default values.
@@ -159,6 +158,8 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+
+bool_t pulse_map_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 
 #ifdef __cplusplus
