@@ -47,6 +47,7 @@ Copyright (C) 2021 Luka Micheletti
 #define SAMPLE_WINDOW_MID 0x20U
 #define SAMPLE_WINDOW_SMALL 0x10U
 
+// Defines the ratio between positive and negative plasticity.
 #define POS_CHANCE_MULTIPLIER 0x14U
 
 #define MAX_SYN_STRENGTH 0x07U
