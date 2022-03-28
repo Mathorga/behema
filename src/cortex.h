@@ -47,9 +47,6 @@ Copyright (C) 2021 Luka Micheletti
 #define SAMPLE_WINDOW_MID 0x20U
 #define SAMPLE_WINDOW_SMALL 0x10U
 
-// Defines the ratio between positive and negative plasticity.
-#define POS_CHANCE_MULTIPLIER 0x14U
-
 #define MAX_SYN_STRENGTH 0x07U
 #define MAX_CHANCE 0xFFFFU
 
@@ -65,8 +62,8 @@ Copyright (C) 2021 Luka Micheletti
 #define DEFAULT_INHEXC_RANGE 0x64U
 #define DEFAULT_INHEXC_RATIO 0x06U
 #define DEFAULT_SAMPLE_WINDOW SAMPLE_WINDOW_SMALL
-#define DEFAULT_MAX_TOT_STRENGTH 0x1AU
-#define DEFAULT_SYNGEN_CHANCE 0x01A0U
+#define DEFAULT_MAX_TOT_STRENGTH 0x20U
+#define DEFAULT_SYNGEN_CHANCE 0x02A0U
 #define DEFAULT_SYNSTR_CHANCE 0x00A0U
 
 typedef uint8_t byte;
