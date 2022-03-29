@@ -413,6 +413,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                 if (syn_strength < MAX_SYN_STRENGTH &&
                                     prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
                                     // TODO Make sure there's no overflow.
+                                    // TODO Try this:
+//                                     (random < prev_cortex->synstr_chance * neighbor.pulse ||
+//                                     random < prev_cortex->synstr_chance * syn_strength)
                                     random < prev_cortex->synstr_chance * (neighbor.pulse - syn_strength)) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
@@ -422,6 +425,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                     next_neuron->tot_syn_strength++;
                                 } else if (syn_strength > 0x00U &&
                                            // TODO Make sure there's no overflow.
+                                           // TODO Try this:
+//                                            (random < prev_cortex->synstr_chance / (neighbor.pulse + 1) ||
+//                                            random < prev_cortex->synstr_chance / (syn_strength + 1))
                                            random < prev_cortex->synstr_chance / (neighbor.pulse + syn_strength + 1)) {
                                     syn_strength--;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
