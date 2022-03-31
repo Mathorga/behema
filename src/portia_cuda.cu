@@ -190,6 +190,9 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                 next_cortex->rand_state = xorshf32(next_cortex->rand_state);
                 chance_t random = next_cortex->rand_state % 0xFFFFU;
 
+                // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
+                syn_strength_t strength_diff = MAX_SYN_STRENGTH - syn_strength;
+
                 // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                 if (prev_ac_mask & 0x01U) {
                     neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
@@ -204,19 +207,12 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                 // Perform the evolution phase if allowed.
                 if (evolve) {
-                    // Structural plasticity: create or destroy synapse.
-                    if (prev_ac_mask & 0x01U &&
-                        random < prev_cortex->syngen_chance / (POS_CHANCE_MULTIPLIER * (neighbor.pulse + 1)) &&
-                        // Only 0-strength synapses can be deleted.
-                        syn_strength <= 0x00U) {
-                        // Delete synapse.
-                        next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
-
-                        next_neuron->syn_count--;
-                    } else if (!(prev_ac_mask & 0x01U) &&
-                                // TODO Make sure there's no overflow.
-                                random < prev_cortex->syngen_chance * neighbor.pulse &&
-                                prev_neuron.syn_count < next_neuron->max_syn_count) {
+                    // Structural plasticity: create or destroy a synapse.
+                    if (!(prev_ac_mask & 0x01U) &&
+                        prev_neuron.syn_count < next_neuron->max_syn_count &&
+                        // Frequency component.
+                        // TODO Make sure there's no overflow.
+                        random < prev_cortex->syngen_chance * (chance_t) neighbor.pulse) {
                         // Add synapse.
                         next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -235,18 +231,23 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         }
 
                         next_neuron->syn_count++;
+                    } else if (prev_ac_mask & 0x01U &&
+                                // Only 0-strength synapses can be deleted.
+                                syn_strength <= 0x00U &&
+                                // Frequency component.
+                                random < prev_cortex->syngen_chance / (neighbor.pulse + 1)) {
+                        // Delete synapse.
+                        next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
+
+                        next_neuron->syn_count--;
                     }
 
-                    // Functional plasticity: strengthen or weaken synapse.
+                    // Functional plasticity: strengthen or weaken a synapse.
                     if (prev_ac_mask & 0x01U) {
                         if (syn_strength < MAX_SYN_STRENGTH &&
                             prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
-                            // Random component.
-                            random < prev_cortex->synstr_chance / (syn_strength + 1) &&
-                            // Neighbor fired right before the current neuron.
-                            ((prev_neuron.pulse_mask & 0x01U && neighbor.pulse_mask >> 0x01U & 0x01U) ||
-                            // Frequency component.
-                            neighbor.pulse > (prev_cortex->pulse_window / 20))) {
+                            // TODO Make sure there's no overflow.
+                            random < prev_cortex->synstr_chance * (chance_t) neighbor.pulse * (chance_t) strength_diff) {
                             syn_strength++;
                             next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                             next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
@@ -254,12 +255,8 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                             next_neuron->tot_syn_strength++;
                         } else if (syn_strength > 0x00U &&
-                                    // Random component.
-                                    random < prev_cortex->synstr_chance / (POS_CHANCE_MULTIPLIER * (syn_strength + 1)) &&
-                                    // Neighbor fired right after the current neuron.
-                                    ((prev_neuron.pulse_mask >> 0x01U & 0x01U && neighbor.pulse_mask & 0x01U) ||
-                                    // Frequency component.
-                                    neighbor.pulse < (prev_cortex->pulse_window / 10))) {
+                                    // TODO Make sure there's no overflow.
+                                    random < prev_cortex->synstr_chance / (neighbor.pulse + syn_strength + 1)) {
                             syn_strength--;
                             next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                             next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
@@ -290,21 +287,21 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
         next_neuron->value += next_cortex->decay_value;
     }
 
+    if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01U) {
+        // Decrease pulse if the oldest recorded pulse is active.
+        next_neuron->pulse--;
+    }
+
     next_neuron->pulse_mask <<= 0x01U;
 
     // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-    if (prev_neuron.value > (prev_cortex->fire_threshold + prev_neuron.pulse)) {
+    if (prev_neuron.value > prev_cortex->fire_threshold + prev_neuron.pulse) {
         // Fired at the previous step.
         next_neuron->value = next_cortex->recovery_value;
 
         // Store pulse.
         next_neuron->pulse_mask |= 0x01U;
         next_neuron->pulse++;
-    }
-
-    if ((prev_neuron.pulse_mask >> prev_cortex->pulse_window) & 0x01U) {
-        // Decrease pulse if the oldest recorded pulse is active.
-        next_neuron->pulse--;
     }
 
     next_cortex->ticks_count++;

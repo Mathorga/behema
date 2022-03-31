@@ -75,12 +75,12 @@ typedef int16_t neuron_value_t;
 typedef uint64_t nh_mask_t;
 typedef int8_t nh_radius_t;
 typedef uint8_t syn_count_t;
-typedef uint16_t syn_strength_t;
+typedef uint8_t syn_strength_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
 typedef int8_t spikes_count_t;
-typedef uint16_t chance_t;
+typedef uint32_t chance_t;
 
 typedef int32_t cortex_size_t;
 
