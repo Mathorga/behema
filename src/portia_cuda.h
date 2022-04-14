@@ -16,7 +16,7 @@ Copyright (C) 2022 Luka Micheletti
 // Util functions:
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^96-1.
-__device__ uint32_t xorshf32();
+__host__ __device__ uint32_t xorshf32();
 
 
 // Initialization functions:
