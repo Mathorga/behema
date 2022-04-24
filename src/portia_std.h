@@ -38,6 +38,9 @@ error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cort
 /// Initializes the given cortex with default values.
 error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
+/// Destroys the given cortex2d and frees memory.
+error_code_t c2d_destroy(cortex2d_t* cortex);
+
 /// Returns a cortex with the same properties as the given one.
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
 

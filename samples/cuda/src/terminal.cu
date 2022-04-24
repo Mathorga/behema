@@ -27,10 +27,11 @@ int main(int argc, char **argv) {
 
     srand(time(NULL));
 
-    error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    printf("ERROR %d", error);
-    // c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
-    // c2d_copy(odd_cortex, even_cortex);
+    error_code_t error;
+
+    error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_copy(odd_cortex, even_cortex);
 
     // for (int i = 0;; i++) {
     //     cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;

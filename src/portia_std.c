@@ -40,7 +40,7 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
     (*cortex)->width = width;
     (*cortex)->height = height;
     (*cortex)->ticks_count = 0x00U;
-    (*cortex)->rand_state = 0x01;
+    (*cortex)->rand_state = 0x01U;
     (*cortex)->evols_count = 0x00U;
     (*cortex)->evol_step = DEFAULT_EVOL_STEP;
     (*cortex)->pulse_window = DEFAULT_PULSE_WINDOW;
@@ -84,6 +84,14 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
     }
 
     return ERROR_NONE;
+}
+
+error_code_t c2d_destroy(cortex2d_t* cortex) {
+    // Free neurons.
+    free(cortex->neurons);
+
+    // Free cortex.
+    free(cortex);
 }
 
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {

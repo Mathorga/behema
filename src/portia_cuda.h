@@ -13,6 +13,15 @@ Copyright (C) 2022 Luka Micheletti
 #include "error.h"
 #include "utils.h"
 
+// Checks whether or not a CUDA error occurred, if so prints it and exits.
+#define cudaCheckError() {\
+            cudaError_t e = cudaGetLastError();\
+            if (e != cudaSuccess) {\
+                printf("Cuda failure %s(%d): %d(%s)\n", __FILE__, __LINE__ - 1, e, cudaGetErrorString(e));\
+                exit(0);\
+            }\
+        }
+
 // Util functions:
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
@@ -26,6 +35,9 @@ error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cort
 
 /// Initializes the given cortex2d with default values.
 error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+
+/// Destroys the given cortex2d and frees memory.
+error_code_t c2d_destroy(cortex2d_t* cortex);
 
 /// Returns a cortex2d with the same properties as the given one.
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
