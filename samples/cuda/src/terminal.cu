@@ -33,20 +33,20 @@ int main(int argc, char **argv) {
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
     c2d_copy(odd_cortex, even_cortex);
 
-    // for (int i = 0;; i++) {
-    //     cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-    //     cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+    for (int i = 0;; i++) {
+        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
-    //     if (rand() % 100 > 50) {
-    //         c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXC_VALUE, 2);
-    //     }
+        // if (rand() % 100 > 50) {
+        //     c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXC_VALUE, 2);
+        // }
 
-    //     c2d_tick(prev_cortex, next_cortex);
+        c2d_tick<<<10, 200>>>(prev_cortex, next_cortex);
 
-    //     print(next_cortex);
+        // print(next_cortex);
 
-    //     usleep(40000);
-    // }
+        usleep(100);
+    }
 
     return 0;
 }
