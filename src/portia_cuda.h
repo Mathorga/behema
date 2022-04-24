@@ -45,7 +45,7 @@ error_code_t i2d_to_device(input2d_t* input);
 /// Feeds a cortex with the provided input2d.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
-__host__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
+void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
 
 /// Performs a full run cycle over the network cortex.
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);

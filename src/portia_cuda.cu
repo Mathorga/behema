@@ -32,34 +32,42 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
         return ERROR_FAILED_ALLOC;
     }
 
+    printf("\nSecond\n");
+
     // Setup cortex properties.
-    (*cortex)->width = width;
-    (*cortex)->height = height;
-    (*cortex)->ticks_count = 0x00U;
-    (*cortex)->rand_state = 0x01;
-    (*cortex)->evols_count = 0x00U;
-    (*cortex)->evol_step = DEFAULT_EVOL_STEP;
-    (*cortex)->pulse_window = DEFAULT_PULSE_WINDOW;
+    cudaMemset(&((*cortex)->width), width, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->height), height, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->ticks_count), 0x00U, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->rand_state), 0x01, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->evols_count), 0x00U, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->evol_step), DEFAULT_EVOL_STEP, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->pulse_window), DEFAULT_PULSE_WINDOW, sizeof(cortex_size_t));
 
-    (*cortex)->nh_radius = nh_radius;
-    (*cortex)->fire_threshold = DEFAULT_THRESHOLD;
-    (*cortex)->recovery_value = DEFAULT_RECOVERY_VALUE;
-    (*cortex)->exc_value = DEFAULT_EXC_VALUE;
-    (*cortex)->decay_value = DEFAULT_DECAY_RATE;
-    (*cortex)->syngen_chance = DEFAULT_SYNGEN_CHANCE;
-    (*cortex)->synstr_chance = DEFAULT_SYNSTR_CHANCE;
-    (*cortex)->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
-    (*cortex)->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
-    (*cortex)->inhexc_range = DEFAULT_INHEXC_RANGE;
+    printf("\nThird\n");
 
-    (*cortex)->sample_window = DEFAULT_SAMPLE_WINDOW;
-    (*cortex)->pulse_mapping = PULSE_MAPPING_LINEAR;
+    cudaMemset(&((*cortex)->nh_radius), nh_radius, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->fire_threshold), DEFAULT_THRESHOLD, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->recovery_value), DEFAULT_RECOVERY_VALUE, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->exc_value), DEFAULT_EXC_VALUE, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->decay_value), DEFAULT_DECAY_RATE, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->syngen_chance), DEFAULT_SYNGEN_CHANCE, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->synstr_chance), DEFAULT_SYNSTR_CHANCE, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->max_tot_strength), DEFAULT_MAX_TOT_STRENGTH, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->max_syn_count), DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius)), sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->inhexc_range), DEFAULT_INHEXC_RANGE, sizeof(cortex_size_t));
+
+    cudaMemset(&((*cortex)->sample_window), DEFAULT_SAMPLE_WINDOW, sizeof(cortex_size_t));
+    cudaMemset(&((*cortex)->pulse_mapping), PULSE_MAPPING_LINEAR, sizeof(cortex_size_t));
+
+    printf("\nFourth\n");
 
     // Allocate neurons.
     error = cudaMalloc(&(*cortex)->neurons, (*cortex)->width * (*cortex)->height * sizeof(neuron_t));
     if (error != cudaSuccess) {
         return ERROR_FAILED_ALLOC;
     }
+
+    printf("\nFifth\n");
 
     // Setup neurons' properties.
     for (cortex_size_t y = 0; y < (*cortex)->height; y++) {
@@ -78,6 +86,8 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
         }
     }
+
+    printf("\nSixth\n");
 
     return ERROR_NONE;
 }
@@ -123,29 +133,31 @@ error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
     return ERROR_NONE;
 }
 
-error_code_t i2d_to_device(input2d_t* input) {
+error_code_t i2d_to_device(input2d_t* input, input2d_t** device_input) {
     // Allocate memory on the device.
     ticks_count_t* device_values;
     cudaMalloc(&device_values, (input->x1 - input->x0) * (input->x1 - input->x0) * sizeof(ticks_count_t));
-    input2d_t* device_input;
     cudaMalloc(&device_input, sizeof(input2d_t));
 
     // Copy all input.
     (*device_values) = *(input->values);
-    (*device_input) = *input;
-    device_input->values = device_values;
+    (**device_input) = *input;
+    (*device_input)->values = device_values;
 
     // Free device memory.
     // TODO?? IDTS
+
+    return ERROR_NONE;
 }
 
 
 // Execution functions.
 
-__host__  void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
+void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     // Copy input to device memory.
     // TODO.
-
+    input2d_t* device_input;
+    i2d_to_device(input, &device_input);
 
     for (cortex_size_t y = input->y0; y < input->y1; y++) {
         for (cortex_size_t x = input->x0; x < input->x1; x++) {
@@ -157,6 +169,9 @@ __host__  void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
             }
         }
     }
+
+    // Free device memory.
+    cudaFree(device_input);
 }
 
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
@@ -342,4 +357,105 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     }
 
     next_cortex->ticks_count++;
+}
+
+__host__ __device__ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+    bool_t result = FALSE;
+
+    // Make sure the provided input correctly lies inside the provided window.
+    if (input < sample_window) {
+        switch (pulse_mapping) {
+            case PULSE_MAPPING_LINEAR:
+                result = pulse_map_linear(sample_window, sample_step, input);
+                break;
+            case PULSE_MAPPING_FPROP:
+                result = pulse_map_fprop(sample_window, sample_step, input);
+                break;
+            case PULSE_MAPPING_RPROP:
+                result = pulse_map_rprop(sample_window, sample_step, input);
+                break;
+            default:
+                break;
+        }
+    }
+
+    return result;
+}
+
+__host__ __device__ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    // sample_window = 10;
+    // x = input;
+    // |@| | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | | | | | |@| | -> x = 2;
+    // |@| | | | | | |@| | | -> x = 3;
+    // |@| | | | | |@| | | | -> x = 4;
+    // |@| | | | |@| | | | | -> x = 5;
+    // |@| | | |@| | | |@| | -> x = 6;
+    // |@| | |@| | |@| | |@| -> x = 7;
+    // |@| |@| |@| |@| |@| | -> x = 8;
+    // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
+    return (sample_step % (sample_window - input) == 0) ? TRUE : FALSE;
+}
+
+__host__ __device__ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool_t result = FALSE;
+    ticks_count_t upper = sample_window - 1;
+
+    // sample_window = 10;
+    // upper = sample_window - 1 = 9;
+    // x = input;
+    // |@| | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | |@| | | |@| | -> x = 2;
+    // |@| | |@| | |@| | |@| -> x = 3;
+    // |@| |@| |@| |@| |@| | -> x = 4;
+    // | |@| |@| |@| |@| |@| -> x = 5;
+    // | |@|@| |@|@| |@|@| | -> x = 6;
+    // | |@|@|@| |@|@|@| |@| -> x = 7;
+    // | |@|@|@|@|@|@|@|@| | -> x = 8;
+    // | |@|@|@|@|@|@|@|@|@| -> x = 9;
+    if (input < sample_window / 2) {
+        if ((sample_step <= 0) ||
+            (sample_step % (upper / input) == 0)) {
+            result = TRUE;
+        }
+    } else {
+        if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
+            result = TRUE;
+        }
+    }
+
+    return result;
+}
+
+__host__ __device__ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bool_t result = FALSE;
+    double upper = sample_window - 1;
+    double d_input = input;
+
+    // sample_window = 10;
+    // upper = sample_window - 1 = 9;
+    // |@| | | | | | | | | | -> x = 0;
+    // |@| | | | | | | | |@| -> x = 1;
+    // |@| | | | |@| | | | | -> x = 2;
+    // |@| | |@| | |@| | |@| -> x = 3;
+    // |@| |@| |@| |@| |@| | -> x = 4;
+    // | |@| |@| |@| |@| |@| -> x = 5;
+    // | |@|@| |@|@| |@|@| | -> x = 6;
+    // | |@|@|@|@| |@|@|@|@| -> x = 7;
+    // | |@|@|@|@|@|@|@|@| | -> x = 8;
+    // | |@|@|@|@|@|@|@|@|@| -> x = 9;
+    if ((double) input < ((double) sample_window) / 2) {
+        if ((sample_step <= 0) ||
+            sample_step % (ticks_count_t) round(upper / d_input) == 0) {
+            result = TRUE;
+        }
+    } else {
+        if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
+            result = TRUE;
+        }
+    }
+
+    return result;
 }

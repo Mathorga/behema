@@ -471,7 +471,7 @@ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_c
     bool_t result = FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
-    if (input >= 0 && input < sample_window) {
+    if (input < sample_window) {
         switch (pulse_mapping) {
             case PULSE_MAPPING_LINEAR:
                 result = pulse_map_linear(sample_window, sample_step, input);
@@ -532,8 +532,7 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
             result = TRUE;
         }
     } else {
-        if ((sample_step >= 0) &&
-            (input >= upper || sample_step % (upper / (upper - input)) != 0)) {
+        if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
             result = TRUE;
         }
     }
@@ -564,8 +563,7 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
             result = TRUE;
         }
     } else {
-        if ((sample_step >= 0) &&
-            (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0)) {
+        if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
             result = TRUE;
         }
     }
