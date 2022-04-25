@@ -22,6 +22,9 @@ Copyright (C) 2022 Luka Micheletti
             }\
         }
 
+// Default block size for kernel executions.
+#define BLOCK_SIZE 256
+
 // Util functions:
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.

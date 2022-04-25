@@ -17,31 +17,35 @@ void print(cortex2d_t* cortex) {
 }
 
 int main(int argc, char **argv) {
-    cortex2d_t even_cortex;
-    cortex2d_t odd_cortex;
+    cortex2d_t* even_cortex;
+    cortex2d_t* odd_cortex;
 
-    cortex_size_t cortex_width = 150;
-    cortex_size_t cortex_height = 50;
+    cortex_size_t cortex_width = 1500;
+    cortex_size_t cortex_height = 500;
     nh_radius_t nh_radius = 1;
-    cortex_size_t inputs_count = 2000;
 
     srand(time(NULL));
 
-    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_copy(&odd_cortex, &even_cortex);
+    error_code_t error;
 
-    for (int i = 0;; i++) {
-        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
+    error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_copy(odd_cortex, even_cortex);
 
-        if (rand() % 100 > 50) {
-            c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXC_VALUE, 2);
-        }
+    for (int i = 0; i < 1000; i++) {
+        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+
+        // if (rand() % 100 > 50) {
+        //     c2d_rsfeed(prev_cortex, 0, inputs_count, DEFAULT_EXC_VALUE, 2);
+        // }
 
         c2d_tick(prev_cortex, next_cortex);
 
-        print(next_cortex);
+        // print(next_cortex);
 
-        usleep(40000);
+        // usleep(100);
     }
+
+    return 0;
 }
