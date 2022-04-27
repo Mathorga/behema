@@ -225,13 +225,13 @@ int main(int argc, char **argv) {
     int counter = 0;
 
     // Inputs.
-    input2d_t leftEye;
+    input2d_t* leftEye;
     i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
 
-    input2d_t rightEye;
+    input2d_t* rightEye;
     i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
 
-    cv::Size eyeSize = cv::Size(leftEye.x1 - leftEye.x0, leftEye.y1 - leftEye.y0);
+    cv::Size eyeSize = cv::Size(leftEye->x1 - leftEye->x0, leftEye->y1 - leftEye->y0);
 
     // cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
     // cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
@@ -313,12 +313,12 @@ int main(int argc, char **argv) {
                 for (cortex_size_t y = 0; y < eyeSize.height; y++) {
                     for (cortex_size_t x = 0; x < eyeSize.width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        leftEye.values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
-                                                                          0, 255,
-                                                                          0, samplingBound);
-                        rightEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
-                                                                           0, 255,
-                                                                           0, samplingBound);
+                        leftEye->values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
+                                                                                               0, 255,
+                                                                                               0, samplingBound);
+                        rightEye->values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
+                                                                            0, 255,
+                                                                            0, samplingBound);
                     }
                 }
 
@@ -338,8 +338,8 @@ int main(int argc, char **argv) {
             }
 
             // Feed the cortex.
-            c2d_feed2d(prev_cortex, &leftEye);
-            c2d_feed2d(prev_cortex, &rightEye);
+            c2d_feed2d(prev_cortex, leftEye);
+            c2d_feed2d(prev_cortex, rightEye);
 
             // Feed the cortex.
             // c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 4);

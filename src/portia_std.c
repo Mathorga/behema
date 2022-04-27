@@ -10,16 +10,22 @@ uint32_t xorshf32(uint32_t state) {
     return x;
 }
 
-error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
-    input->x0 = x0;
-    input->y0 = y0;
-    input->x1 = x1;
-    input->y1 = y1;
-    input->exc_value = exc_value;
-    input->pulse_mapping = pulse_mapping;
+error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+    // Allocate the input.
+    (*input) = (input2d_t*) malloc(sizeof(input2d_t));
+    if ((*input) == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    (*input)->x0 = x0;
+    (*input)->y0 = y0;
+    (*input)->x1 = x1;
+    (*input)->y1 = y1;
+    (*input)->exc_value = exc_value;
+    (*input)->pulse_mapping = pulse_mapping;
 
     // Allocate values.
-    input->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+    (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
 
     return ERROR_NONE;
 }
@@ -30,7 +36,7 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    // Allocate the cortex
+    // Allocate the cortex.
     (*cortex) = (cortex2d_t*) malloc(sizeof(cortex2d_t));
     if ((*cortex) == NULL) {
         return ERROR_FAILED_ALLOC;
@@ -92,6 +98,8 @@ error_code_t c2d_destroy(cortex2d_t* cortex) {
 
     // Free cortex.
     free(cortex);
+
+    return ERROR_NONE;
 }
 
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {

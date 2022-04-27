@@ -13,8 +13,24 @@ __host__ __device__ uint32_t xorshf32(uint32_t state) {
 
 // Initialization functions.
 
-error_code_t i2d_init(input2d_t* input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
-    // TODO.
+error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+
+    // Allocate the input on the host.
+    input2d_t* host_input = (input2d_t*) malloc(sizeof(input2d_t));
+    if (host_input == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    host_input->x0 = x0;
+    host_input->y0 = y0;
+    host_input->x1 = x1;
+    host_input->y1 = y1;
+    host_input->exc_value = exc_value;
+    host_input->pulse_mapping = pulse_mapping;
+
+    // Allocate values on the device.
+    (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+
     return ERROR_NONE;
 }
 
@@ -24,136 +40,156 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
         return ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    cudaError_t cuda_error;
+    // Allocate the cortex.
+    (*cortex) = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    if ((*cortex) == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
 
-    // Allocate the cortex on the host.
-    cortex2d_t* host_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    // Setup cortex properties.
+    (*cortex)->width = width;
+    (*cortex)->height = height;
+    (*cortex)->ticks_count = 0x00U;
+    (*cortex)->rand_state = 0x01U;
+    (*cortex)->evols_count = 0x00U;
+    (*cortex)->evol_step = DEFAULT_EVOL_STEP;
+    (*cortex)->pulse_window = DEFAULT_PULSE_WINDOW;
 
-    syn_count_t default_max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    (*cortex)->nh_radius = nh_radius;
+    (*cortex)->fire_threshold = DEFAULT_THRESHOLD;
+    (*cortex)->recovery_value = DEFAULT_RECOVERY_VALUE;
+    (*cortex)->exc_value = DEFAULT_EXC_VALUE;
+    (*cortex)->decay_value = DEFAULT_DECAY_RATE;
+    (*cortex)->syngen_chance = DEFAULT_SYNGEN_CHANCE;
+    (*cortex)->synstr_chance = DEFAULT_SYNSTR_CHANCE;
+    (*cortex)->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
+    (*cortex)->max_syn_count = DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    (*cortex)->inhexc_range = DEFAULT_INHEXC_RANGE;
 
-    // Setup host cortex properties.
-    host_cortex->width = width;
-    host_cortex->height = height;
-    host_cortex->ticks_count = 0x00U;
-    host_cortex->rand_state = 0x01U;
-    host_cortex->evols_count = 0x00U;
-    host_cortex->evol_step = DEFAULT_EVOL_STEP;
-    host_cortex->pulse_window = DEFAULT_PULSE_WINDOW;
+    (*cortex)->sample_window = DEFAULT_SAMPLE_WINDOW;
+    (*cortex)->pulse_mapping = PULSE_MAPPING_LINEAR;
 
-    host_cortex->nh_radius = nh_radius;
-    host_cortex->fire_threshold = DEFAULT_THRESHOLD;
-    host_cortex->recovery_value = DEFAULT_RECOVERY_VALUE;
-    host_cortex->exc_value = DEFAULT_EXC_VALUE;
-    host_cortex->decay_value = DEFAULT_DECAY_RATE;
-    host_cortex->syngen_chance = DEFAULT_SYNGEN_CHANCE;
-    host_cortex->synstr_chance = DEFAULT_SYNSTR_CHANCE;
-    host_cortex->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
-    host_cortex->max_syn_count = default_max_syn_count;
-    host_cortex->inhexc_range = DEFAULT_INHEXC_RANGE;
-
-    host_cortex->sample_window = DEFAULT_SAMPLE_WINDOW;
-    host_cortex->pulse_mapping = PULSE_MAPPING_LINEAR;
-
-    // Allocate host cortex' neurons on the device.
-    cuda_error = cudaMalloc((void**) &(host_cortex->neurons), width * height * sizeof(neuron_t));
-    cudaCheckError();
-    if (cuda_error != cudaSuccess) {
+    // Allocate neurons.
+    (*cortex)->neurons = (neuron_t*) malloc((*cortex)->width * (*cortex)->height * sizeof(neuron_t));
+    if ((*cortex)->neurons == NULL) {
         return ERROR_FAILED_ALLOC;
     }
 
     // Setup neurons' properties.
-    for (cortex_size_t y = 0; y < height; y++) {
-        for (cortex_size_t x = 0; x < width; x++) {
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].synac_mask), 0x00U, sizeof(nh_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].synex_mask), 0x00U, sizeof(nh_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].synstr_mask_a), 0x00U, sizeof(nh_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].synstr_mask_b), 0x00U, sizeof(nh_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].synstr_mask_c), 0x00U, sizeof(nh_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].pulse_mask), 0x00U, sizeof(pulse_mask_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].pulse), 0x00U, sizeof(spikes_count_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].value), DEFAULT_STARTING_VALUE, sizeof(neuron_value_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].max_syn_count), default_max_syn_count, sizeof(syn_count_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].syn_count), 0x00U, sizeof(syn_count_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].tot_syn_strength), 0x00U, sizeof(syn_strength_t));
-            cudaCheckError();
-            cudaMemset(&(host_cortex->neurons[IDX2D(x, y, width)].inhexc_ratio), DEFAULT_INHEXC_RATIO, sizeof(chance_t));
-            cudaCheckError();
+    for (cortex_size_t y = 0; y < (*cortex)->height; y++) {
+        for (cortex_size_t x = 0; x < (*cortex)->width; x++) {
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synac_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synex_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_a = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_b = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_c = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse_mask = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].value = DEFAULT_STARTING_VALUE;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].max_syn_count = (*cortex)->max_syn_count;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].syn_count = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].tot_syn_strength = 0x00U;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
         }
     }
-
-    // Allocate the cortex on the device.
-    cuda_error = cudaMalloc((void**) cortex, sizeof(cortex2d_t));
-    cudaCheckError();
-    if (cuda_error != cudaSuccess) {
-        return ERROR_FAILED_ALLOC;
-    }
-
-    // Now the host cortex has all data set and neurons allocated on the device, time to copy it all to the device.
-    cudaMemcpy(*cortex, host_cortex, sizeof(cortex2d_t), cudaMemcpyHostToDevice);
-    cudaCheckError();
-
-    // Free tmp host cortex.
-    free(host_cortex);
 
     return ERROR_NONE;
 }
 
 error_code_t c2d_destroy(cortex2d_t* cortex) {
-    cudaFree(cortex);
+    // Free neurons.
+    free(cortex->neurons);
+
+    // Free cortex.
+    free(cortex);
 
     return ERROR_NONE;
 }
 
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
-    // Copy "from" cortex to host.
-    cortex2d_t* host_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
-    cudaMemcpy(host_cortex, from, sizeof(cortex2d_t), cudaMemcpyDeviceToHost);
-    cudaCheckError();
+    to->width = from->width;
+    to->height = from->height;
+    to->ticks_count = from->ticks_count;
+    to->evols_count = from->evols_count;
+    to->evol_step = from->evol_step;
+    to->pulse_window = from->pulse_window;
 
-    size_t neurons_size = host_cortex->width * host_cortex->height * sizeof(neuron_t);
+    to->nh_radius = from->nh_radius;
+    to->fire_threshold = from->fire_threshold;
+    to->recovery_value = from->recovery_value;
+    to->exc_value = from->exc_value;
+    to->decay_value = from->decay_value;
+    to->syngen_chance = from->syngen_chance;
+    to->synstr_chance = from->synstr_chance;
+    to->max_tot_strength = from->max_tot_strength;
+    to->max_syn_count = from->max_syn_count;
+    to->inhexc_range = from->inhexc_range;
 
-    // Copy neurons to host.
-    neuron_t* host_neurons = (neuron_t*) malloc(neurons_size);
-    cudaMemcpy(host_neurons, host_cortex->neurons, neurons_size, cudaMemcpyDeviceToHost);
-    cudaCheckError();
-    host_cortex->neurons = host_neurons;
+    to->sample_window = from->sample_window;
+    to->pulse_mapping = from->pulse_mapping;
 
-    // Allocate other neurons on the device and copy them from host cortex.
-    neuron_t* device_neurons;
-    cudaMalloc((void**) &device_neurons, neurons_size);
-    cudaCheckError();
-    cudaMemcpy(device_neurons, host_cortex->neurons, neurons_size, cudaMemcpyHostToDevice);
-    cudaCheckError();
-
-    // Assign device neurons to host cortex, so that it's ready when it will be copied to device.
-    host_cortex->neurons = device_neurons;
-    // Free host neurons.
-    free(host_neurons);
-
-    // Copy the newly created cortex to "to" in order to complete the copy.
-    cudaMemcpy(to, host_cortex, sizeof(cortex2d_t), cudaMemcpyHostToDevice);
-    cudaCheckError();
+    for (cortex_size_t y = 0; y < from->height; y++) {
+        for (cortex_size_t x = 0; x < from->width; x++) {
+            to->neurons[IDX2D(x, y, from->width)] = from->neurons[IDX2D(x, y, from->width)];
+        }
+    }
 
     return ERROR_NONE;
 }
 
-error_code_t c2d_to_device(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
-    // TODO.
+error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
+    cudaError_t cuda_error;
+
+    // Allocate tmp cortex on the host.
+    cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    if (tmp_cortex == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    // Copy host cortex to tmp cortex.
+    (*tmp_cortex) = (*host_cortex);
+
+    // Allocate neurons on the device.
+    cuda_error = cudaMalloc((void**) &(tmp_cortex->neurons), host_cortex->width * host_cortex->height * sizeof(neuron_t));
+    cudaCheckError();
+    if (cuda_error != cudaSuccess) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    // Copy tmp cortex to device.
+    cudaMemcpy(device_cortex, tmp_cortex, sizeof(cortex2d_t), cudaMemcpyHostToDevice);
+    cudaCheckError();
+
+    // Cleanup.
+    free(tmp_cortex);
+
     return ERROR_NONE;
 }
 
-error_code_t c2d_to_host(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
-    // TODO.
+error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
+    // Allocate tmp cortex on the host.
+    cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    if (tmp_cortex == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    // Copy tmp cortex to device.
+    cudaMemcpy(tmp_cortex, device_cortex, sizeof(cortex2d_t), cudaMemcpyDeviceToHost);
+    cudaCheckError();
+
+    // Copy tmp cortex to host cortex.
+    (*host_cortex) = (*tmp_cortex);
+
+    // Allocate neurons on the host.
+    host_cortex->neurons = (neuron_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(neuron_t));
+
+    // Copy tmp cortex neurons (still on device) to host cortex.
+    cudaMemcpy(host_cortex->neurons, tmp_cortex->neurons, tmp_cortex->width * tmp_cortex->height * sizeof(neuron_t), cudaMemcpyDeviceToHost);
+    cudaCheckError();
+
+    // Cleanup.
+    free(tmp_cortex);
+
     return ERROR_NONE;
 }
 
@@ -170,6 +206,31 @@ error_code_t i2d_to_device(input2d_t* input, input2d_t** device_input) {
 
     // Free device memory.
     // TODO?? IDTS
+
+    return ERROR_NONE;
+}
+
+error_code_t c2d_device_destroy(cortex2d_t* cortex) {
+    // Allocate tmp cortex on the host.
+    cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
+    if (tmp_cortex == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+    
+    // Copy device cortex to host in order to free its neurons.
+    cudaMemcpy(tmp_cortex, cortex, sizeof(cortex2d_t), cudaMemcpyDeviceToHost);
+    cudaCheckError();
+
+    // Free device neurons.
+    cudaFree(tmp_cortex->neurons);
+    cudaCheckError();
+
+    // Free tmp cortex.
+    free(tmp_cortex);
+
+    // Finally free device cortex.
+    cudaFree(cortex);
+    cudaCheckError();
 
     return ERROR_NONE;
 }

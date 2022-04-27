@@ -1,6 +1,11 @@
 #ifndef __PORTIA_UTILS__
 #define __PORTIA_UTILS__
 
+// This line **must** come **before** including <time.h> in order to
+// bring in the POSIX functions such as `clock_gettime() from <time.h>`!
+// #define _POSIX_C_SOURCE 199309L
+        
+#include <time.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,6 +18,20 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/// Convert seconds to milliseconds
+#define S_TO_MS(s) ((s) * 1000)
+/// Convert seconds to microseconds
+#define S_TO_US(s) ((s) * 1000000)
+/// Convert seconds to nanoseconds
+#define S_TO_NS(s) ((s) * 1000000000)
+
+/// Convert nanoseconds to seconds
+#define NS_TO_S(ns) ((ns) / 1000000000)
+/// Convert nanoseconds to milliseconds
+#define NS_TO_MS(ns) ((ns) / 1000000)
+/// Convert nanoseconds to microseconds
+#define NS_TO_US(ns) ((ns) / 1000)
 
 // Structure for storing the
 // image data
@@ -28,6 +47,15 @@ typedef struct pgm_content_t {
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
 // Maps a value to the specified output domain while preserving decimal integrity.
 uint32_t fmap(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
+
+/// Get a time stamp in milliseconds.
+uint64_t millis();
+
+/// Get a time stamp in microseconds.
+uint64_t micros();
+
+/// Get a time stamp in nanoseconds.
+uint64_t nanos();
 
 /// Dumps the cortex' content to a file.
 /// The file is created if not already present, overwritten otherwise.

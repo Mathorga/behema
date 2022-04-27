@@ -6,10 +6,12 @@ Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __cortex__
-#define __cortex__
+#ifndef __CORTEX__
+#define __CORTEX__
 
 #include <stdint.h>
+
+#include "error.h"
 
 // Translate an id wrapping it to the provided size (pacman effect).
 // WARNING: Only works with signed types and does not show errors otherwise.

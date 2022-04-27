@@ -57,6 +57,7 @@ uninstall: clean
 std: create std-build
 cuda: create cuda-build
 
+
 # Builds all library files.
 std-build: portia_std.o utils.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libportia.so
