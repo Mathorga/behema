@@ -222,4 +222,8 @@ error_code_t c2d_destroy(cortex2d_t* cortex);
 /// Returns a cortex with the same properties as the given one.
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
 
+#ifdef __cplusplus
+}
+#endif
+
 #endif
