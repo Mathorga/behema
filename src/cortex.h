@@ -13,6 +13,10 @@ Copyright (C) 2021 Luka Micheletti
 
 #include "error.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Translate an id wrapping it to the provided size (pacman effect).
 // WARNING: Only works with signed types and does not show errors otherwise.
 // [i] is the given index.
