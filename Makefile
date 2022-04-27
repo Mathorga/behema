@@ -59,11 +59,11 @@ cuda: create cuda-build
 
 
 # Builds all library files.
-std-build: portia_std.o utils.o
+std-build: cortex.o portia_std.o utils.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libportia.so
 	@printf "\nCompiled $@!\n\n"
 
-cuda-build: portia_cuda.o utils.o
+cuda-build: cortex.o portia_cuda.o utils.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libportia.so
 	@printf "\nCompiled $@!\n\n"
 

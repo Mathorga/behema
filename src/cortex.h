@@ -10,6 +10,7 @@ Copyright (C) 2021 Luka Micheletti
 #define __CORTEX__
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "error.h"
 
