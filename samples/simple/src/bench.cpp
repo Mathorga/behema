@@ -5,8 +5,10 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 1500;
-    cortex_size_t cortex_height = 500;
+    cortex_size_t cortex_width = 500;
+    cortex_size_t cortex_height = 400;
+    cortex_size_t input_width = 20;
+    cortex_size_t input_height = 1;
     nh_radius_t nh_radius = 1;
 
     srand(time(NULL));
@@ -21,8 +23,13 @@ int main(int argc, char **argv) {
     c2d_copy(odd_cortex, even_cortex);
 
     // Input init.
-    // input2d_t* input;
-    // i2d_init(&input, (cortex_width / 2) - 10, 0, (cortex_width / 2) + 10, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    input2d_t* input;
+    i2d_init(&input, (cortex_width / 2) - (input_width / 2), 0, (cortex_width / 2) + (input_width / 2), input_height, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+
+    // Set input values.
+    for (int i = 0; i < input_width * input_height; i++) {
+        input->values[i] = even_cortex->sample_window / 2;
+    }
 
     uint64_t start_time = millis();
 
@@ -30,11 +37,10 @@ int main(int argc, char **argv) {
         cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
-        // TODO Feed.
+        // Feed.
+        c2d_feed2d(prev_cortex, input);
 
-        printf("\npre_tick\n");
         c2d_tick(prev_cortex, next_cortex);
-        printf("\npost_tick\n");
 
         // usleep(100);
     }
@@ -45,6 +51,7 @@ int main(int argc, char **argv) {
     // Cleanup.
     c2d_destroy(even_cortex);
     c2d_destroy(odd_cortex);
+    i2d_destroy(input);
 
     return 0;
 }

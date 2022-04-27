@@ -13,24 +13,39 @@ __host__ __device__ uint32_t xorshf32(uint32_t state) {
 
 // Initialization functions.
 
-error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
+    cudaError_t cuda_error;
 
-    // Allocate the input on the host.
-    input2d_t* host_input = (input2d_t*) malloc(sizeof(input2d_t));
-    if (host_input == NULL) {
+    // Allocate tmp input on the host.
+    input2d_t* tmp_input = (input2d_t*) malloc(sizeof(input2d_t));
+
+    // Copy host input to tmp input.
+    (*tmp_input) = (*host_input);
+
+    // Allocate values on the device.
+    cuda_error = cudaMalloc((void**) &(tmp_input->values), (host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0) * sizeof(ticks_count_t));
+    cudaCheckError();
+    if (cuda_error != cudaSuccess) {
         return ERROR_FAILED_ALLOC;
     }
 
-    host_input->x0 = x0;
-    host_input->y0 = y0;
-    host_input->x1 = x1;
-    host_input->y1 = y1;
-    host_input->exc_value = exc_value;
-    host_input->pulse_mapping = pulse_mapping;
+    // Allocate memory on the device.
+    ticks_count_t* device_values;
+    cudaMalloc(&device_values, (host_input->x1 - host_input->x0) * (host_input->x1 - host_input->x0) * sizeof(ticks_count_t));
+    cudaMalloc(&device_input, sizeof(input2d_t));
 
-    // Allocate values on the device.
-    (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+    // Copy tmp input to device.
+    cudaMemcpy(device_input, tmp_input, sizeof(input2d_t), cudaMemcpyHostToDevice);
+    cudaCheckError();
 
+    // Cleanup.
+    free(tmp_input);
+
+    return ERROR_NONE;
+}
+
+error_code_t i2d_to_host(input2d_t* host_input, input2d_t* device_input) {
+    // TODO
     return ERROR_NONE;
 }
 
@@ -90,20 +105,8 @@ error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
     return ERROR_NONE;
 }
 
-error_code_t i2d_to_device(input2d_t* input, input2d_t** device_input) {
-    // Allocate memory on the device.
-    ticks_count_t* device_values;
-    cudaMalloc(&device_values, (input->x1 - input->x0) * (input->x1 - input->x0) * sizeof(ticks_count_t));
-    cudaMalloc(&device_input, sizeof(input2d_t));
-
-    // Copy all input.
-    (*device_values) = *(input->values);
-    (**device_input) = *input;
-    (*device_input)->values = device_values;
-
-    // Free device memory.
-    // TODO?? IDTS
-
+error_code_t i2d_device_destroy(input2d_t* input) {
+    // TODO
     return ERROR_NONE;
 }
 
@@ -135,25 +138,16 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex) {
 
 // Execution functions.
 
-void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
-    // Copy input to device memory.
-    // TODO.
-    input2d_t* device_input;
-    i2d_to_device(input, &device_input);
+__global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
+    // TODO
+    cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
 
-    for (cortex_size_t y = input->y0; y < input->y1; y++) {
-        for (cortex_size_t x = input->x0; x < input->x1; x++) {
-            if (pulse_map(cortex->sample_window,
-                          cortex->ticks_count % cortex->sample_window,
-                          input->values[IDX2D(x - input->x0, y - input->y0, input->x1 - input->x0)],
-                          cortex->pulse_mapping)) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
-            }
-        }
-    }
-
-    // Free device memory.
-    cudaFree(device_input);
+    // if (pulse_map(cortex->sample_window,
+    //               cortex->ticks_count % cortex->sample_window,
+    //               input->values[x],
+    //               cortex->pulse_mapping)) {
+    //     cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
+    // }
 }
 
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {

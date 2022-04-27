@@ -10,26 +10,6 @@ uint32_t xorshf32(uint32_t state) {
     return x;
 }
 
-error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
-    // Allocate the input.
-    (*input) = (input2d_t*) malloc(sizeof(input2d_t));
-    if ((*input) == NULL) {
-        return ERROR_FAILED_ALLOC;
-    }
-
-    (*input)->x0 = x0;
-    (*input)->y0 = y0;
-    (*input)->x1 = x1;
-    (*input)->y1 = y1;
-    (*input)->exc_value = exc_value;
-    (*input)->pulse_mapping = pulse_mapping;
-
-    // Allocate values.
-    (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
-
-    return ERROR_NONE;
-}
-
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
     // Make sure the provided radius is valid.
     if (radius <= 0 || NH_COUNT_2D(NH_DIAM_2D(radius)) > sizeof(nh_mask_t) * 8) {

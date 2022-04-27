@@ -32,9 +32,6 @@ uint32_t xorshf32();
 
 // Initialization functions:
 
-/// Initializes the given input with the given values.
-error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
-
 /// Sets the neighborhood radius for all neurons in the cortex.
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius);
 

@@ -1,5 +1,28 @@
 #include "cortex.h"
 
+error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+    // Allocate the input.
+    (*input) = (input2d_t*) malloc(sizeof(input2d_t));
+    if ((*input) == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    (*input)->x0 = x0;
+    (*input)->y0 = y0;
+    (*input)->x1 = x1;
+    (*input)->y1 = y1;
+    (*input)->exc_value = exc_value;
+    (*input)->pulse_mapping = pulse_mapping;
+
+    // Allocate values.
+    (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+    if ((*input)->values == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    return ERROR_NONE;
+}
+
 error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(nh_mask_t) * 8) {
         // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
@@ -58,6 +81,16 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].inhexc_ratio = DEFAULT_INHEXC_RATIO;
         }
     }
+
+    return ERROR_NONE;
+}
+
+error_code_t i2d_destroy(input2d_t* input) {
+    // Free values.
+    free(input->values);
+
+    // Free input.
+    free(input);
 
     return ERROR_NONE;
 }

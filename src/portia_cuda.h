@@ -33,8 +33,11 @@ __host__ __device__ uint32_t xorshf32();
 
 // Initialization functions:
 
-/// Initializes the given input with the given values.
-error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
+/// Copies an input2d from host to device.
+error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input);
+
+/// Copies an input2d from device to host.
+error_code_t i2d_to_host(input2d_t* host_input, input2d_t* device_input);
 
 /// Copies a cortex2d from host to device.
 error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex);
@@ -42,11 +45,8 @@ error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex);
 /// Copies a cortex2d from device to host.
 error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex);
 
-/// Copies an input2d from host to device.
-error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input);
-
-/// Copies an input2d from device to host.
-error_code_t i2d_to_device(input2d_t* host_input, input2d_t* device_input);
+/// Destroys the given cortex (on device) and frees memory.
+error_code_t i2d_device_destroy(input2d_t* input);
 
 /// Destroys the given cortex (on device) and frees memory.
 error_code_t c2d_device_destroy(cortex2d_t* cortex);
@@ -57,7 +57,7 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex);
 /// Feeds a cortex with the provided input2d.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
-void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
+__global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
 
 /// Performs a full run cycle over the network cortex.
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
