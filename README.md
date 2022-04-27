@@ -1,4 +1,3 @@
-# Portia
 <p align="center" width="100%">
     <img width="66%" src="/meta/portia.png"> 
 </p>
