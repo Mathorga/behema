@@ -139,15 +139,17 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex) {
 // Execution functions.
 
 __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
-    // TODO
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
+    cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
-    // if (pulse_map(cortex->sample_window,
-    //               cortex->ticks_count % cortex->sample_window,
-    //               input->values[x],
-    //               cortex->pulse_mapping)) {
-    //     cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
-    // }
+    printf("\n%d %d %d %d\n", x, y, input->x0, input->y0);
+
+    if (pulse_map(cortex->sample_window,
+                  cortex->ticks_count % cortex->sample_window,
+                  input->values[IDX2D(x + input->x0, y + input->y0, cortex->width)],
+                  cortex->pulse_mapping)) {
+        cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
+    }
 }
 
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
@@ -165,7 +167,7 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     // next_neuron->syn_count = 0x00u;
 
     /* Compute the neighborhood diameter:
-            d = 7
+        d = 7
         <------------->
         r = 3
         <----->

@@ -37,6 +37,7 @@ int main(int argc, char **argv) {
     // Input init.
     input2d_t* input;
     i2d_init(&input, (cortex_width / 2) - (input_width / 2), 0, (cortex_width / 2) + (input_width / 2), input_height, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    printf("DEDDD %d %d %d %d", input->x0, input->y0, input->x1, input->y1);
 
     // Set input values.
     for (int i = 0; i < input_width * input_height; i++) {
@@ -57,7 +58,7 @@ int main(int argc, char **argv) {
         cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
         // Feed.
-        c2d_feed2d<<<input_grid_size, 1>>>(prev_cortex, d_input);
+        c2d_feed2d<<<input_grid_size, dim3(1, 1)>>>(prev_cortex, d_input);
         cudaCheckError();
         cudaDeviceSynchronize();
 
