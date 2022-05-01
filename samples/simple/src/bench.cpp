@@ -5,8 +5,8 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 500;
-    cortex_size_t cortex_height = 400;
+    cortex_size_t cortex_width = 2000;
+    cortex_size_t cortex_height = 1000;
     cortex_size_t input_width = 20;
     cortex_size_t input_height = 1;
     nh_radius_t nh_radius = 1;
@@ -33,9 +33,11 @@ int main(int argc, char **argv) {
 
     uint64_t start_time = millis();
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 1000; i++) {
         cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+
+        // TODO Fetch input.
 
         // Feed.
         c2d_feed2d(prev_cortex, input);

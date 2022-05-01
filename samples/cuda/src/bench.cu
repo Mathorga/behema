@@ -5,8 +5,8 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
+    cortex_size_t cortex_width = 2000;
+    cortex_size_t cortex_height = 1000;
     cortex_size_t input_width = 20;
     cortex_size_t input_height = 1;
     int32_t cortex_grid_size = (cortex_width * cortex_height) / BLOCK_SIZE;
@@ -37,7 +37,6 @@ int main(int argc, char **argv) {
     // Input init.
     input2d_t* input;
     i2d_init(&input, (cortex_width / 2) - (input_width / 2), 0, (cortex_width / 2) + (input_width / 2), input_height, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
-    printf("DEDDD %d %d %d %d", input->x0, input->y0, input->x1, input->y1);
 
     // Set input values.
     for (int i = 0; i < input_width * input_height; i++) {
@@ -57,6 +56,11 @@ int main(int argc, char **argv) {
         cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
         cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
+        // TODO Fetch input.
+
+        // Copy input to device.
+        i2d_to_device(d_input, input);
+
         // Feed.
         c2d_feed2d<<<input_grid_size, dim3(1, 1)>>>(prev_cortex, d_input);
         cudaCheckError();
@@ -73,7 +77,9 @@ int main(int argc, char **argv) {
     printf("\nCompleted 1000 iterations in %ldms\n", end_time - start_time);
 
     // Copy the cortex back to host to check the results.
-    // TODO.
+    c2d_to_host(even_cortex, d_even_cortex);
+    printf("\nDindolo\n");
+    c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
     c2d_destroy(even_cortex);

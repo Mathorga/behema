@@ -29,11 +29,6 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
         return ERROR_FAILED_ALLOC;
     }
 
-    // Allocate memory on the device.
-    ticks_count_t* device_values;
-    cudaMalloc(&device_values, (host_input->x1 - host_input->x0) * (host_input->x1 - host_input->x0) * sizeof(ticks_count_t));
-    cudaMalloc(&device_input, sizeof(input2d_t));
-
     // Copy tmp input to device.
     cudaMemcpy(device_input, tmp_input, sizeof(input2d_t), cudaMemcpyHostToDevice);
     cudaCheckError();
@@ -141,8 +136,6 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex) {
 __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
-
-    printf("\n%d %d %d %d\n", x, y, input->x0, input->y0);
 
     if (pulse_map(cortex->sample_window,
                   cortex->ticks_count % cortex->sample_window,
