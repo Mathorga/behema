@@ -106,6 +106,11 @@ uint64_t nanos() {
 void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
+    if (out_file == NULL) {
+        printf("File does not exist: %s\n", file_name);
+        // TODO Return ERROR_FILE_NOT_FOUND.
+        return;
+    }
 
     // Write cortex metadata to the output file.
     fwrite(&(cortex->width), sizeof(cortex_size_t), 1, out_file);

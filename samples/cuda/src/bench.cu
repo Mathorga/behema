@@ -5,8 +5,8 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 2000;
-    cortex_size_t cortex_height = 1000;
+    cortex_size_t cortex_width = 100;
+    cortex_size_t cortex_height = 60;
     cortex_size_t input_width = 20;
     cortex_size_t input_height = 1;
     int32_t cortex_grid_size = (cortex_width * cortex_height) / BLOCK_SIZE;
@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 
     // Copy the cortex back to host to check the results.
     c2d_to_host(even_cortex, d_even_cortex);
-    printf("\nDindolo\n");
+    printf("\nHost cortex %d %d\n", even_cortex->width, even_cortex->height);
     c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
