@@ -23,7 +23,14 @@ Copyright (C) 2022 Luka Micheletti
         }
 
 // Default block size for kernel executions.
-#define BLOCK_SIZE 256
+// Block sizes are designed not to exceed the 1024 thread per block limit in the CUDA architecture.
+// BLOCK_SIZE constants should be used as components of a dim3 object:
+// dim3 block_size(BLOCK_SIZE_1D);
+// dim3 block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+// dim3 block_size(BLOCK_SIZE_3D, BLOCK_SIZE_3D, BLOCK_SIZE_3D);
+#define BLOCK_SIZE_1D 256
+#define BLOCK_SIZE_2D 32
+#define BLOCK_SIZE_3D 8
 
 // Util functions:
 

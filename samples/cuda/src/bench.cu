@@ -5,12 +5,15 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
+    cortex_size_t cortex_width = 256;
+    cortex_size_t cortex_height = 128;
     cortex_size_t input_width = 20;
     cortex_size_t input_height = 1;
-    int32_t cortex_grid_size = (cortex_width * cortex_height) / BLOCK_SIZE;
+    uint32_t iterations_count = 1;
+    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
+    dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
+    dim3 input_block_size(1, 1);
     nh_radius_t nh_radius = 1;
 
     srand(time(NULL));
@@ -27,9 +30,9 @@ int main(int argc, char **argv) {
     // Copy cortexes to the device.
     cortex2d_t* d_even_cortex;
     cortex2d_t* d_odd_cortex;
-    cudaMalloc(&d_even_cortex, sizeof(cortex2d_t));
+    cudaMalloc((void**) &d_even_cortex, sizeof(cortex2d_t));
     cudaCheckError();
-    cudaMalloc(&d_odd_cortex, sizeof(cortex2d_t));
+    cudaMalloc((void**) &d_odd_cortex, sizeof(cortex2d_t));
     cudaCheckError();
     error = c2d_to_device(d_even_cortex, even_cortex);
     error = c2d_to_device(d_odd_cortex, odd_cortex);
@@ -40,19 +43,19 @@ int main(int argc, char **argv) {
 
     // Set input values.
     for (int i = 0; i < input_width * input_height; i++) {
-        input->values[i] = even_cortex->sample_window / 2;
+        input->values[i] = even_cortex->sample_window - 1;
     }
 
     // Copy input to device.
     input2d_t* d_input;
-    cudaMalloc(&d_input, sizeof(input2d_t));
+    cudaMalloc((void**) &d_input, sizeof(input2d_t));
     cudaCheckError();
     i2d_to_device(d_input, input);
 
     // Start timer.
     uint64_t start_time = millis();
 
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < iterations_count; i++) {
         cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
         cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
@@ -62,11 +65,13 @@ int main(int argc, char **argv) {
         i2d_to_device(d_input, input);
 
         // Feed.
-        c2d_feed2d<<<input_grid_size, dim3(1, 1)>>>(prev_cortex, d_input);
+        c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_input);
         cudaCheckError();
         cudaDeviceSynchronize();
 
-        c2d_tick<<<cortex_grid_size, BLOCK_SIZE>>>(prev_cortex, next_cortex);
+        // printf("\nCORTEX_GRID_SIZE %d %d\n", cortex_grid_size.x, cortex_grid_size.y);
+        c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
+        cudaCheckError();
         cudaDeviceSynchronize();
 
         // usleep(100);
@@ -74,7 +79,7 @@ int main(int argc, char **argv) {
 
     // Stop timer.
     uint64_t end_time = millis();
-    printf("\nCompleted 1000 iterations in %ldms\n", end_time - start_time);
+    printf("\nCompleted %d iterations in %ldms\n", iterations_count, end_time - start_time);
 
     // Copy the cortex back to host to check the results.
     c2d_to_host(even_cortex, d_even_cortex);

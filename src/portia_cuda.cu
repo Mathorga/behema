@@ -18,6 +18,9 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
 
     // Allocate tmp input on the host.
     input2d_t* tmp_input = (input2d_t*) malloc(sizeof(input2d_t));
+    if (tmp_input == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
 
     // Copy host input to tmp input.
     (*tmp_input) = (*host_input);
@@ -36,6 +39,7 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
         (host_input->x1 - host_input->x0 * host_input->y1 - host_input->y0) * sizeof(ticks_count_t),
         cudaMemcpyHostToDevice
     );
+    cudaCheckError();
 
     // Copy tmp input to device.
     cudaMemcpy(
@@ -240,6 +244,8 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         }
                     }
                 }
+
+                printf("\nEVOLVE %d %d %d\n", i, j, evolve);
 
                 // Perform the evolution phase if allowed.
                 if (evolve) {
