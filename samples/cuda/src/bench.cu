@@ -5,11 +5,11 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 256;
-    cortex_size_t cortex_height = 128;
-    cortex_size_t input_width = 20;
+    cortex_size_t cortex_width = 512;
+    cortex_size_t cortex_height = 256;
+    cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 1;
+    uint32_t iterations_count = 1000;
     dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
     dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
@@ -39,7 +39,15 @@ int main(int argc, char **argv) {
 
     // Input init.
     input2d_t* input;
-    i2d_init(&input, (cortex_width / 2) - (input_width / 2), 0, (cortex_width / 2) + (input_width / 2), input_height, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    i2d_init(
+        &input,
+        (cortex_width / 2) - (input_width / 2),
+        0,
+        (cortex_width / 2) + (input_width / 2),
+        input_height,
+        DEFAULT_EXC_VALUE * 2,
+        PULSE_MAPPING_FPROP
+    );
 
     // Set input values.
     for (int i = 0; i < input_width * input_height; i++) {
@@ -55,7 +63,7 @@ int main(int argc, char **argv) {
     // Start timer.
     uint64_t start_time = millis();
 
-    for (int i = 0; i < iterations_count; i++) {
+    for (uint32_t i = 0; i < iterations_count; i++) {
         cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
         cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
@@ -69,7 +77,6 @@ int main(int argc, char **argv) {
         cudaCheckError();
         cudaDeviceSynchronize();
 
-        // printf("\nCORTEX_GRID_SIZE %d %d\n", cortex_grid_size.x, cortex_grid_size.y);
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();
@@ -83,7 +90,6 @@ int main(int argc, char **argv) {
 
     // Copy the cortex back to host to check the results.
     c2d_to_host(even_cortex, d_even_cortex);
-    printf("\nHost cortex %d %d\n", even_cortex->width, even_cortex->height);
     c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.

@@ -188,8 +188,6 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
 
-            // next_neuron->syn_count = 0x00u;
-
             /* Compute the neighborhood diameter:
                    d = 7
               <------------->

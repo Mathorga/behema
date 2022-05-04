@@ -5,9 +5,9 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 256;
-    cortex_size_t cortex_height = 128;
-    cortex_size_t input_width = 20;
+    cortex_size_t cortex_width = 512;
+    cortex_size_t cortex_height = 256;
+    cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
     uint32_t iterations_count = 1000;
     nh_radius_t nh_radius = 1;
@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
 
     uint64_t start_time = millis();
 
-    for (int i = 0; i < iterations_count; i++) {
+    for (uint32_t i = 0; i < iterations_count; i++) {
         cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
@@ -53,7 +53,6 @@ int main(int argc, char **argv) {
     printf("\nCompleted %d iterations in %ldms\n", iterations_count, end_time - start_time);
 
     // Copy the cortex back to host to check the results.
-    printf("\nHost cortex %d %d\n", even_cortex->width, even_cortex->height);
     c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.

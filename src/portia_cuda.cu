@@ -80,6 +80,15 @@ error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
         return ERROR_FAILED_ALLOC;
     }
 
+    // Copy neurons to device.
+    cudaMemcpy(
+        tmp_cortex->neurons,
+        host_cortex->neurons,
+        host_cortex->width * host_cortex->height * sizeof(neuron_t),
+        cudaMemcpyHostToDevice
+    );
+    cudaCheckError();
+
     // Copy tmp cortex to device.
     cudaMemcpy(device_cortex, tmp_cortex, sizeof(cortex2d_t), cudaMemcpyHostToDevice);
     cudaCheckError();
@@ -154,10 +163,12 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
-    if (pulse_map(cortex->sample_window,
-                  cortex->ticks_count % cortex->sample_window,
-                  input->values[IDX2D(x, y, input->x1 - input->x0)],
-                  cortex->pulse_mapping)) {
+    if (pulse_map(
+            cortex->sample_window,
+            cortex->ticks_count % cortex->sample_window,
+            input->values[IDX2D(x, y, input->x1 - input->x0)],
+            cortex->pulse_mapping
+        )) {
         cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
     }
 }
@@ -173,8 +184,6 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
     // Copy prev neuron values to the new one.
     *next_neuron = prev_neuron;
-
-    // next_neuron->syn_count = 0x00u;
 
     /* Compute the neighborhood diameter:
         d = 7
@@ -244,8 +253,6 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                         }
                     }
                 }
-
-                printf("\nEVOLVE %d %d %d\n", i, j, evolve);
 
                 // Perform the evolution phase if allowed.
                 if (evolve) {
