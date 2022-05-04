@@ -29,8 +29,21 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
         return ERROR_FAILED_ALLOC;
     }
 
+    // Copy values to device.
+    cudaMemcpy(
+        tmp_input->values,
+        host_input->values,
+        (host_input->x1 - host_input->x0 * host_input->y1 - host_input->y0) * sizeof(ticks_count_t),
+        cudaMemcpyHostToDevice
+    );
+
     // Copy tmp input to device.
-    cudaMemcpy(device_input, tmp_input, sizeof(input2d_t), cudaMemcpyHostToDevice);
+    cudaMemcpy(
+        device_input,
+        tmp_input,
+        sizeof(input2d_t),
+        cudaMemcpyHostToDevice
+    );
     cudaCheckError();
 
     // Cleanup.
@@ -139,7 +152,7 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
 
     if (pulse_map(cortex->sample_window,
                   cortex->ticks_count % cortex->sample_window,
-                  input->values[IDX2D(x + input->x0, y + input->y0, cortex->width)],
+                  input->values[IDX2D(x, y, input->x1 - input->x0)],
                   cortex->pulse_mapping)) {
         cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
     }

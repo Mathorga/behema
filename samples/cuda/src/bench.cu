@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
     // Start timer.
     uint64_t start_time = millis();
 
-    for (int i = 0; i < 1000; i++) {
+    for (int i = 0; i < 1; i++) {
         cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
         cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 

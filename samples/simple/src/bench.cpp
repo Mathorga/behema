@@ -5,8 +5,8 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 2000;
-    cortex_size_t cortex_height = 1000;
+    cortex_size_t cortex_width = 200;
+    cortex_size_t cortex_height = 100;
     cortex_size_t input_width = 20;
     cortex_size_t input_height = 1;
     nh_radius_t nh_radius = 1;
@@ -47,8 +47,13 @@ int main(int argc, char **argv) {
         // usleep(100);
     }
 
+    // Stop timer.
     uint64_t end_time = millis();
     printf("\nCompleted 1000 iterations in %ldms\n", end_time - start_time);
+
+    // Copy the cortex back to host to check the results.
+    printf("\nHost cortex %d %d\n", even_cortex->width, even_cortex->height);
+    c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
     c2d_destroy(even_cortex);
