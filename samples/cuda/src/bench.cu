@@ -5,16 +5,16 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 128;
-    cortex_size_t cortex_height = 64;
-    cortex_size_t input_width = 64;
+    cortex_size_t cortex_width = 2048;
+    cortex_size_t cortex_height = 1024;
+    cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 100000;
+    uint32_t iterations_count = 1000;
     dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
     dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
-    nh_radius_t nh_radius = 1;
+    nh_radius_t nh_radius = 2;
 
     srand(time(NULL));
 

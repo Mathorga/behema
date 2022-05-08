@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
     uint32_t iterations_count = 1000;
-    nh_radius_t nh_radius = 1;
+    nh_radius_t nh_radius = 2;
 
     srand(time(NULL));
 
