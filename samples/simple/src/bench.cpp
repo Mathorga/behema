@@ -21,6 +21,9 @@ int main(int argc, char **argv) {
     cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_set_evol_step(even_cortex, 0x01U);
+    c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_max_syn_count(even_cortex, 24);
     c2d_copy(odd_cortex, even_cortex);
 
     // Input init.
