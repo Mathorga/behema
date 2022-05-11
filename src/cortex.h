@@ -89,6 +89,7 @@ typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
 typedef int8_t spikes_count_t;
 typedef uint32_t chance_t;
+typedef uint32_t rand_state_t;
 
 typedef int32_t cortex_size_t;
 
@@ -171,7 +172,7 @@ typedef struct cortex2d_t {
     ticks_count_t ticks_count;
     // Random state. The random state has to be consistent inside a cortex, so it qualifies as a property.
     // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
-    uint32_t rand_state;
+    rand_state_t rand_state;
     // Evolutions performed since cortex creation.
     ticks_count_t evols_count;
     // Amount of ticks between each evolution.
@@ -231,7 +232,7 @@ error_code_t c2d_destroy(cortex2d_t* cortex);
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
 
 
-// ################################################## Setters ###################################################
+// ########################################## Setter functions ##################################################
 
 /// Sets the neighborhood radius for all neurons in the cortex.
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius);

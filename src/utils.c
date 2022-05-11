@@ -116,6 +116,7 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->width), sizeof(cortex_size_t), 1, out_file);
     fwrite(&(cortex->height), sizeof(cortex_size_t), 1, out_file);
     fwrite(&(cortex->ticks_count), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->rand_state), sizeof(rand_state_t), 1, out_file);
     fwrite(&(cortex->evols_count), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->evol_step), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_window), sizeof(spikes_count_t), 1, out_file);
@@ -131,6 +132,7 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
 
     fwrite(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, out_file);
     fwrite(&(cortex->max_syn_count), sizeof(syn_count_t), 1, out_file);
+    fwrite(&(cortex->inhexc_range), sizeof(chance_t), 1, out_file);
 
     fwrite(&(cortex->sample_window), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, out_file);
@@ -153,6 +155,7 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->width), sizeof(cortex_size_t), 1, in_file);
     fread(&(cortex->height), sizeof(cortex_size_t), 1, in_file);
     fread(&(cortex->ticks_count), sizeof(ticks_count_t), 1, in_file);
+    fread(&(cortex->rand_state), sizeof(rand_state_t), 1, in_file);
     fread(&(cortex->evols_count), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->evol_step), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_window), sizeof(spikes_count_t), 1, in_file);
@@ -168,6 +171,7 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
 
     fread(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, in_file);
     fread(&(cortex->max_syn_count), sizeof(syn_count_t), 1, in_file);
+    fread(&(cortex->inhexc_range), sizeof(chance_t), 1, in_file);
 
     fread(&(cortex->sample_window), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, in_file);
