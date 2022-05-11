@@ -5,11 +5,11 @@
 #include <portia/portia.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 2048;
-    cortex_size_t cortex_height = 1024;
+    cortex_size_t cortex_width = 1024;
+    cortex_size_t cortex_height = 512;
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 1000;
+    uint32_t iterations_count = 100000;
     nh_radius_t nh_radius = 2;
 
     srand(time(NULL));
@@ -24,15 +24,29 @@ int main(int argc, char **argv) {
     c2d_set_evol_step(even_cortex, 0x01U);
     c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(even_cortex, 24);
+    char touchFileName[40];
+    char inhexcFileName[40];
+    sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
+    sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+    c2d_touch_from_map(even_cortex, touchFileName);
+    c2d_inhexc_from_map(even_cortex, inhexcFileName);
     c2d_copy(odd_cortex, even_cortex);
 
     // Input init.
     input2d_t* input;
-    i2d_init(&input, (cortex_width / 2) - (input_width / 2), 0, (cortex_width / 2) + (input_width / 2), input_height, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    i2d_init(
+        &input,
+        (cortex_width / 2) - (input_width / 2),
+        0,
+        (cortex_width / 2) + (input_width / 2),
+        input_height,
+        DEFAULT_EXC_VALUE * 2,
+        PULSE_MAPPING_FPROP
+    );
 
     // Set input values.
     for (int i = 0; i < input_width * input_height; i++) {
-        input->values[i] = even_cortex->sample_window / 2;
+        input->values[i] = even_cortex->sample_window - 1;
     }
 
     uint64_t start_time = millis();

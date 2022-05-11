@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_height = 512;
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 10000;
+    uint32_t iterations_count = 100000;
     dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
     dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
@@ -89,6 +89,10 @@ int main(int argc, char **argv) {
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();
+
+        if (i % 1000 == 0) {
+            printf("\nPerformed %d iterations in %ldms\n", i, millis() - start_time);
+        }
 
         // usleep(100);
     }
