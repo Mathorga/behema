@@ -62,6 +62,10 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
+        if (i % 1000 == 0) {
+            printf("\nPerformed %d iterations in %ldms\n", i, millis() - start_time);
+        }
+
         // usleep(100);
     }
 

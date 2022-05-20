@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
     c2d_inhexc_from_map(even_cortex, inhexcFileName);
     c2d_copy(odd_cortex, even_cortex);
 
-    // Copy cortexes to the device.
+    // Copy cortexes to device.
     cortex2d_t* d_even_cortex;
     cortex2d_t* d_odd_cortex;
     cudaMalloc((void**) &d_even_cortex, sizeof(cortex2d_t));
