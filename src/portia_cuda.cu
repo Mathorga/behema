@@ -163,6 +163,11 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
+    // Avoid accessing unallocated memory.
+    if (x >= input->x1 - input->x0 || y >= input->y1 - input->y0) {
+        return;
+    }
+
     if (pulse_map(
             cortex->sample_window,
             cortex->ticks_count % cortex->sample_window,
@@ -176,6 +181,11 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
+
+    // Avoid accessing unallocated memory.
+    if (x >= prev_cortex->width || y >= prev_cortex->height) {
+        return;
+    }
 
     // Retrieve the involved neurons.
     cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
