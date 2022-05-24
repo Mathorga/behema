@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_height = 512;
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 100000;
+    uint32_t iterations_count = 10000;
     nh_radius_t nh_radius = 2;
 
     srand(time(NULL));
@@ -64,6 +64,7 @@ int main(int argc, char **argv) {
 
         if (i % 1000 == 0) {
             printf("\nPerformed %d iterations in %ldms\n", i, millis() - start_time);
+            c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
         // usleep(100);
