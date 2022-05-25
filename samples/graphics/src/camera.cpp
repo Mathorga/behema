@@ -326,27 +326,12 @@ int main(int argc, char **argv) {
                 // cv::imshow("Preview", frame);
                 // cv::waitKey(1);
 
-
-                // for (cortex_size_t y = 0; y < eyeSize.height; y++) {
-                //     for (cortex_size_t x = 0; x < eyeSize.width; x++) {
-                //         printf("%d ", leftEye.values[IDX2D(x, y, eyeSize.width)]);
-                //     }
-                //     printf("\n");
-                // }
-
                 sample_step = 0;
             }
 
             // Feed the cortex.
             c2d_feed2d(prev_cortex, leftEye);
             c2d_feed2d(prev_cortex, rightEye);
-
-            // Feed the cortex.
-            // c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 4);
-            // c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 4);
-
-            // c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
-            // c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
 
             sample_step++;
         }
