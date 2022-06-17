@@ -1,6 +1,6 @@
 #include "portia_cuda.h"
 
-// The state word must be initialized to non-zero.
+// The state must be initialized to non-zero.
 __host__ __device__ uint32_t xorshf32(uint32_t state) {
     // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
     uint32_t x = state;
@@ -27,6 +27,7 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
 
     // Allocate values on the device.
     cuda_error = cudaMalloc((void**) &(tmp_input->values), (host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0) * sizeof(ticks_count_t));
+    printf("\nHERE %d %d %d %d\n", host_input->x0, host_input->y0, host_input->x1, host_input->y1);
     cudaCheckError();
     if (cuda_error != cudaSuccess) {
         return ERROR_FAILED_ALLOC;
@@ -36,7 +37,7 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
     cudaMemcpy(
         tmp_input->values,
         host_input->values,
-        (host_input->x1 - host_input->x0 * host_input->y1 - host_input->y0) * sizeof(ticks_count_t),
+        ((host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0)) * sizeof(ticks_count_t),
         cudaMemcpyHostToDevice
     );
     cudaCheckError();

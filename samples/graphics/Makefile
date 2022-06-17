@@ -1,8 +1,18 @@
 CCOMP=g++
+NVCOMP=nvcc
 
 STD_CCOMP_FLAGS=-std=c++17 -Wall -pedantic -g
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
 CLINK_FLAGS=-Wall
+
+ifdef CUDA_ARCH
+CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
+else
+CUDA_ARCH_FLAG=
+endif
+
+NVCOMP_FLAGS=-std=c++11 -G $(CUDA_ARCH_FLAG)
+NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
 STD_LIBS=-lrt -lm
 SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
@@ -28,6 +38,12 @@ camera: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
+	@printf "\nCreated $@!\n"
+
+cuda_camera: create
+	@printf "\n"
+	$(NVCOMP) $(NVCOMP_FLAGS) -c $(SRC_DIR)/$@.cu -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
+	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
 	@printf "\nCreated $@!\n"
 
 inspect: create

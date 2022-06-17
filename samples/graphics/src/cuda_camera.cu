@@ -182,6 +182,15 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    cortex_size_t input_width = (cortex_width / 10) * 3;
+    cortex_size_t input_height = 1;
+
+    // Define kernel sizes.
+    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
+    dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+    dim3 input_grid_size(input_width, input_height);
+    dim3 input_block_size(1, 1);
+
     srand(time(NULL));
 
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
@@ -207,6 +216,18 @@ int main(int argc, char **argv) {
     c2d_set_max_syn_count(even_cortex, 24);
     c2d_copy(odd_cortex, even_cortex);
 
+    // Copy cortexes to device.
+    cortex2d_t* d_even_cortex;
+    cortex2d_t* d_odd_cortex;
+    cudaMalloc((void**) &d_even_cortex, sizeof(cortex2d_t));
+    cudaCheckError();
+    cudaMalloc((void**) &d_odd_cortex, sizeof(cortex2d_t));
+    cudaCheckError();
+    error = c2d_to_device(d_even_cortex, even_cortex);
+    cudaCheckError();
+    error = c2d_to_device(d_odd_cortex, odd_cortex);
+    cudaCheckError();
+
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -217,24 +238,44 @@ int main(int argc, char **argv) {
     sf::RenderWindow window(desktopMode, "Portia", sf::Style::Fullscreen);
     window.setMouseCursorVisible(false);
     
-    bool feeding = false;
-    bool showInfo = false;
+    bool feeding = true;
     bool nDraw = true;
     bool sDraw = true;
 
     int counter = 0;
 
     // Inputs.
-    input2d_t* leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    input2d_t* left_eye;
+    i2d_init(&left_eye,
+             0,
+             0,
+             input_width,
+             input_height,
+             DEFAULT_EXC_VALUE * 2,
+             PULSE_MAPPING_FPROP);
 
-    input2d_t* rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    input2d_t* right_eye;
+    i2d_init(&right_eye,
+             cortex_width - input_width,
+             0,
+             cortex_width,
+             input_height,
+             DEFAULT_EXC_VALUE * 2,
+             PULSE_MAPPING_FPROP);
 
-    cv::Size eyeSize = cv::Size(leftEye->x1 - leftEye->x0, leftEye->y1 - leftEye->y0);
+    // Copy input to device.
+    input2d_t* d_left_eye;
+    input2d_t* d_right_eye;
+    cudaMalloc((void**) &d_left_eye, sizeof(input2d_t));
+    cudaCheckError();
+    i2d_to_device(d_left_eye, left_eye);
+    cudaCheckError();
+    cudaMalloc((void**) &d_right_eye, sizeof(input2d_t));
+    cudaCheckError();
+    i2d_to_device(d_right_eye, right_eye);
+    cudaCheckError();
 
-    // cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
-    // cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
+    cv::Size eyeSize = cv::Size(input_width, input_height);
 
     char touchFileName[40];
     char inhexcFileName[40];
@@ -252,11 +293,17 @@ int main(int argc, char **argv) {
         printf("Font not loaded\n");
     }
 
+    cortex2d_t* h_cortex;
+    error = c2d_init(&h_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_copy(h_cortex, even_cortex);
+
     for (int i = 0; window.isOpen(); i++) {
         counter++;
 
-        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+        cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
+        cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
+
+        printf("\n0\n");
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
@@ -275,17 +322,11 @@ int main(int argc, char **argv) {
                         case sf::Keyboard::Space:
                             feeding = !feeding;
                             break;
-                        case sf::Keyboard::I:
-                            showInfo = !showInfo;
-                            break;
                         case sf::Keyboard::N:
                             nDraw = !nDraw;
                             break;
                         case sf::Keyboard::S:
                             sDraw = !sDraw;
-                            break;
-                        case sf::Keyboard::D:
-                            c2d_to_file(prev_cortex, (char*) "out/test.c2d");
                             break;
                         default:
                             break;
@@ -298,12 +339,14 @@ int main(int argc, char **argv) {
 
         // Only get new inputs according to the sample rate.
         if (feeding) {
+
+            printf("\n1\n");
             if (sample_step > samplingBound) {
                 // Fetch input.
                 cam.read(frame);
 
                 if (frame.empty()) {
-                    printf("ERROR! blank frame grabbed\n");
+                    printf("\nERROR! Blank frame grabbed\n");
                     break;
                 }
 
@@ -311,62 +354,93 @@ int main(int argc, char **argv) {
                 cv::resize(frame, resized, eyeSize);
 
                 resized.at<uint8_t>(cv::Point(0, 0));
-                for (cortex_size_t y = 0; y < eyeSize.height; y++) {
-                    for (cortex_size_t x = 0; x < eyeSize.width; x++) {
+                for (cortex_size_t y = 0; y < input_height; y++) {
+                    for (cortex_size_t x = 0; x < input_width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        leftEye->values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
-                                                                                               0, 255,
-                                                                                               0, samplingBound);
-                        rightEye->values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
-                                                                            0, 255,
-                                                                            0, samplingBound);
+                        left_eye->values[IDX2D(input_width - 1 - x, y, input_width)] = fmap(val[2],
+                                                                                            0, 255,
+                                                                                            0, samplingBound);
+                        right_eye->values[IDX2D(x, y, input_width)] = fmap(val[0],
+                                                                           0, 255,
+                                                                           0, samplingBound);
                     }
                 }
 
-                // cv::resize(resized, frame, eyeSize * 15, 0, 0, cv::INTER_NEAREST);
-                // cv::imshow("Preview", frame);
-                // cv::waitKey(1);
+                printf("\n2\n");
+
+                // Copy input to device.
+                i2d_to_device(d_left_eye, left_eye);
+                cudaCheckError();   
+                i2d_to_device(d_right_eye, right_eye);
+                cudaCheckError();
+
+                printf("\n3\n");
 
                 sample_step = 0;
             }
 
+            printf("\n11\n");
+
             // Feed the cortex.
-            c2d_feed2d(prev_cortex, leftEye);
-            c2d_feed2d(prev_cortex, rightEye);
+            c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_left_eye);
+            cudaCheckError();
+            c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_right_eye);
+            cudaCheckError();
+
+            printf("\n4\n");
 
             sample_step++;
         }
 
-        // Clear the window with black color.
-        window.clear(sf::Color(31, 31, 31, 255));
+        // // Clear the window with black color.
+        // window.clear(sf::Color(31, 31, 31, 255));
 
-        // Draw synapses.
-        if (sDraw) {
-            drawSynapses(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions);
-        }
+        // printf("\n01\n");
 
-        // Draw neurons.
-        if (nDraw) {
-            drawNeurons(next_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
-        }
+        // // Copy cortex back to host in order to print it.
+        // error = c2d_to_host(h_cortex, next_cortex);
 
-        sf::Text text;
-        text.setPosition(10.0, 10.0);
-        text.setFont(font);
-        char string[100];
-        snprintf(string, 100, "%d", sample_step);
-        text.setString(string);
-        text.setCharacterSize(12);
-        text.setFillColor(sf::Color::White);
-        window.draw(text);
+        // // Draw synapses.
+        // if (sDraw) {
+        //     printf("\n011\n");
+        //     drawSynapses(h_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions);
+        //     printf("\n012\n");
+        // }
 
-        // End the current frame.
-        window.display();
+        // printf("\n02\n");
+
+        // // Draw neurons.
+        // if (nDraw) {
+        //     drawNeurons(h_cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+        // }
+
+        // printf("\n03\n");
+
+        // sf::Text text;
+        // text.setPosition(10.0, 10.0);
+        // text.setFont(font);
+        // char string[100];
+        // snprintf(string, 100, "%d", sample_step);
+        // text.setString(string);
+        // text.setCharacterSize(12);
+        // text.setFillColor(sf::Color::White);
+        // window.draw(text);
+
+        // printf("\n04\n");
+
+        // // End the current frame.
+        // window.display();
+
+        // printf("\n05\n");
 
         // usleep(10000);
 
         // Tick the cortex.
-        c2d_tick(prev_cortex, next_cortex);
+        c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
+        cudaCheckError();
+        cudaDeviceSynchronize();
+
+        printf("\n06\n");
     }
     
     return 0;
