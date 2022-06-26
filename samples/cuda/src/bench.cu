@@ -24,8 +24,9 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_height = 512;
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 100000;
-    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
+    uint32_t iterations_count = 10000;
+    // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra BLOCK_SIZE is allocated when needed.
+    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D + cortex_width % BLOCK_SIZE_2D != 0 ? 1 : 0, cortex_height / BLOCK_SIZE_2D + cortex_height % BLOCK_SIZE_2D ? 1 : 0);
     dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
@@ -96,7 +97,6 @@ int main(int argc, char **argv) {
         cudaCheckError();
         cudaDeviceSynchronize();
 
-        printf("\n11 %d %d %d %d\n", cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();
@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
     uint64_t end_time = millis();
     printf("\nCompleted %d iterations in %ldms\n", iterations_count, end_time - start_time);
 
-    // Copy the cortex back to host to check the results.
+    // Copy the cortex back to host and save it to file.
     c2d_to_host(even_cortex, d_even_cortex);
     c2d_to_file(even_cortex, (char*) "out/test.c2d");
 

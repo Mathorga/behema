@@ -152,8 +152,8 @@ void setup_cortexes(cortex2d_t** even_cortex,
 }
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
+    cortex_size_t cortex_width = 128;
+    cortex_size_t cortex_height = 64;
     cortex_size_t input_width = 32;
     cortex_size_t input_height = 1;
     dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D, 1);
