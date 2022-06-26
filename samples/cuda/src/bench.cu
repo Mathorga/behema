@@ -4,19 +4,19 @@
 #include <unistd.h>
 #include <portia/portia.h>
 
-void setup_cortexes(cortex2d_t* even_cortex, cortex2d_t* odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
-    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_set_evol_step(even_cortex, 0x01U);
-    c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
-    c2d_set_max_syn_count(even_cortex, 24);
+void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
+    c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_init(odd_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_set_evol_step(*even_cortex, 0x01U);
+    c2d_set_pulse_mapping(*even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_max_syn_count(*even_cortex, 24);
     char touchFileName[40];
     char inhexcFileName[40];
     sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
     sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
-    c2d_touch_from_map(even_cortex, touchFileName);
-    c2d_inhexc_from_map(even_cortex, inhexcFileName);
-    c2d_copy(odd_cortex, even_cortex);
+    c2d_touch_from_map(*even_cortex, touchFileName);
+    c2d_inhexc_from_map(*even_cortex, inhexcFileName);
+    c2d_copy(*odd_cortex, *even_cortex);
 }
 
 int main(int argc, char **argv) {
@@ -38,7 +38,13 @@ int main(int argc, char **argv) {
     // Cortex configuration.
     cortex2d_t* even_cortex;
     cortex2d_t* odd_cortex;
-    setup_cortexes(even_cortex, odd_cortex, cortex_width, cortex_height, nh_radius);
+    setup_cortexes(
+        &even_cortex,
+        &odd_cortex,
+        cortex_width,
+        cortex_height,
+        nh_radius
+    );
 
     // Copy cortexes to device.
     cortex2d_t* d_even_cortex;
@@ -90,6 +96,7 @@ int main(int argc, char **argv) {
         cudaCheckError();
         cudaDeviceSynchronize();
 
+        printf("\n11 %d %d %d %d\n", cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();

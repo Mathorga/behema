@@ -18,7 +18,7 @@ STD_LIBS=-lrt -lm
 SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
 OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 SPIKES_COUNT_LIBS=-lncurses
-TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
+CUDA_STD_LIBS=-lcudart -lstdc++
 PORTIA_LIBS=-lportia
 
 SRC_DIR=./src
