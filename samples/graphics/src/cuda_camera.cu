@@ -148,66 +148,30 @@ int main(int argc, char **argv) {
     cv::Mat frame;
     cv::VideoCapture cam;
 
-    // Input handling.
-    switch (argc) {
-        case 1:
-            break;
-        case 2:
-            cortex_width = atoi(argv[1]);
-            break;
-        case 3:
-            cortex_width = atoi(argv[1]);
-            cortex_height = atoi(argv[2]);
-            break;
-        case 4:
-            cortex_width = atoi(argv[1]);
-            cortex_height = atoi(argv[2]);
-            nh_radius = atoi(argv[3]);
-            break;
-        case 5:
-            cortex_width = atoi(argv[1]);
-            cortex_height = atoi(argv[2]);
-            nh_radius = atoi(argv[3]);
-            sampleWindow = atoi(argv[4]);
-            break;
-        default:
-            printf("USAGE: sampled <width> <height> <nh_radius> <inputs_count>\n");
-            exit(0);
-            break;
-    }
-
     cam.open(0);
     if (!cam.isOpened()) {
         printf("ERROR! Unable to open camera\n");
         return -1;
     }
 
-    cortex_size_t input_width = (cortex_width / 10) * 3;
+    cortex_size_t input_width = 32;
     cortex_size_t input_height = 1;
 
     // Define kernel sizes.
-    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D);
-    dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
-    dim3 input_grid_size(input_width, input_height);
-    dim3 input_block_size(1, 1);
+    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D, cortex_height / BLOCK_SIZE_2D, 1);
+    dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D, 1);
+    dim3 input_grid_size(input_width, input_height, 1);
+    dim3 input_block_size(1, 1, 1);
 
     srand(time(NULL));
 
-    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
+    error_code_t error;
 
     // Create network model.
     cortex2d_t* even_cortex;
     cortex2d_t* odd_cortex;
-    error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    if (error != 0) {
-        printf("Error %d during init\n", error);
-        exit(1);
-    }
+    error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
-    if (error != 0) {
-        printf("Error %d during init\n", error);
-        exit(1);
-    }
 
     // Customize cortex properties.
     c2d_set_sample_window(even_cortex, sampleWindow);
@@ -235,10 +199,11 @@ int main(int argc, char **argv) {
     initPositions(even_cortex, xNeuronPositions, yNeuronPositions);
     
     // create the window
+    sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
     sf::RenderWindow window(desktopMode, "Portia", sf::Style::Fullscreen);
     window.setMouseCursorVisible(false);
     
-    bool feeding = true;
+    bool feeding = false;
     bool nDraw = true;
     bool sDraw = true;
 
@@ -263,17 +228,21 @@ int main(int argc, char **argv) {
              DEFAULT_EXC_VALUE * 2,
              PULSE_MAPPING_FPROP);
 
+    // Set input values.
+    for (int i = 0; i < input_width * input_height; i++) {
+        left_eye->values[i] = even_cortex->sample_window - 1;
+        right_eye->values[i] = even_cortex->sample_window - 1;
+    }
+
     // Copy input to device.
     input2d_t* d_left_eye;
     input2d_t* d_right_eye;
     cudaMalloc((void**) &d_left_eye, sizeof(input2d_t));
     cudaCheckError();
     i2d_to_device(d_left_eye, left_eye);
-    cudaCheckError();
     cudaMalloc((void**) &d_right_eye, sizeof(input2d_t));
     cudaCheckError();
     i2d_to_device(d_right_eye, right_eye);
-    cudaCheckError();
 
     cv::Size eyeSize = cv::Size(input_width, input_height);
 
@@ -297,7 +266,7 @@ int main(int argc, char **argv) {
     error = c2d_init(&h_cortex, cortex_width, cortex_height, nh_radius);
     c2d_copy(h_cortex, even_cortex);
 
-    for (int i = 0; window.isOpen(); i++) {
+    for (int i = 0; /*window.isOpen()*/ i < 1; i++) {
         counter++;
 
         cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
@@ -306,91 +275,95 @@ int main(int argc, char **argv) {
         printf("\n0\n");
 
         // Check all the window's events that were triggered since the last iteration of the loop.
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            switch (event.type) {
-                case sf::Event::Closed:
-                    // Close requested event: close the window.
-                    window.close();
-                    break;
-                case sf::Event::KeyReleased:
-                    switch (event.key.code) {
-                        case sf::Keyboard::Escape:
-                        case sf::Keyboard::Q:
-                            window.close();
-                            break;
-                        case sf::Keyboard::Space:
-                            feeding = !feeding;
-                            break;
-                        case sf::Keyboard::N:
-                            nDraw = !nDraw;
-                            break;
-                        case sf::Keyboard::S:
-                            sDraw = !sDraw;
-                            break;
-                        default:
-                            break;
-                    }
-                    break;
-                default:
-                    break;
-            }
-        }
+        // sf::Event event;
+        // while (window.pollEvent(event)) {
+        //     switch (event.type) {
+        //         case sf::Event::Closed:
+        //             // Close requested event: close the window.
+        //             window.close();
+        //             break;
+        //         case sf::Event::KeyReleased:
+        //             switch (event.key.code) {
+        //                 case sf::Keyboard::Escape:
+        //                 case sf::Keyboard::Q:
+        //                     window.close();
+        //                     break;
+        //                 case sf::Keyboard::Space:
+        //                     feeding = !feeding;
+        //                     break;
+        //                 case sf::Keyboard::N:
+        //                     nDraw = !nDraw;
+        //                     break;
+        //                 case sf::Keyboard::S:
+        //                     sDraw = !sDraw;
+        //                     break;
+        //                 default:
+        //                     break;
+        //             }
+        //             break;
+        //         default:
+        //             break;
+        //     }
+        // }
 
         // Only get new inputs according to the sample rate.
-        if (feeding) {
+        // if (feeding) {
 
-            printf("\n1\n");
-            if (sample_step > samplingBound) {
-                // Fetch input.
-                cam.read(frame);
+        //     printf("\n1\n");
+        //     if (sample_step > samplingBound) {
+        //         // Fetch input.
+        //         cam.read(frame);
 
-                if (frame.empty()) {
-                    printf("\nERROR! Blank frame grabbed\n");
-                    break;
-                }
+        //         if (frame.empty()) {
+        //             printf("\nERROR! Blank frame grabbed\n");
+        //             break;
+        //         }
 
-                cv::Mat resized;
-                cv::resize(frame, resized, eyeSize);
+        //         cv::Mat resized;
+        //         cv::resize(frame, resized, eyeSize);
 
-                resized.at<uint8_t>(cv::Point(0, 0));
-                for (cortex_size_t y = 0; y < input_height; y++) {
-                    for (cortex_size_t x = 0; x < input_width; x++) {
-                        cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        left_eye->values[IDX2D(input_width - 1 - x, y, input_width)] = fmap(val[2],
-                                                                                            0, 255,
-                                                                                            0, samplingBound);
-                        right_eye->values[IDX2D(x, y, input_width)] = fmap(val[0],
-                                                                           0, 255,
-                                                                           0, samplingBound);
-                    }
-                }
+        //         resized.at<uint8_t>(cv::Point(0, 0));
+        //         for (cortex_size_t y = 0; y < input_height; y++) {
+        //             for (cortex_size_t x = 0; x < input_width; x++) {
+        //                 cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
+        //                 left_eye->values[IDX2D(input_width - 1 - x, y, input_width)] = fmap(val[2],
+        //                                                                                     0, 255,
+        //                                                                                     0, samplingBound);
+        //                 right_eye->values[IDX2D(x, y, input_width)] = fmap(val[0],
+        //                                                                    0, 255,
+        //                                                                    0, samplingBound);
+        //             }
+        //         }
 
-                printf("\n2\n");
+        //         printf("\n2\n");
 
-                // Copy input to device.
-                i2d_to_device(d_left_eye, left_eye);
-                cudaCheckError();   
-                i2d_to_device(d_right_eye, right_eye);
-                cudaCheckError();
+        //         // Copy input to device.
+        //         i2d_to_device(d_left_eye, left_eye);
+        //         cudaCheckError();   
+        //         i2d_to_device(d_right_eye, right_eye);
+        //         cudaCheckError();
 
-                printf("\n3\n");
+        //         printf("\n3\n");
 
-                sample_step = 0;
-            }
+        //         sample_step = 0;
+        //     }
 
-            printf("\n11\n");
+            printf("\n11 %d %d %d %d\n", input_grid_size.x, input_grid_size.y, input_block_size.x, input_block_size.y);
 
             // Feed the cortex.
             c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_left_eye);
             cudaCheckError();
+            cudaDeviceSynchronize();
+            usleep(10000000);
+            printf("\n12\n");
             c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_right_eye);
             cudaCheckError();
+            cudaDeviceSynchronize();
 
             printf("\n4\n");
 
             sample_step++;
-        }
+        // }
 
         // // Clear the window with black color.
         // window.clear(sf::Color(31, 31, 31, 255));
@@ -436,9 +409,11 @@ int main(int argc, char **argv) {
         // usleep(10000);
 
         // Tick the cortex.
+        printf("\n11 %d %d %d %d\n", cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();
+        cudaCheckError();
 
         printf("\n06\n");
     }

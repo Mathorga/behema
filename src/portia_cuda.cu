@@ -27,7 +27,6 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
 
     // Allocate values on the device.
     cuda_error = cudaMalloc((void**) &(tmp_input->values), (host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0) * sizeof(ticks_count_t));
-    printf("\nHERE %d %d %d %d\n", host_input->x0, host_input->y0, host_input->x1, host_input->y1);
     cudaCheckError();
     if (cuda_error != cudaSuccess) {
         return ERROR_FAILED_ALLOC;
@@ -169,6 +168,8 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
         return;
     }
 
+    printf("\n%d %d\n", x, y);
+
     if (pulse_map(
             cortex->sample_window,
             cortex->ticks_count % cortex->sample_window,
@@ -182,6 +183,8 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
+
+    printf("\nX %d Y %d\n", x, y);
 
     // Avoid accessing unallocated memory.
     if (x >= prev_cortex->width || y >= prev_cortex->height) {
