@@ -25,9 +25,6 @@ int main(int argc, char **argv) {
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
     uint32_t iterations_count = 10000;
-    // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra BLOCK_SIZE is allocated when needed.
-    dim3 cortex_grid_size(cortex_width / BLOCK_SIZE_2D + cortex_width % BLOCK_SIZE_2D != 0 ? 1 : 0, cortex_height / BLOCK_SIZE_2D + cortex_height % BLOCK_SIZE_2D ? 1 : 0);
-    dim3 cortex_block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
     nh_radius_t nh_radius = 2;
@@ -46,6 +43,8 @@ int main(int argc, char **argv) {
         cortex_height,
         nh_radius
     );
+    dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
+    dim3 cortex_block_size = c2d_get_block_size(even_cortex);
 
     // Copy cortexes to device.
     cortex2d_t* d_even_cortex;
@@ -97,6 +96,7 @@ int main(int argc, char **argv) {
         cudaCheckError();
         cudaDeviceSynchronize();
 
+        // printf("\ncortex\t%d - %d\ngrid\t%d - %d\nblock\t%d - %d", even_cortex->width, even_cortex->height, cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();

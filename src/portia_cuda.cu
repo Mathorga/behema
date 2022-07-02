@@ -13,6 +13,16 @@ __host__ __device__ uint32_t xorshf32(uint32_t state) {
 
 // Initialization functions.
 
+dim3 c2d_get_grid_size(cortex2d_t* cortex) {
+    // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra block is allocated when needed.
+    dim3 result(cortex->width / BLOCK_SIZE_2D + (cortex->width % BLOCK_SIZE_2D != 0 ? 1 : 0), cortex->height / BLOCK_SIZE_2D + (cortex->height % BLOCK_SIZE_2D ? 1 : 0));
+    return result;
+}
+
+dim3 c2d_get_block_size(cortex2d_t* cortex) {
+    return dim3(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+}
+
 error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
     cudaError_t cuda_error;
 

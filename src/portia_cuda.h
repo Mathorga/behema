@@ -40,6 +40,14 @@ __host__ __device__ uint32_t xorshf32(uint32_t state);
 
 // Initialization functions:
 
+/// Computes and returns the grid size to allocate on device.
+/// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
+dim3 c2d_get_grid_size(cortex2d_t* cortex);
+
+/// Computes and returns the block size to allocate on device.
+/// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
+dim3 c2d_get_block_size(cortex2d_t* cortex);
+
 /// Copies an input2d from host to device.
 error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input);
 
