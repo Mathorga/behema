@@ -256,8 +256,8 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 
                 // Pick a random number for each neighbor, capped to the max uint16 value.
-                next_cortex->rand_state = xorshf32(next_cortex->rand_state);
-                chance_t random = next_cortex->rand_state % 0xFFFFU;
+                next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                chance_t random = next_neuron->rand_state % 0xFFFFU;
 
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                 syn_strength_t strength_diff = MAX_SYN_STRENGTH - syn_strength;

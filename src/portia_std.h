@@ -32,47 +32,10 @@ uint32_t xorshf32();
 
 // Execution functions:
 
-/// Feeds external spikes to the specified neurons.
-void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values);
-
 /// Feeds a cortex with the provided input2d.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
 void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
-
-/// Externally feeds the neurons inside the rectangle described by the given parameters.
-/// x0 and y0 cannot be less than 0, while x1 and y1 cannot be greater than the cortex's width and height respectively.
-/// @param cortex The target cortex to feed.
-/// @param x0 The starting x index of the target neurons square.
-/// @param y0 The starting y index of the target neurons square.
-/// @param x1 The ending x index of the target neurons square.
-/// @param y1 The ending y index of the target neurons square.
-/// @param value The value used to feed each input neuron.
-void c2d_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t value);
-
-/// Externally feeds the neurons inside the rectangle described by the given parameters.
-/// The feeding is done by inputs mapping: inputs have to be values between 0 and cortex->sample_window.
-/// @param cortex The target cortex to feed.
-/// @param x0 The starting x index of the target neurons square.
-/// @param y0 The starting y index of the target neurons square.
-/// @param x1 The ending x index of the target neurons square.
-/// @param y1 The ending y index of the target neurons square.
-/// @param sample_step The current step in the sample window, must be between 0 and cortex->sample_window - 1.
-/// @param inputs The input values mapped to the sample window.
-/// @param value The value used to feed each input neuron.
-void c2d_sample_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value);
-
-/// Default feed.
-void c2d_dfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value);
-
-/// Random feed.
-void c2d_rfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value);
-
-/// Spread feed.
-void c2d_sfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value, cortex_size_t spread);
-
-/// Random spread feed.
-void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value, cortex_size_t spread);
 
 /// Performs a full run cycle over the network cortex.
 void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);

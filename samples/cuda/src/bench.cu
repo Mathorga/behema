@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     cortex_size_t cortex_height = 512;
     cortex_size_t input_width = 128;
     cortex_size_t input_height = 1;
-    uint32_t iterations_count = 10000;
+    uint32_t iterations_count = 20000;
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
     nh_radius_t nh_radius = 2;

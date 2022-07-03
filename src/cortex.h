@@ -138,6 +138,11 @@ typedef struct neuron_t {
     nh_mask_t synstr_mask_c;
 
 
+    // Random state. The random state has to be consistent inside a single neuron in order to allow for parallel edits without any race condition.
+    // The random state is used to generate consistent random numbers across the lifespan of a neuron, therefore should NEVER be manually changed.
+    rand_state_t rand_state;
+
+
     // Activation history pattern:
     //           |<--pulse_window-->|
     // xxxxxxxxxx01001010001010001001--------> t
@@ -170,9 +175,6 @@ typedef struct cortex2d_t {
     cortex_size_t height;
     // Ticks performed since cortex creation.
     ticks_count_t ticks_count;
-    // Random state. The random state has to be consistent inside a cortex, so it qualifies as a property.
-    // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
-    rand_state_t rand_state;
     // Evolutions performed since cortex creation.
     ticks_count_t evols_count;
     // Amount of ticks between each evolution.

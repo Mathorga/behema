@@ -11,15 +11,6 @@ uint32_t xorshf32(uint32_t state) {
 }
 
 
-void c2d_feed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t* values) {
-    if (starting_index + count < cortex->width * cortex->height) {
-        // Loop through count.
-        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i].value += values[i];
-        }
-    }
-}
-
 void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     #pragma omp parallel for collapse(2)
     for (cortex_size_t y = input->y0; y < input->y1; y++) {
@@ -30,70 +21,6 @@ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
                           cortex->pulse_mapping)) {
                 cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
             }
-        }
-    }
-}
-
-void c2d_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t value) {
-    // Make sure the provided values are within the cortex size.
-    if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
-        for (cortex_size_t y = y0; y < y1; y++) {
-            for (cortex_size_t x = x0; x < x1; x++) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].value += value;
-            }
-        }
-    }
-}
-
-void c2d_sample_sqfeed(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, ticks_count_t sample_step, ticks_count_t* inputs, neuron_value_t value) {
-    // Make sure the provided values are within the cortex size.
-    if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
-        #pragma omp parallel for
-        for (cortex_size_t y = y0; y < y1; y++) {
-            for (cortex_size_t x = x0; x < x1; x++) {
-                ticks_count_t current_input = inputs[IDX2D(x - x0, y - y0, x1 - x0)];
-                if (pulse_map(cortex->sample_window, sample_step, current_input, cortex->pulse_mapping)) {
-                    cortex->neurons[IDX2D(x, y, cortex->width)].value += value;
-                }
-            }
-        }
-    }
-}
-
-void c2d_dfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value) {
-    if (starting_index + count < cortex->width * cortex->height) {
-        // Loop through count.
-        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i].value += value;
-        }
-    }
-}
-
-void c2d_rfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value) {
-    if (starting_index + count < cortex->width * cortex->height) {
-        // Loop through count.
-        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->rand_state = xorshf32(cortex->rand_state);
-            cortex->neurons[i].value += cortex->rand_state % max_value;
-        }
-    }
-}
-
-void c2d_sfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t value, cortex_size_t spread) {
-    if ((starting_index + count) * spread < cortex->width * cortex->height) {
-        // Loop through count.
-        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->neurons[i * spread].value += value;
-        }
-    }
-}
-
-void c2d_rsfeed(cortex2d_t* cortex, cortex_size_t starting_index, cortex_size_t count, neuron_value_t max_value, cortex_size_t spread) {
-    if ((starting_index + count) * spread < cortex->width * cortex->height) {
-        // Loop through count.
-        for (cortex_size_t i = starting_index; i < starting_index + count; i++) {
-            cortex->rand_state = xorshf32(cortex->rand_state);
-            cortex->neurons[i * spread].value += cortex->rand_state % max_value;
         }
     }
 }
@@ -161,8 +88,8 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Pick a random number for each neighbor, capped to the max uint16 value.
-                        next_cortex->rand_state = xorshf32(next_cortex->rand_state);
-                        chance_t random = next_cortex->rand_state % 0xFFFFU;
+                        next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                        chance_t random = next_neuron->rand_state % 0xFFFFU;
 
                         // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                         syn_strength_t strength_diff = MAX_SYN_STRENGTH - syn_strength;
