@@ -10,9 +10,9 @@ Run `make install` or `make std-install` to install the default (CPU) package in
 ### CUDA
 Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic library.<br/>
 Warnings:<br/>
-    The CUDA version only works with NVIDIA GPUS<br/>
-    The CUDA version requires the CUDA SDK and APIs to work<br/>
-    The CUDA SDK or APIs are not included in any install_deps.sh script<br/>
+* The CUDA version only works with NVIDIA GPUS<br/>
+* The CUDA version requires the CUDA SDK and APIs to work<br/>
+* The CUDA SDK or APIs are not included in any install_deps.sh script<br/>
 
 ### Uninstall
 Run `make uninstall` to uninstall any previous installation.
