@@ -20,14 +20,37 @@ void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_si
 }
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 1024;
-    cortex_size_t cortex_height = 512;
-    cortex_size_t input_width = 128;
-    cortex_size_t input_height = 1;
+    cortex_size_t cortex_width = 512;
+    cortex_size_t cortex_height = 256;
     uint32_t iterations_count = 20000;
+    nh_radius_t nh_radius = 2;
+
+    // Input handling.
+    switch (argc) {
+        case 1:
+            break;
+        case 2:
+            iterations_count = atoi(argv[1]);
+            break;
+        case 3:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            break;
+        case 4:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            cortex_height = atoi(argv[3]);
+            break;
+        default:
+            printf("USAGE: bench <iterations> <width> <height>\n");
+            exit(0);
+            break;
+    }
+
+    cortex_size_t input_width = cortex_width / 4;
+    cortex_size_t input_height = 1;
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
-    nh_radius_t nh_radius = 2;
 
     srand(time(NULL));
 
