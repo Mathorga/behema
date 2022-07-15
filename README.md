@@ -3,6 +3,7 @@
 </p>
 BEHEMA (BEHavioral EMergent Automaton) is a spiking neural network library inspired by cellular automata.<br/>
 Behema borrows concepts such as grid layout and kernels from cellular automata to boost efficiency in highly parallel environments.
+The implementations aims at mimicking a biological brain as closely as possible without losing performance. The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
 ## Shared library installation (Linux)
 ### Standard
