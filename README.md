@@ -2,7 +2,7 @@
     <img width="66%" src="/meta/portia.png"> 
 </p>
 BEHEMA (BEHavioral EMergent Automaton) is a spiking neural network library inspired by cellular automata.<br/>
-Behema borrows concepts such as grid layout and kernels to boost efficiency in highly parallel environments.
+Behema borrows concepts such as grid layout and kernels from cellular automata to boost efficiency in highly parallel environments.
 
 ## Shared library installation (Linux)
 ### Standard
