@@ -6,7 +6,7 @@ CLINK_FLAGS=-Wall
 
 STD_LIBS=-lrt -lm
 OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
-PORTIA_LIBS=-lportia
+behema_LIBS=-lbehema
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -24,13 +24,13 @@ all: clean timed camera
 timed: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 camera: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:

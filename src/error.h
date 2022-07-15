@@ -1,5 +1,5 @@
-#ifndef __PORTIA_ERROR__
-#define __PORTIA_ERROR__
+#ifndef __behema_ERROR__
+#define __behema_ERROR__
 
 typedef enum error_code_t {
     ERROR_NONE = 0,

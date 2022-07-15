@@ -19,7 +19,7 @@ SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
 OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 SPIKES_COUNT_LIBS=-lncurses
 CUDA_STD_LIBS=-lcudart -lstdc++
-PORTIA_LIBS=-lportia
+behema_LIBS=-lbehema
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -37,19 +37,19 @@ all: clean camera inspect
 camera: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 cuda_camera: create
 	@printf "\n"
 	$(NVCOMP) $(NVCOMP_FLAGS) -c $(SRC_DIR)/$@.cu -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
+	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 inspect: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(SFML_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(SFML_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:

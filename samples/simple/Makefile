@@ -8,7 +8,7 @@ STD_LIBS=-lrt -lm
 GRAPHICS_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
 SPIKES_COUNT_LIBS=-lncurses
 TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
-PORTIA_LIBS=-lportia
+behema_LIBS=-lbehema
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -25,19 +25,19 @@ all: clean bench sampled
 bench: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 time: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(PORTIA_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:

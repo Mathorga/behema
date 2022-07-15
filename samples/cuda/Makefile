@@ -16,7 +16,7 @@ NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
 STD_LIBS=-lrt -lm
 CUDA_STD_LIBS=-lcudart -lstdc++
-PORTIA_LIBS=-lportia
+behema_LIBS=-lbehema
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -33,7 +33,7 @@ all: bench
 bench: create
 	@printf "\n"
 	$(NVCOMP) $(NVCOMP_FLAGS) -c $(SRC_DIR)/$@.cu -o $(BLD_DIR)/$@.o
-	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(PORTIA_LIBS)
+	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:

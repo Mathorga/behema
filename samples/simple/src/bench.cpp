@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <portia/portia.h>
+#include <behema/behema.h>
 
 int main(int argc, char **argv) {
     cortex_size_t cortex_width = 100;

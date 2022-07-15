@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <portia/portia.h>
+#include <behema/behema.h>
 
 void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
     c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);

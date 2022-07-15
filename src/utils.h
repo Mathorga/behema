@@ -1,5 +1,5 @@
-#ifndef __PORTIA_UTILS__
-#define __PORTIA_UTILS__
+#ifndef __behema_UTILS__
+#define __behema_UTILS__
 
 // This line **must** come **before** including <time.h> in order to
 // bring in the POSIX functions such as `clock_gettime() from <time.h>`!

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <portia/portia.h>
+#include <behema/behema.h>
 
 void print(cortex2d_t* cortex) {
     for (cortex_size_t y = 0; y < cortex->height; y++) {

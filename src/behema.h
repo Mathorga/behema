@@ -1,21 +1,21 @@
 /*
 *****************************************************************
-portia.h
+behema.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __PORTIA__
-#define __PORTIA__
+#ifndef __behema__
+#define __behema__
 
 #include "cortex.h"
 #include "utils.h"
 
 #ifdef __CUDACC__
-#include "portia_cuda.h"
+#include "behema_cuda.h"
 #else
-#include "portia_std.h"
+#include "behema_std.h"
 #endif
 
 #endif

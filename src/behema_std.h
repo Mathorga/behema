@@ -1,13 +1,13 @@
 /*
 *****************************************************************
-portia_std.h
+behema_std.h
 
 Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __PORTIA_STD__
-#define __PORTIA_STD__
+#ifndef __behema_STD__
+#define __behema_STD__
 
 #include <stdint.h>
 #include <stdlib.h>

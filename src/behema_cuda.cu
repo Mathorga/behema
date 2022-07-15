@@ -1,4 +1,4 @@
-#include "portia_cuda.h"
+#include "behema_cuda.h"
 
 // The state must be initialized to non-zero.
 __host__ __device__ uint32_t xorshf32(uint32_t state) {

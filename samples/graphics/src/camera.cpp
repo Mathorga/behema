@@ -1,4 +1,4 @@
-#include <portia/portia.h>
+#include <behema/behema.h>
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
 #include <opencv2/videoio.hpp>
@@ -214,7 +214,7 @@ int main(int argc, char **argv) {
     initPositions(even_cortex, xNeuronPositions, yNeuronPositions);
     
     // create the window
-    sf::RenderWindow window(desktopMode, "Portia", sf::Style::Fullscreen);
+    sf::RenderWindow window(desktopMode, "behema", sf::Style::Fullscreen);
     window.setMouseCursorVisible(false);
     
     bool feeding = false;

@@ -1,13 +1,13 @@
 /*
 *****************************************************************
-portia_cuda.h
+behema_cuda.h
 
 Copyright (C) 2022 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __PORTIA_CUDA__
-#define __PORTIA_CUDA__
+#ifndef __behema_CUDA__
+#define __behema_CUDA__
 
 #include "cortex.h"
 #include "error.h"
