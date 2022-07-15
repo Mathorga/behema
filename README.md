@@ -1,5 +1,5 @@
 <p align="center" width="100%">
-    <img width="66%" src="/meta/portia.png"> 
+    <img width="66%" src="/meta/behema.png"> 
 </p>
 BEHEMA (BEHavioral EMergent Automaton) is a spiking neural network library inspired by cellular automata.<br/>
 Behema borrows concepts such as grid layout and kernels from cellular automata to boost efficiency in highly parallel environments.
