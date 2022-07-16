@@ -6,8 +6,8 @@ Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __behema_STD__
-#define __behema_STD__
+#ifndef __BEHEMA_STD__
+#define __BEHEMA_STD__
 
 #include <stdint.h>
 #include <stdlib.h>

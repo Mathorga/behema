@@ -6,8 +6,8 @@ Copyright (C) 2021 Luka Micheletti
 *****************************************************************
 */
 
-#ifndef __behema__
-#define __behema__
+#ifndef __BEHEMA__
+#define __BEHEMA__
 
 #include "cortex.h"
 #include "utils.h"

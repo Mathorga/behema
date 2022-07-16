@@ -47,6 +47,8 @@ int main(int argc, char **argv) {
             break;
     }
 
+    printf("\nRunning %dx%d cortex\n", cortex_width, cortex_height);
+
     cortex_size_t input_width = cortex_width / 4;
     cortex_size_t input_height = 1;
     dim3 input_grid_size(input_width, input_height);
