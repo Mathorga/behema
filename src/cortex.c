@@ -76,7 +76,7 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_c = 0x00U;
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
-            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].rand_state = x << y;
+            (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].rand_state = 31 + x * y;
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse_mask = 0x00U;
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse = 0x00U;
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].value = DEFAULT_STARTING_VALUE;
