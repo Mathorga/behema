@@ -101,13 +101,13 @@ typedef enum bool_t {
 typedef enum pulse_mapping_t {
     // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
     // Linear.
-    PULSE_MAPPING_LINEAR = 0x10000,
+    PULSE_MAPPING_LINEAR = 0x100000,
     // Floored proportional.
-    PULSE_MAPPING_FPROP = 0x10001,
+    PULSE_MAPPING_FPROP = 0x100001,
     // Rounded proportional.
-    PULSE_MAPPING_RPROP = 0x10002,
+    PULSE_MAPPING_RPROP = 0x100002,
     // Double floored proportional.
-    PULSE_MAPPING_DFPROP = 0x10003,
+    PULSE_MAPPING_DFPROP = 0x100003,
 } pulse_mapping_t;
 
 typedef struct input2d_t {
