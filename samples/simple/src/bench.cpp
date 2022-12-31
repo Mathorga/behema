@@ -5,8 +5,8 @@
 #include <behema/behema.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
+    cortex_size_t cortex_width = 512;
+    cortex_size_t cortex_height = 256;
     cortex_size_t input_width = 32;
     cortex_size_t input_height = 1;
     uint32_t iterations_count = 10000;
