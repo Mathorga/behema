@@ -79,8 +79,14 @@ ticks_count_t* inputs = (ticks_count_t*) malloc((inputsCoords[2] - inputsCoords[
 ticks_count_t sample_step = samplingBound;
 ```
 
-#### Input mapping
-<img width="33%" src="/meta/10f.png"><br/>
+### Input mapping
+Input mapping defines how input values are mapped to spike trains.<br/>
+Inputs are always normalized to a [0.0,1.0] range for input mapping to work intuitively.
+
+#### Floored proportional
+<img width="33%" src="/meta/10f.png">
+
+#### Rounded proportional
 <img width="33%" src="/meta/10r.png">
 
 ## TODO
