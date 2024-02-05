@@ -83,6 +83,9 @@ ticks_count_t sample_step = samplingBound;
 Input mapping defines how input values are mapped to spike trains.<br/>
 Inputs are always normalized to a [0.0,1.0] range for input mapping to work intuitively.
 
+#### Linear
+<img width="33%" src="/meta/10l.png">
+
 #### Floored proportional
 <img width="33%" src="/meta/10f.png"><img width="33%" src="/meta/20f.png"><img width="33%" src="/meta/100f.png"><br/>
 
