@@ -90,7 +90,7 @@ Inputs are always normalized to a [0.0,1.0] range for input mapping to work intu
 <img width="33%" src="/meta/10f.png"><img width="33%" src="/meta/20f.png"><img width="33%" src="/meta/100f.png"><br/>
 
 #### Rounded proportional
-<img width="25%" src="/meta/10r.png"><img width="25%" src="/meta/20r.png"><img width="25%" src="/meta/100r.png"><img width="25%" src="/meta/1000r.png"><br/>
+<img width="33%" src="/meta/10r.png"><img width="33%" src="/meta/20r.png"><img width="33%" src="/meta/100r.png"><br/>
 
 ## TODO
 Neurons competition for synapses
