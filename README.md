@@ -47,9 +47,9 @@ ticks_count_t sampleWindow = 10;
 cortex2d_t even_cortex;
 cortex2d_t odd_cortex;
 
-// Initialize the first cortex and copy it to the second.
+// Initialize the two cortexes.
 c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-odd_cortex = *c2d_copy(&even_cortex);
+c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
 ```
 This will setup two identical 100x60 cortexes with default values.<br/>
 Optionally, before copying the first cortex to the second, its properties can be set by:
@@ -59,6 +59,10 @@ c2d_set_pulse_window(&even_cortex, 0x3A);
 c2d_set_syngen_beat(&even_cortex, 0.1F);
 c2d_set_max_touch(&even_cortex, 0.2F);
 c2d_set_sample_window(&even_cortex, sampleWindow);
+```
+Now the updated cortex needs to be copied to the second by:
+```
+odd_cortex = *c2d_copy(&even_cortex);
 ```
 The two cortexes will be updated alternatively at each iteration step.
 
