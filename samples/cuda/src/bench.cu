@@ -5,6 +5,7 @@
 #include <behema/behema.h>
 
 void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
+    // Initialize the first cortex.
     c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);
     c2d_init(odd_cortex, cortex_width, cortex_height, nh_radius);
     c2d_set_evol_step(*even_cortex, 0x01U);
@@ -16,6 +17,8 @@ void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_si
     sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
     c2d_touch_from_map(*even_cortex, touchFileName);
     c2d_inhexc_from_map(*even_cortex, inhexcFileName);
+
+    // Copy the first cortex properties to the second one.
     c2d_copy(*odd_cortex, *even_cortex);
 }
 
