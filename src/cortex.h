@@ -74,6 +74,9 @@ extern "C" {
 #define DEFAULT_SYNGEN_CHANCE 0x02A0U
 #define DEFAULT_SYNSTR_CHANCE 0x00A0U
 
+#define MAX_SYNGEN_CHANCE 0xFFFFU
+#define MAX_SYNSTR_CHANCE 0xFFFFU
+
 typedef uint8_t byte;
 
 typedef int16_t neuron_value_t;
@@ -253,6 +256,14 @@ void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
 
 /// Sets the fire threshold for all neurons in the cortex.
 void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
+
+/// Sets the syngen chance for the cortex. Syngen chance defines the probability for synapse generation and deletion.
+/// @param syngen_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+void c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance);
+
+/// Sets the synstr chance for the cortex. Synstr chance defines the probability for synapse strengthening and weakening.
+/// @param synstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+void c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance);
 
 /// Sets the maximum number of (input) synapses for the neurons of the cortex.
 /// @param cortex The cortex to edit.

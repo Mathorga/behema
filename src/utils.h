@@ -20,18 +20,18 @@ extern "C" {
 #endif
 
 /// Convert seconds to milliseconds
-#define S_TO_MS(s) ((s) * 1000)
+#define S_TO_MS(s) ((s) * 1e3)
 /// Convert seconds to microseconds
-#define S_TO_US(s) ((s) * 1000000)
+#define S_TO_US(s) ((s) * 1e6)
 /// Convert seconds to nanoseconds
-#define S_TO_NS(s) ((s) * 1000000000)
+#define S_TO_NS(s) ((s) * 1e9)
 
 /// Convert nanoseconds to seconds
-#define NS_TO_S(ns) ((ns) / 1000000000)
+#define NS_TO_S(ns) ((ns) / 1e9)
 /// Convert nanoseconds to milliseconds
-#define NS_TO_MS(ns) ((ns) / 1000000)
+#define NS_TO_MS(ns) ((ns) / 1e6)
 /// Convert nanoseconds to microseconds
-#define NS_TO_US(ns) ((ns) / 1000)
+#define NS_TO_US(ns) ((ns) / 1e3)
 
 // Structure for storing the
 // image data

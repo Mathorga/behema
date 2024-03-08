@@ -183,6 +183,16 @@ void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold) {
     cortex->fire_threshold = threshold;
 }
 
+void c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance) {
+    // TODO Return error and check for max value.
+    cortex->syngen_chance = syngen_chance;
+}
+
+void c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance) {
+    // TODO Return error and check for max value.
+    cortex->synstr_chance = synstr_chance;
+}
+
 void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count) {
     cortex->max_syn_count = syn_count;
 }

@@ -3,7 +3,8 @@
 </p>
 BEHEMA (BEHavioral EMergent Automaton) is a spiking neural network library inspired by cellular automata.<br/>
 Behema borrows concepts such as grid layout and kernels from cellular automata to boost efficiency in highly parallel environments.
-The implementations aims at mimicking a biological brain as closely as possible without losing performance. The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
+The implementation aims at mimicking a biological brain as closely as possible without losing performance. <br/>
+The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
 ## Shared library installation (Linux)
 ### Standard
@@ -46,9 +47,9 @@ ticks_count_t sampleWindow = 10;
 cortex2d_t even_cortex;
 cortex2d_t odd_cortex;
 
-// Initialize the first cortex and copy it to the second.
+// Initialize the two cortexes.
 c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-odd_cortex = *c2d_copy(&even_cortex);
+c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
 ```
 This will setup two identical 100x60 cortexes with default values.<br/>
 Optionally, before copying the first cortex to the second, its properties can be set by:
@@ -58,6 +59,10 @@ c2d_set_pulse_window(&even_cortex, 0x3A);
 c2d_set_syngen_beat(&even_cortex, 0.1F);
 c2d_set_max_touch(&even_cortex, 0.2F);
 c2d_set_sample_window(&even_cortex, sampleWindow);
+```
+Now the updated cortex needs to be copied to the second by:
+```
+odd_cortex = *c2d_copy(&even_cortex);
 ```
 The two cortexes will be updated alternatively at each iteration step.
 
@@ -78,8 +83,18 @@ ticks_count_t* inputs = (ticks_count_t*) malloc((inputsCoords[2] - inputsCoords[
 ticks_count_t sample_step = samplingBound;
 ```
 
-#### Input mapping
-<img width="33%" src="/meta/10f.png"> <img width="33%" src="/meta/10r.png">
+### Input mapping
+Input mapping defines how input values are mapped to spike trains.<br/>
+Inputs are always normalized to a [0.0,1.0] range for input mapping to work intuitively.
+
+#### Linear
+<img width="33%" src="/meta/10l.png">
+
+#### Floored proportional
+<img width="33%" src="/meta/10f.png"><img width="33%" src="/meta/20f.png"><img width="33%" src="/meta/100f.png"><br/>
+
+#### Rounded proportional
+<img width="33%" src="/meta/10r.png"><img width="33%" src="/meta/20r.png"><img width="33%" src="/meta/100r.png"><br/>
 
 ## TODO
 Neurons competition for synapses
