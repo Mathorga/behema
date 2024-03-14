@@ -1,15 +1,20 @@
 CCOMP=gcc
 NVCOMP=nvcc
+ARC=ar
 
 STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
 CLINK_FLAGS=-Wall -fopenmp
+ARC_FLAGS=-rcs
 
 ifdef CUDA_ARCH
 CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
 else
 CUDA_ARCH_FLAG=
 endif
+
+# Mode flag: if set to "archive", installs behema as a static library.
+MODE=
 
 NVCOMP_FLAGS=--compiler-options '-fPIC' -G $(CUDA_ARCH_FLAG)
 NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
@@ -35,19 +40,34 @@ all: std
 
 install: std-install
 
+# Installs all header files to the default include dir.
+install-headers:
+	@printf "\nInstalling headers...\n\n"
+	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/behema
+	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/behema
+
+
+# Installs the generated lib file to the default lib dir.
+install-lib:
+ifneq ($(MODE), archive)
+	@printf "\nInstalling dynamic library...\n\n"
+	sudo cp $(BLD_DIR)/libbehema.so $(SYSTEM_LIB_DIR)
+endif
+ifeq ($(MODE), archive)
+	@printf "\nInstalling static library...\n\n"
+	sudo cp $(BLD_DIR)/libbehema.a $(SYSTEM_LIB_DIR)
+endif
+
+
 # Installs the library files (headers and compiled) into the default system lookup folders.
-std-install: std
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/behema
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/behema
-	sudo cp $(BLD_DIR)/libbehema.so $(SYSTEM_LIB_DIR)
+std-install: std install-headers install-lib
 	@printf "\nInstallation complete!\n\n"
 
-cuda-install: cuda
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/behema
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/behema
-	sudo cp $(BLD_DIR)/libbehema.so $(SYSTEM_LIB_DIR)
+cuda-install: cuda install-headers install-lib
 	@printf "\nInstallation complete!\n\n"
 
+
+# Uninstalls any previous installation.
 uninstall: clean
 	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/behema
 	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema.so
@@ -57,16 +77,16 @@ uninstall: clean
 std: create std-build
 cuda: create cuda-build
 
-
 # Builds all library files.
 std-build: cortex.o behema_std.o utils.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libbehema.so
-	@printf "\nCompiled $@!\n\n"
+	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
+	@printf "\nCompiled $@!\n"
 
 cuda-build: cortex.o behema_cuda.o utils.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libbehema.so
-	@printf "\nCompiled $@!\n\n"
-
+	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
+	@printf "\nCompiled $@!\n"
 
 
 # Builds object files from source.
@@ -75,7 +95,6 @@ cuda-build: cortex.o behema_cuda.o utils.o
 
 %.o: $(SRC_DIR)/%.cu
 	$(NVCOMP) $(NVCOMP_FLAGS) -c $^ -o $(BLD_DIR)/$@
-
 
 
 # Creates temporary working directories.
