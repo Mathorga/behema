@@ -290,6 +290,10 @@ void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 /// Disables self connections whithin the specified bounds.
 void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
 
+/// Randomly mutates the cortex.
+// TODO
+error_code_t c2d_mutate(cortex2d_t* cortex);
+
 #ifdef __cplusplus
 }
 #endif
