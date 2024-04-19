@@ -7,11 +7,20 @@ The implementation aims at mimicking a biological brain as closely as possible w
 The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
 ## Shared library installation (Linux)
+All the following commands install behema as a dynamic lybrary by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:<br/>
+`make install MODE=archive`<br/>
+
+
 ### Standard
-Run `make install` or `make std-install` to install the default (CPU) package in a system-wide dynamic library.<br/>
+Run `make install` or `make std-install` to install the default (CPU) package in a system-wide dynamic or static library.<br/>
 
 ### CUDA
-Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic library.<br/>
+Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic or static library.<br/>
+
+Optionally you can specify the compute capability of your GPU with the dedicated variable `CUDA_ARCH`. This allows for some extra optimizations:<br/>
+`make cuda-install CUDA_ARCH=sm_61`<br/>
+
+
 Warnings:<br/>
 * The CUDA version only works with NVIDIA GPUS<br/>
 * The CUDA version requires the CUDA SDK and APIs to work<br/>
