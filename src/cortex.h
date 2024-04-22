@@ -159,6 +159,7 @@ typedef struct neuron_t {
     // Current internal value.
     neuron_value_t value;
     // Maximum number of synapses to the neuron. Cannot be greater than the cortex' max_syn_count.
+    //* Mutable.
     syn_count_t max_syn_count;
     // Amount of connected neighbors.
     syn_count_t syn_count;
@@ -167,6 +168,7 @@ typedef struct neuron_t {
     // Proportion between excitatory and inhibitory generated synapses. Can vary between 0 and cortex.inhexc_range.
     // inhexc_ratio = 0 -> all synapses are excitatory.
     // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
+    //* Mutable.
     chance_t inhexc_ratio;
 } neuron_t;
 
