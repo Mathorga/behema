@@ -232,3 +232,7 @@ void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cor
         }
     }
 }
+
+error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mutation_chance) {
+    // TODO
+}

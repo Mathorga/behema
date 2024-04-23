@@ -175,8 +175,10 @@ typedef struct neuron_t {
 /// 2D cortex of neurons.
 typedef struct cortex2d_t {
     // Width of the cortex.
+    //* Mutable.
     cortex_size_t width;
     // Height of the cortex.
+    //* Mutable.
     cortex_size_t height;
     // Ticks performed since cortex creation.
     ticks_count_t ticks_count;
@@ -185,7 +187,7 @@ typedef struct cortex2d_t {
     // Amount of ticks between each evolution.
     ticks_count_t evol_step;
     // Length of the window used to count pulses in the cortex' neurons.
-    // TODO Switch "beat" and "pulse".
+    //* Mutable.
     spikes_count_t pulse_window;
 
 
@@ -198,8 +200,10 @@ typedef struct cortex2d_t {
 
 
     // Chance (out of 0xFFFFU) of synapse generation or deletion (structural plasticity).
+    //* Mutable.
     chance_t syngen_chance;
     // Chance (out of 0xFFFFU) of synapse strengthening or weakening (functional plasticity).
+    //* Mutable.
     chance_t synstr_chance;
 
 
@@ -293,8 +297,10 @@ void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
 
 /// Randomly mutates the cortex.
-// TODO
-error_code_t c2d_mutate(cortex2d_t* cortex);
+/// @param cortex The cortex to edit.
+/// @param mutation_chance The probability of applying mutation to any mutable property of the cortex.
+/// @return The error code defining the problem occurred, ERROR_NONE if no errors occurred.
+error_code_t c2d_mutate(cortex2d_t* cortex, chance_t mutation_chance);
 
 #ifdef __cplusplus
 }
