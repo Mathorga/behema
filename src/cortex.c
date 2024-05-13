@@ -51,6 +51,7 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
     (*cortex)->recovery_value = DEFAULT_RECOVERY_VALUE;
     (*cortex)->exc_value = DEFAULT_EXC_VALUE;
     (*cortex)->decay_value = DEFAULT_DECAY_RATE;
+    (*cortex)->rand_state = (rand_state_t) time(NULL);
     (*cortex)->syngen_chance = DEFAULT_SYNGEN_CHANCE;
     (*cortex)->synstr_chance = DEFAULT_SYNSTR_CHANCE;
     (*cortex)->max_tot_strength = DEFAULT_MAX_TOT_STRENGTH;
@@ -156,63 +157,85 @@ error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
     return ERROR_NONE;
 }
 
-void c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask) {
+error_code_t c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask) {
     for (cortex_size_t y = 0; y < cortex->height; y++) {
         for (cortex_size_t x = 0; x < cortex->width; x++) {
             cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = mask;
         }
     }
+
+    return ERROR_NONE;
 }
 
-void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
+error_code_t c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
     cortex->evol_step = evol_step;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window) {
+error_code_t c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window) {
     // The given window size must be between 0 and the pulse mask size (in bits).
     if (window >= 0x00u && window < (sizeof(pulse_mask_t) * 8)) {
         cortex->pulse_window = window;
     }
+
+    return ERROR_NONE;
 }
 
-void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window) {
+error_code_t c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window) {
     cortex->sample_window = sample_window;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold) {
+error_code_t c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold) {
     cortex->fire_threshold = threshold;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance) {
-    // TODO Return error and check for max value.
+error_code_t c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance) {
+    // TODO Check for max value.
     cortex->syngen_chance = syngen_chance;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance) {
-    // TODO Return error and check for max value.
+error_code_t c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance) {
+    // TODO Check for max value.
     cortex->synstr_chance = synstr_chance;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count) {
+error_code_t c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count) {
     cortex->max_syn_count = syn_count;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_max_touch(cortex2d_t* cortex, float touch) {
+error_code_t c2d_set_max_touch(cortex2d_t* cortex, float touch) {
     // Only set touch if a valid value is provided.
     if (touch <= 1 && touch >= 0) {
         cortex->max_syn_count = touch * NH_COUNT_2D(NH_DIAM_2D(cortex->nh_radius));
     }
+
+    return ERROR_NONE;
 }
 
-void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
+error_code_t c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping) {
     cortex->pulse_mapping = pulse_mapping;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range) {
+error_code_t c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range) {
     cortex->inhexc_range = inhexc_range;
+
+    return ERROR_NONE;
 }
 
-void c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio) {
+error_code_t c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio) {
     if (inhexc_ratio <= cortex->inhexc_range) {
         for (cortex_size_t y = 0; y < cortex->height; y++) {
             for (cortex_size_t x = 0; x < cortex->width; x++) {
@@ -220,9 +243,11 @@ void c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio) {
             }
         }
     }
+
+    return ERROR_NONE;
 }
 
-void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
+error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
     // Make sure the provided values are within the cortex size.
     if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
         for (cortex_size_t y = y0; y < y1; y++) {
@@ -231,8 +256,36 @@ void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cor
             }
         }
     }
+
+    return ERROR_NONE;
 }
 
 error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mutation_chance) {
-    // TODO
+    // Start by mutating the network itself, then go on to single neurons.
+    // TODO Mutate the cortex shape.
+
+    // Mutate pulse window.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mutation_chance) {
+        // Decide whether to increase or decrease the pulse window.
+        cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate syngen chance.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mutation_chance) {
+        // Decide whether to increase or decrease the syngen chance.
+        cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate synstr chance.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mutation_chance) {
+        // Decide whether to increase or decrease the syngen chance.
+        cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // TODO Mutate neurons.
+
+    return ERROR_NONE;
 }

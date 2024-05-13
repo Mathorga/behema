@@ -12,8 +12,10 @@ Copyright (C) 2021 Luka Micheletti
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
 
 #include "error.h"
+#include "utils_std.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,6 +201,12 @@ typedef struct cortex2d_t {
     neuron_value_t decay_value;
 
 
+    // Random state.
+    // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
+    // Embedding the rand state allows for completely deterministic and reproducible results.
+    rand_state_t rand_state;
+
+
     // Chance (out of 0xFFFFU) of synapse generation or deletion (structural plasticity).
     //* Mutable.
     chance_t syngen_chance;
@@ -249,52 +257,52 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius);
 
 /// Sets the neighborhood mask for all neurons in the cortex.
-void c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask);
+error_code_t c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask);
 
 /// Sets the evolution step for the cortex.
-void c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step);
+error_code_t c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step);
 
 /// Sets the pulse window width for the cortex.
-void c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window);
+error_code_t c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window);
 
 /// Sets the sample window for the cortex.
-void c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
+error_code_t c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
 
 /// Sets the fire threshold for all neurons in the cortex.
-void c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
+error_code_t c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
 
 /// Sets the syngen chance for the cortex. Syngen chance defines the probability for synapse generation and deletion.
 /// @param syngen_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
-void c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance);
+error_code_t c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance);
 
 /// Sets the synstr chance for the cortex. Synstr chance defines the probability for synapse strengthening and weakening.
 /// @param synstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
-void c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance);
+error_code_t c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance);
 
 /// Sets the maximum number of (input) synapses for the neurons of the cortex.
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
-void c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count);
+error_code_t c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count);
 
 /// Sets the maximum allowable touch for each neuron in the network.
 /// A neuron touch is defined as its synapses count divided by its total neighbors count.
 /// @param touch The touch to assign the cortex. Only values between 0 and 1 are allowed.
-void c2d_set_max_touch(cortex2d_t* cortex, float touch);
+error_code_t c2d_set_max_touch(cortex2d_t* cortex, float touch);
 
 /// Sets the preferred input mapping for the given cortex.
-void c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
+error_code_t c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 
 /// Sets the range for excitatory to inhibitory ratios in single neurons.
-void c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range);
+error_code_t c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range);
 
 /// Sets the proportion between excitatory and inhibitory generated synapses.
-void c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio);
+error_code_t c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio);
 
 /// Sets whether the tick pass should wrap around the edges (pacman effect).
-void c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
+error_code_t c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 
 /// Disables self connections whithin the specified bounds.
-void c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
+error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
 
 /// Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
