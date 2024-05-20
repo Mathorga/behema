@@ -15,6 +15,10 @@ Copyright (C) 2024 Luka Micheletti
 extern "C" {
 #endif
 
+#define DEFAULT_POPULATION_SIZE 0x00FFU
+#define DEFAULT_SURVIVORS_SIZE 0x0014U
+#define DEFAULT_PARENTS_COUNT 0x0002U
+
 typedef uint16_t cortex_fitness_t;
 typedef uint16_t population_size_t;
 
@@ -23,11 +27,14 @@ typedef struct {
     // Size of the population (number of contained cortexes).
     population_size_t size;
 
-    // Cortexes' fitness.
-    cortex_fitness_t* cortexes_fitness;
-
     // Size of the pool of fittest individuals.
     population_size_t survivors_size;
+
+    // Amount of parents needed to generate offspring during crossover.
+    population_size_t parents_count;
+
+    // Cortexes' fitness.
+    cortex_fitness_t* cortexes_fitness;
 
     // Chance of mutation during the evolution step.
     chance_t mut_rate;
@@ -68,8 +75,14 @@ error_code_t p2d_evaluate(population2d_t* population);
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_select(population2d_t* population);
 
-// TODO Doc.
+/// @brief Breeds the currently selected survivors and generates a new population starting from them.
+/// @param population The population to breed.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_crossover(population2d_t* population);
+
+/// @brief Mutates the given population in order to provide variability in the pool.
+/// @param population the population to mutate.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_mutate(population2d_t* population);
 
 #ifdef __cplusplus
