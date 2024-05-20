@@ -98,12 +98,12 @@ typedef uint32_t rand_state_t;
 
 typedef int32_t cortex_size_t;
 
-typedef enum bool_t {
+typedef enum {
     FALSE = 0,
     TRUE = 1
 } bool_t;
 
-typedef enum pulse_mapping_t {
+typedef enum {
     // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
     // Linear.
     PULSE_MAPPING_LINEAR = 0x100000,
@@ -115,7 +115,7 @@ typedef enum pulse_mapping_t {
     PULSE_MAPPING_DFPROP = 0x100003,
 } pulse_mapping_t;
 
-typedef struct input2d_t {
+typedef struct {
     cortex_size_t x0;
     cortex_size_t y0;
     cortex_size_t x1;
@@ -128,7 +128,7 @@ typedef struct input2d_t {
 // TODO output2d.
 
 /// Neuron.
-typedef struct neuron_t {
+typedef struct {
     // Neighborhood connections pattern (SYNapses ACtivation state):
     // 1|1|0
     // 0|x|1 => 1100x1100
@@ -175,7 +175,7 @@ typedef struct neuron_t {
 } neuron_t;
 
 /// 2D cortex of neurons.
-typedef struct cortex2d_t {
+typedef struct {
     // Width of the cortex.
     //* Mutable.
     cortex_size_t width;
@@ -235,76 +235,96 @@ typedef struct cortex2d_t {
 
 // ########################################## Initialization functions ##########################################
 
-/// Initializes the given input with the given values.
+/// @brief Initializes the given input with the given values.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
-/// Initializes the given cortex with default values.
+/// @brief Initializes the given cortex with default values.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
-/// Destroys the given input2d and frees memory.
+/// @brief Destroys the given input2d and frees memory.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_destroy(input2d_t* input);
 
-/// Destroys the given cortex2d and frees memory.
+/// @brief Destroys the given cortex2d and frees memory.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_destroy(cortex2d_t* cortex);
 
-/// Returns a cortex with the same properties as the given one.
+/// @brief Returns a cortex with the same properties as the given one.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from);
 
 
 // ########################################## Setter functions ##################################################
 
-/// Sets the neighborhood radius for all neurons in the cortex.
+/// @brief Sets the neighborhood radius for all neurons in the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius);
 
-/// Sets the neighborhood mask for all neurons in the cortex.
+/// @brief Sets the neighborhood mask for all neurons in the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_nhmask(cortex2d_t* cortex, nh_mask_t mask);
 
-/// Sets the evolution step for the cortex.
+/// @brief Sets the evolution step for the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step);
 
-/// Sets the pulse window width for the cortex.
+/// @brief Sets the pulse window width for the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window);
 
-/// Sets the sample window for the cortex.
+/// @brief Sets the sample window for the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_sample_window(cortex2d_t* cortex, ticks_count_t sample_window);
 
-/// Sets the fire threshold for all neurons in the cortex.
+/// @brief Sets the fire threshold for all neurons in the cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_fire_threshold(cortex2d_t* cortex, neuron_value_t threshold);
 
-/// Sets the syngen chance for the cortex. Syngen chance defines the probability for synapse generation and deletion.
+/// @brief Sets the syngen chance for the cortex. Syngen chance defines the probability for synapse generation and deletion.
 /// @param syngen_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_syngen_chance(cortex2d_t* cortex, chance_t syngen_chance);
 
-/// Sets the synstr chance for the cortex. Synstr chance defines the probability for synapse strengthening and weakening.
+/// @brief Sets the synstr chance for the cortex. Synstr chance defines the probability for synapse strengthening and weakening.
 /// @param synstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_synstr_chance(cortex2d_t* cortex, chance_t synstr_chance);
 
-/// Sets the maximum number of (input) synapses for the neurons of the cortex.
+/// @brief Sets the maximum number of (input) synapses for the neurons of the cortex.
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_max_syn_count(cortex2d_t* cortex, syn_count_t syn_count);
 
-/// Sets the maximum allowable touch for each neuron in the network.
+/// @brief Sets the maximum allowable touch for each neuron in the network.
 /// A neuron touch is defined as its synapses count divided by its total neighbors count.
 /// @param touch The touch to assign the cortex. Only values between 0 and 1 are allowed.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_max_touch(cortex2d_t* cortex, float touch);
 
-/// Sets the preferred input mapping for the given cortex.
+/// @brief Sets the preferred input mapping for the given cortex.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_pulse_mapping(cortex2d_t* cortex, pulse_mapping_t pulse_mapping);
 
-/// Sets the range for excitatory to inhibitory ratios in single neurons.
+/// @brief Sets the range for excitatory to inhibitory ratios in single neurons.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_inhexc_range(cortex2d_t* cortex, chance_t inhexc_range);
 
-/// Sets the proportion between excitatory and inhibitory generated synapses.
+/// @brief Sets the proportion between excitatory and inhibitory generated synapses.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_inhexc_ratio(cortex2d_t* cortex, chance_t inhexc_ratio);
 
-/// Sets whether the tick pass should wrap around the edges (pacman effect).
+/// @brief Sets whether the tick pass should wrap around the edges (pacman effect).
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_set_wrapped(cortex2d_t* cortex, bool_t wrapped);
 
-/// Disables self connections whithin the specified bounds.
+/// @brief Disables self connections whithin the specified bounds.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
 
-/// Randomly mutates the cortex.
+/// @brief Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
 /// @param mutation_chance The probability of applying mutation to any mutable property of the cortex.
 /// @return The error code defining the problem occurred, ERROR_NONE if no errors occurred.
