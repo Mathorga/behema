@@ -12,6 +12,7 @@ Copyright (C) 2022 Luka Micheletti
 #include "cortex.h"
 #include "error.h"
 #include "utils.h"
+#include "utils_cuda.h"
 
 // Checks whether or not a CUDA error occurred, if so prints it and exits.
 #define cudaCheckError() {\
@@ -31,12 +32,6 @@ Copyright (C) 2022 Luka Micheletti
 #define BLOCK_SIZE_1D 256
 #define BLOCK_SIZE_2D 32
 #define BLOCK_SIZE_3D 8
-
-// Util functions:
-
-/// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
-__host__ __device__ uint32_t xorshf32(uint32_t state);
-
 
 // Initialization functions:
 

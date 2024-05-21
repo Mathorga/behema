@@ -1,16 +1,5 @@
 #include "behema_std.h"
 
-// The state word must be initialized to non-zero.
-uint32_t xorshf32(uint32_t state) {
-    // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
-    uint32_t x = state;
-    x ^= x << 13;
-    x ^= x >> 17;
-    x ^= x << 5;
-    return x;
-}
-
-
 void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     #pragma omp parallel for collapse(2)
     for (cortex_size_t y = input->y0; y < input->y1; y++) {

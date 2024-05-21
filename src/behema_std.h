@@ -19,16 +19,11 @@ Copyright (C) 2021 Luka Micheletti
 #include "cortex.h"
 #include "error.h"
 #include "utils.h"
+#include "utils_std.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// Util functions:
-
-/// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
-uint32_t xorshf32();
-
 
 // Execution functions:
 
