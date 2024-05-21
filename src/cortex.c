@@ -260,27 +260,27 @@ error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t
     return ERROR_NONE;
 }
 
-error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mutation_chance) {
+error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mut_rate) {
     // Start by mutating the network itself, then go on to single neurons.
     // TODO Mutate the cortex shape.
 
     // Mutate pulse window.
     cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mutation_chance) {
+    if (cortex->rand_state > mut_rate) {
         // Decide whether to increase or decrease the pulse window.
         cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate syngen chance.
     cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mutation_chance) {
+    if (cortex->rand_state > mut_rate) {
         // Decide whether to increase or decrease the syngen chance.
         cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate synstr chance.
     cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mutation_chance) {
+    if (cortex->rand_state > mut_rate) {
         // Decide whether to increase or decrease the syngen chance.
         cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
     }

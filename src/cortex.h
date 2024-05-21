@@ -326,9 +326,9 @@ error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t
 
 /// @brief Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
-/// @param mutation_chance The probability of applying mutation to any mutable property of the cortex.
+/// @param mut_rate The probability of applying mutation to any mutable property of the cortex.
 /// @return The error code defining the problem occurred, ERROR_NONE if no errors occurred.
-error_code_t c2d_mutate(cortex2d_t* cortex, chance_t mutation_chance);
+error_code_t c2d_mutate(cortex2d_t* cortex, chance_t mut_rate);
 
 #ifdef __cplusplus
 }
