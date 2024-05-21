@@ -18,6 +18,7 @@ extern "C" {
 #define DEFAULT_POPULATION_SIZE 0x00FFU
 #define DEFAULT_SURVIVORS_SIZE 0x0014U
 #define DEFAULT_PARENTS_COUNT 0x0002U
+#define DEFAULT_MUT_CHANCE 0x000002A0U
 
 typedef uint16_t cortex_fitness_t;
 typedef uint16_t population_size_t;
@@ -33,17 +34,21 @@ typedef struct {
     // Amount of parents needed to generate offspring during crossover.
     population_size_t parents_count;
 
-    // Cortexes' fitness.
-    cortex_fitness_t* cortexes_fitness;
-
     // Chance of mutation during the evolution step.
-    chance_t mut_rate;
+    chance_t mut_chance;
+
+    // Evaluation function.
+    // TODO is this correct??
+    cortex_fitness_t(*eval_function)(cortex2d_t* cortex);
 
     // List of all cortexes in the population.
     cortex2d_t* cortexes;
 
-    // List of all survivors to the current round of selection.
-    cortex2d_t* survivors;
+    // Cortexes' fitness.
+    cortex_fitness_t* cortexes_fitness;
+
+    // Indexes of all survivors to the current round of selection.
+    population_size_t* survivors;
 } population2d_t;
 
 // ########################################## Initialization functions ##########################################
@@ -51,16 +56,16 @@ typedef struct {
 /// @brief Initializes the provided population with default values.
 /// @param population The population to initialize.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_init(population2d_t* population);
+error_code_t p2d_init(population2d_t** population);
 
 
 // ########################################## Setter functions ##################################################
 
 /// @brief Sets the provided population the appropriate mutation rate
 /// @param population The population to apply the new mutation rate to.
-/// @param mut_rate The mutation rate to apply to the population.
+/// @param mut_chance The mutation rate to apply to the population.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_rate);
+error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance);
 
 
 // ########################################## Action functions ##################################################
