@@ -39,7 +39,7 @@ typedef struct {
 
     // Evaluation function.
     // TODO is this correct??
-    cortex_fitness_t(*eval_function)(cortex2d_t* cortex);
+    cortex_fitness_t (*eval_function)(cortex2d_t* cortex);
 
     // List of all cortexes in the population.
     cortex2d_t* cortexes;
