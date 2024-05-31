@@ -295,7 +295,7 @@ error_code_t c2d_to_string(cortex2d_t* cortex, char* target) {
 
     sprintf(size_buffer, "size: %d:%d\n", cortex->width, cortex->height);
 
-    target = size_buffer;
+    *target = *size_buffer;
 
     return ERROR_NONE;
 }
