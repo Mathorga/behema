@@ -289,3 +289,13 @@ error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mut_chance) {
 
     return ERROR_NONE;
 }
+
+error_code_t c2d_to_string(cortex2d_t* cortex, char* target) {
+    char size_buffer[15];
+
+    sprintf(size_buffer, "size: %d:%d\n", cortex->width, cortex->height);
+
+    target = size_buffer;
+
+    return ERROR_NONE;
+}

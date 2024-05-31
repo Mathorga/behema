@@ -327,8 +327,17 @@ error_code_t c2d_syn_disable(cortex2d_t* cortex, cortex_size_t x0, cortex_size_t
 /// @brief Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
 /// @param mut_chance The probability of applying mutation to any mutable property of the cortex.
-/// @return The error code defining the problem occurred, ERROR_NONE if no errors occurred.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_mutate(cortex2d_t* cortex, chance_t mut_chance);
+
+
+// ########################################## Getter functions ##################################################
+
+/// @brief Stores the string representation of the given cortex to the provided string [target].
+/// @param cortex The cortex to inspect.
+/// @param target The string to fill with cortex data.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t c2d_to_string(cortex2d_t* cortex, char* target);
 
 #ifdef __cplusplus
 }

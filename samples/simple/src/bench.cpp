@@ -32,6 +32,10 @@ int main(int argc, char **argv) {
     c2d_inhexc_from_map(even_cortex, inhexcFileName);
     c2d_copy(odd_cortex, even_cortex);
 
+    char cortex_string[40];
+    c2d_to_string(even_cortex, cortex_string);
+    printf("%s", cortex_string);
+
     // Input init.
     input2d_t* input;
     i2d_init(
