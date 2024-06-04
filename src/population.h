@@ -28,8 +28,8 @@ typedef struct {
     // Size of the population (number of contained cortexes).
     population_size_t size;
 
-    // Size of the pool of fittest individuals.
-    population_size_t survivors_size;
+    // Size of the pool of fittest individuals to be selected as reproductors.
+    population_size_t sel_pool_size;
 
     // Amount of parents needed to generate offspring during crossover.
     population_size_t parents_count;
@@ -38,7 +38,6 @@ typedef struct {
     chance_t mut_chance;
 
     // Evaluation function.
-    // TODO is this correct??
     cortex_fitness_t (*eval_function)(cortex2d_t* cortex);
 
     // List of all cortexes in the population.
@@ -55,9 +54,25 @@ typedef struct {
 
 /// @brief Initializes the provided population with default values.
 /// @param population The population to initialize.
+/// @param size The population size to start with.
+/// @param sel_pool_size The size of the pool of fittest individuals.
+/// @param mut_chance The probability of mutation for each evolution step.
+/// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_init(population2d_t** population);
+error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex));
 
+/// @brief Populates the starting pool of cortexes with the provided values.
+/// @param population The population whose cortexes to setup.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+
+/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
+/// @param cortex The cortex to destroy
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t p2d_destroy(population2d_t* population);
 
 // ########################################## Setter functions ##################################################
 

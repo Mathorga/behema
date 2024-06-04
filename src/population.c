@@ -2,7 +2,7 @@
 
 // ########################################## Initialization functions ##########################################
 
-error_code_t p2d_init(population2d_t** population) {
+error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex)) {
     // Allocate the population.
     (*population) = (population2d_t *) malloc(sizeof(cortex2d_t));
     if ((*population) == NULL) {
@@ -10,10 +10,11 @@ error_code_t p2d_init(population2d_t** population) {
     }
 
     // Setup population properties.
-    (*population)->size = DEFAULT_POPULATION_SIZE;
-    (*population)->survivors_size = DEFAULT_SURVIVORS_SIZE;
+    (*population)->size = size;
+    (*population)->sel_pool_size = sel_pool_size;
     (*population)->parents_count = DEFAULT_PARENTS_COUNT;
-    (*population)->mut_chance = DEFAULT_MUT_CHANCE;
+    (*population)->mut_chance = mut_chance;
+    (*population)->eval_function = eval_function;
 
     // Allocate cortexes.
     (*population)->cortexes = (cortex2d_t *) malloc((*population)->size * sizeof(cortex2d_t));
@@ -27,10 +28,28 @@ error_code_t p2d_init(population2d_t** population) {
         return ERROR_FAILED_ALLOC;
     }
 
-    // Allocate survivors.
-    (*population)->survivors = (population_size_t *) malloc((*population)->survivors_size * sizeof(population_size_t));
+    // Allocate selection pool.
+    (*population)->survivors = (population_size_t *) malloc((*population)->sel_pool_size * sizeof(population_size_t));
     if ((*population)->survivors == NULL) {
         return ERROR_FAILED_ALLOC;
+    }
+
+    return ERROR_NONE;
+}
+
+error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
+    for (population_size_t i = 0; i < population->size; i++) {
+        // Init the ith cortex.
+        error_code_t error = c2d_init(&(population->cortexes[i]), width, height, nh_radius);
+
+        if (error != ERROR_NONE) {
+            // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
+            for (population_size_t j = 0; j < i - 1; j++) {
+                // Destroy the jth cortex.
+                c2d_destroy(&(population->cortexes[j]));
+            }
+            return error;
+        }
     }
 
     return ERROR_NONE;

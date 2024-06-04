@@ -230,16 +230,40 @@ typedef struct {
     neuron_t* neurons;
 } cortex2d_t;
 
-// TODO cortex3d_t
+// 3D cortex of neurons.
+typedef struct {
+    // Width of the cortex.
+    cortex_size_t width;
+    // Height of the cortex.
+    cortex_size_t height;
+    // Depth of the cortex.
+    cortex_size_t depth;
+
+    // TODO Other data.
+
+    neuron_t* neurons;
+} cortex3d_t;
 
 
 // ########################################## Initialization functions ##########################################
 
 /// @brief Initializes the given input with the given values.
+/// @param input 
+/// @param x0 
+/// @param y0 
+/// @param x1 
+/// @param y1 
+/// @param exc_value 
+/// @param pulse_mapping 
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
+
 /// @brief Initializes the given cortex with default values.
+/// @param cortex The cortex to initialize.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
@@ -247,7 +271,8 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_destroy(input2d_t* input);
 
-/// @brief Destroys the given cortex2d and frees memory.
+/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
+/// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_destroy(cortex2d_t* cortex);
 
