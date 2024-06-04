@@ -3,14 +3,14 @@ NVCOMP=nvcc
 ARC=ar
 
 STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g
-CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
-CLINK_FLAGS=-Wall -fopenmp
+CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
+CLINK_FLAGS=-Wall
 ARC_FLAGS=-rcs
 
 ifdef CUDA_ARCH
-CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
+	CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
 else
-CUDA_ARCH_FLAG=
+	CUDA_ARCH_FLAG=
 endif
 
 # Mode flag: if set to "archive", installs behema as a static library.
@@ -27,14 +27,31 @@ SRC_DIR=./src
 BLD_DIR=./bld
 BIN_DIR=./bin
 
-SYSTEM_INCLUDE_DIR=/usr/include
-SYSTEM_LIB_DIR=/usr/lib
+SYSTEM_INCLUDE_DIR=
+SYSTEM_LIB_DIR=
 
 # Adds BLD_DIR to object parameter names.
 OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$^)
 
 MKDIR=mkdir -p
 RM=rm -rf
+
+# Check what the current operating system is.
+UNAME_S=$(shell uname -s)
+
+# The curren OS is Linux.
+ifeq ($(UNAME_S),Linux)
+	CCOMP_FLAGS+=-fopenmp
+	CLINK_FLAGS+=-fopenmp
+	SYSTEM_INCLUDE_DIR=/usr/include
+	SYSTEM_LIB_DIR=/usr/lib
+endif
+
+# The current OS is MacOS.
+ifeq ($(UNAME_S),Darwin)
+	SYSTEM_INCLUDE_DIR=/usr/local/include
+	SYSTEM_LIB_DIR=/usr/local/lib
+endif
 
 all: std
 

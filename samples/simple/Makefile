@@ -4,11 +4,11 @@ STD_CCOMP_FLAGS=-std=c++17 -Wall -pedantic -g
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
 CLINK_FLAGS=-Wall
 
-STD_LIBS=-lrt -lm
+STD_LIBS=-lm
 GRAPHICS_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
 SPIKES_COUNT_LIBS=-lncurses
 TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
-behema_LIBS=-lbehema
+BEHEMA_LIBS=-lbehema
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -21,24 +21,37 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
+# Check what the current operating system is.
+UNAME_S=$(shell uname -s)
+
+# The curren OS is Linux.
+ifeq ($(UNAME_S),Linux)
+	STD_LIBS+=-lrt
+endif
+
+# The current OS is MacOS.
+ifeq ($(UNAME_S),Darwin)
+	CLINK_FLAGS+=-L/usr/local/lib
+endif
+
 all: clean bench sampled
 
 bench: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 sampled: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 time: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(behema_LIBS)
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:

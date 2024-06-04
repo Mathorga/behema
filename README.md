@@ -7,7 +7,7 @@ The implementation aims at mimicking a biological brain as closely as possible w
 The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
 ## Shared library installation (Linux)
-All the following commands install behema as a dynamic lybrary by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:<br/>
+All the following commands install behema as a dynamic library by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:<br/>
 `make install MODE=archive`<br/>
 
 
