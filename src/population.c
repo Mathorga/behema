@@ -39,8 +39,11 @@ error_code_t p2d_init(population2d_t** population, population_size_t size, popul
 
 error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius) {
     for (population_size_t i = 0; i < population->size; i++) {
+        // Allocate a temporary pointer to the ith cortex.
+        cortex2d_t* cortex = &(population->cortexes[i]);
+
         // Init the ith cortex.
-        error_code_t error = c2d_init(&(population->cortexes[i]), width, height, nh_radius);
+        error_code_t error = c2d_init(&cortex, width, height, nh_radius);
 
         if (error != ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
