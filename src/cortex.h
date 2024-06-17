@@ -15,7 +15,6 @@ Copyright (C) 2021 Luka Micheletti
 #include <time.h>
 
 #include "error.h"
-#include "utils_std.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -244,6 +243,9 @@ typedef struct {
     neuron_t* neurons;
 } cortex3d_t;
 
+
+/// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
+uint32_t xorshf32(uint32_t state);
 
 // ########################################## Initialization functions ##########################################
 

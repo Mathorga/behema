@@ -4,7 +4,7 @@
 // This line **must** come **before** including <time.h> in order to
 // bring in the POSIX functions such as `clock_gettime() from <time.h>`!
 // #define _POSIX_C_SOURCE 199309L
-        
+
 #include <time.h>
 #include <stdint.h>
 #include <stdio.h>

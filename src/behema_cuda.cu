@@ -1,5 +1,15 @@
 #include "behema_cuda.h"
 
+// The state must be initialized to non-zero.
+__host__ __device__ uint32_t cuda_xorshf32(uint32_t state) {
+    // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
+    uint32_t x = state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    return x;
+}
+
 // Initialization functions.
 
 dim3 c2d_get_grid_size(cortex2d_t* cortex) {
@@ -245,7 +255,7 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 
                 // Pick a random number for each neighbor, capped to the max uint16 value.
-                next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                next_neuron->rand_state = cuda_xorshf32(next_neuron->rand_state);
                 chance_t random = next_neuron->rand_state % 0xFFFFU;
 
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
