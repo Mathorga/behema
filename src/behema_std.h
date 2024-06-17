@@ -19,7 +19,6 @@ Copyright (C) 2021 Luka Micheletti
 #include "cortex.h"
 #include "error.h"
 #include "utils.h"
-#include "utils_std.h"
 
 #ifdef __cplusplus
 extern "C" {
