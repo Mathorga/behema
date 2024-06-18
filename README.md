@@ -42,7 +42,7 @@ Once the installation is complete you can include the library by `#include <behe
 During linking you can specify `-lbehema` in order to link the compiled functions.
 
 ### Usage example
-The first step is to create and initialize two cortexes by:
+The first step is to create and initialize two cortices by:
 ```
 // Define starting parameters.
 cortex_size_t cortex_width = 100;
@@ -52,15 +52,15 @@ nh_radius_t nh_radius = 2;
 // Define the sampling interval, used later.
 ticks_count_t sampleWindow = 10;
 
-// Create the cortexes.
+// Create the cortices.
 cortex2d_t even_cortex;
 cortex2d_t odd_cortex;
 
-// Initialize the two cortexes.
+// Initialize the two cortices.
 c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
 c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
 ```
-This will setup two identical 100x60 cortexes with default values.<br/>
+This will setup two identical 100x60 cortices with default values.<br/>
 Optionally, before copying the first cortex to the second, its properties can be set by:
 ```
 c2d_set_evol_step(&even_cortex, 0x20U);
@@ -73,7 +73,7 @@ Now the updated cortex needs to be copied to the second by:
 ```
 odd_cortex = *c2d_copy(&even_cortex);
 ```
-The two cortexes will be updated alternatively at each iteration step.
+The two cortices will be updated alternatively at each iteration step.
 
 Now the cortex can already be deployed, but it's often useful to setup its inputs and outputs:
 ```
@@ -81,7 +81,7 @@ Now the cortex can already be deployed, but it's often useful to setup its input
 ticks_count_t samplingBound = sampleWindow - 1;
 
 // Define an input rectangle (the area of neurons directly attached to inputs).
-// Since even_cortex and odd_cortex are 2D cortexes, inputs are arranged in a 2D surface.
+// Since even_cortex and odd_cortex are 2D cortices, inputs are arranged in a 2D surface.
 // inputCoords contains the bound coordinates of the input rectangle as [x0, y0, x1, y1].
 cortex_size_t inputsCoords[] = {10, 5, 40, 20};
 

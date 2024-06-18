@@ -20,19 +20,28 @@ int main(int argc, char **argv) {
     cortex2d_t* even_cortex;
     cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    if (error != ERROR_NONE) {
+        printf("There was an error initializing the even cortex\n");
+        return 1;
+    }
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    if (error != ERROR_NONE) {
+        printf("There was an error initializing the odd cortex\n");
+        return 1;
+    }
     c2d_set_evol_step(even_cortex, 0x01U);
     c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(even_cortex, 24);
     char touchFileName[40];
     char inhexcFileName[40];
-    sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
-    sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+    snprintf(touchFileName, 40, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
+    snprintf(inhexcFileName, 40, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
     c2d_touch_from_map(even_cortex, touchFileName);
     c2d_inhexc_from_map(even_cortex, inhexcFileName);
     c2d_copy(odd_cortex, even_cortex);
 
-    char cortex_string[40] = "ciao";
+    // Print the cortex out.
+    char cortex_string[100];
     c2d_to_string(even_cortex, cortex_string);
     printf("%s", cortex_string);
 
@@ -67,7 +76,7 @@ int main(int argc, char **argv) {
         c2d_tick(prev_cortex, next_cortex);
 
         if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations in %ldms\n", i, millis() - start_time);
+            printf("\nPerformed %d iterations in %llums\n", i, millis() - start_time);
             c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
@@ -76,7 +85,7 @@ int main(int argc, char **argv) {
 
     // Stop timer.
     uint64_t end_time = millis();
-    printf("\nCompleted %d iterations in %ldms\n", iterations_count, end_time - start_time);
+    printf("\nCompleted %d iterations in %llums\n", iterations_count, end_time - start_time);
 
     // Copy the cortex back to host to check the results.
     c2d_to_file(even_cortex, (char*) "out/test.c2d");

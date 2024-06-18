@@ -23,9 +23,9 @@ extern "C" {
 typedef uint16_t cortex_fitness_t;
 typedef uint16_t population_size_t;
 
-/// Population of 2D cortexes.
+/// Population of 2D cortices.
 typedef struct {
-    // Size of the population (number of contained cortexes).
+    // Size of the population (number of contained cortices).
     population_size_t size;
 
     // Size of the pool of fittest individuals to be selected as reproductors.
@@ -40,11 +40,11 @@ typedef struct {
     // Evaluation function.
     cortex_fitness_t (*eval_function)(cortex2d_t* cortex);
 
-    // List of all cortexes in the population.
-    cortex2d_t* cortexes;
+    // List of all cortices in the population.
+    cortex2d_t* cortices;
 
-    // Cortexes' fitness.
-    cortex_fitness_t* cortexes_fitness;
+    // cortices' fitness.
+    cortex_fitness_t* cortices_fitness;
 
     // Indexes of all survivors to the current round of selection.
     population_size_t* survivors;
@@ -61,8 +61,8 @@ typedef struct {
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex));
 
-/// @brief Populates the starting pool of cortexes with the provided values.
-/// @param population The population whose cortexes to setup.
+/// @brief Populates the starting pool of cortices with the provided values.
+/// @param population The population whose cortices to setup.
 /// @param width The width of the cortex.
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.

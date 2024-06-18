@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <behema/behema.h>
 
-void setup_cortexes(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
+void setup_cortices(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
     // Initialize the first cortex.
     c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);
     c2d_init(odd_cortex, cortex_width, cortex_height, nh_radius);
@@ -64,7 +64,7 @@ int main(int argc, char **argv) {
     // Cortex configuration.
     cortex2d_t* even_cortex;
     cortex2d_t* odd_cortex;
-    setup_cortexes(
+    setup_cortices(
         &even_cortex,
         &odd_cortex,
         cortex_width,
@@ -74,7 +74,7 @@ int main(int argc, char **argv) {
     dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
 
-    // Copy cortexes to device.
+    // Copy cortices to device.
     cortex2d_t* d_even_cortex;
     cortex2d_t* d_odd_cortex;
     cudaMalloc((void**) &d_even_cortex, sizeof(cortex2d_t));
