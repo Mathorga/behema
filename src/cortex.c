@@ -302,12 +302,18 @@ error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mut_chance) {
 
 error_code_t c2d_to_string(cortex2d_t* cortex, char* target) {
     int string_length = 0;
+
+    // Header.
     string_length += sprintf(target + string_length, "\ncortex(\n");
+
+    // Data.
     string_length += sprintf(target + string_length, "\twidth:%d\n", cortex->width);
     string_length += sprintf(target + string_length, "\theight:%d\n", cortex->height);
     string_length += sprintf(target + string_length, "\tnh_radius:%d\n", cortex->nh_radius);
     string_length += sprintf(target + string_length, "\tpulse_window:%d\n", cortex->pulse_window);
     string_length += sprintf(target + string_length, "\tsample_window:%d\n", cortex->sample_window);
+
+    // Footer.
     string_length += sprintf(target + string_length, ")\n");
 
     return ERROR_NONE;
