@@ -3,8 +3,8 @@ NVCOMP=nvcc
 ARC=ar
 
 STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g
-CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
-CLINK_FLAGS=-Wall
+CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
+CLINK_FLAGS=-Wall -fopenmp
 ARC_FLAGS=-rcs
 
 ifdef CUDA_ARCH
@@ -41,8 +41,6 @@ UNAME_S=$(shell uname -s)
 
 # The curren OS is Linux.
 ifeq ($(UNAME_S),Linux)
-	CCOMP_FLAGS+=-fopenmp
-	CLINK_FLAGS+=-fopenmp
 	SYSTEM_INCLUDE_DIR=/usr/include
 	SYSTEM_LIB_DIR=/usr/lib
 endif
