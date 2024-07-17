@@ -31,6 +31,7 @@ endif
 
 # The current OS is MacOS.
 ifeq ($(UNAME_S),Darwin)
+	CCOMP_FLAGS+=-I/usr/local/include
 	CLINK_FLAGS+=-L/usr/local/lib
 endif
 
