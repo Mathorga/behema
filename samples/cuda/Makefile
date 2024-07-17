@@ -21,6 +21,7 @@ behema_LIBS=-lbehema
 SRC_DIR=./src
 BLD_DIR=./bld
 BIN_DIR=./bin
+OUT_DIR=./out
 
 # Adds BLD_DIR to object parameter names.
 OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
@@ -39,7 +40,9 @@ bench: create
 create:
 	$(MKDIR) $(BLD_DIR)
 	$(MKDIR) $(BIN_DIR)
+	$(MKDIR) $(OUT_DIR)
 
 clean:
 	$(RM) $(BLD_DIR)
 	$(RM) $(BIN_DIR)
+	$(RM) $(OUT_DIR)
