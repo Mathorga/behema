@@ -14,14 +14,16 @@ void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPo
     }
 }
 
-void drawNeurons(cortex2d_t* cortex,
-                 sf::RenderWindow* window,
-                 sf::VideoMode videoMode,
-                 float* xNeuronPositions,
-                 float* yNeuronPositions,
-                 bool drawInfo,
-                 sf::VideoMode desktopMode,
-                 sf::Font font) {
+void drawNeurons(
+    cortex2d_t* cortex,
+    sf::RenderWindow* window,
+    sf::VideoMode videoMode,
+    float* xNeuronPositions,
+    float* yNeuronPositions,
+    bool drawInfo,
+    sf::VideoMode desktopMode,
+    sf::Font font
+) {
     for (cortex_size_t i = 0; i < cortex->height; i++) {
         for (cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
@@ -88,9 +90,11 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
-                                                            WRAP(i + (k - cortex->nh_radius), cortex->height),
-                                                            cortex->width);
+                        cortex_size_t neighborIndex = IDX2D(
+                            WRAP(j + (l - cortex->nh_radius), cortex->width),
+                            WRAP(i + (k - cortex->nh_radius), cortex->height),
+                            cortex->width
+                        );
 
                         // Compute the current synapse strength.
                         uint64_t syn_strength = (str_mask_a & 0x01U) |
@@ -130,15 +134,17 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
     }
 }
 
-void highlightNeuron(cortex2d_t* cortex,
-                     sf::RenderWindow* window,
-                     sf::VideoMode videoMode,
-                     int* passedNeurons,
-                     int* passedNeuronsSize,
-                     float* xNeuronPositions,
-                     float* yNeuronPositions,
-                     int xFocus,
-                     int yFocus) {
+void highlightNeuron(
+    cortex2d_t* cortex,
+    sf::RenderWindow* window,
+    sf::VideoMode videoMode,
+    int* passedNeurons,
+    int* passedNeuronsSize,
+    float* xNeuronPositions,
+    float* yNeuronPositions,
+    int xFocus,
+    int yFocus
+) {
     passedNeurons[*passedNeuronsSize] = IDX2D(xFocus, yFocus, cortex->width);
     (*passedNeuronsSize)++;
 
@@ -189,15 +195,17 @@ void highlightNeuron(cortex2d_t* cortex,
                     }
 
                     // Recall.
-                    highlightNeuron(cortex,
-                                    window,
-                                    videoMode,
-                                    passedNeurons,
-                                    passedNeuronsSize,
-                                    xNeuronPositions,
-                                    yNeuronPositions,
-                                    WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
-                                    WRAP(yFocus + (y - cortex->nh_radius), cortex->height));
+                    highlightNeuron(
+                        cortex,
+                        window,
+                        videoMode,
+                        passedNeurons,
+                        passedNeuronsSize,
+                        xNeuronPositions,
+                        yNeuronPositions,
+                        WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                        WRAP(yFocus + (y - cortex->nh_radius), cortex->height)
+                    );
                     // return;
                 }
             }
@@ -320,15 +328,17 @@ int main(int argc, char **argv) {
             int* passedNeuronsSize = (int*) malloc(sizeof(int));
             (*passedNeuronsSize) = 0;
 
-            highlightNeuron(&cortex,
-                            &window,
-                            desktopMode,
-                            passedNeurons,
-                            passedNeuronsSize,
-                            xNeuronPositions,
-                            yNeuronPositions,
-                            xFocus,
-                            yFocus);
+            highlightNeuron(
+                &cortex,
+                &window,
+                desktopMode,
+                passedNeurons,
+                passedNeuronsSize,
+                xNeuronPositions,
+                yNeuronPositions,
+                xFocus,
+                yFocus
+            );
         }
 
         // End the current frame.
