@@ -108,3 +108,6 @@ Inputs are always normalized to a [0.0,1.0] range for input mapping to work intu
 
 ## TODO
 Neurons competition for synapses
+
+### Examples
+The [examples](/samples/README.md) directory contains useful use cases
