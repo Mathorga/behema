@@ -21,7 +21,6 @@ NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
 STD_LIBS=-lrt -lm
 CUDA_STD_LIBS=-lcudart
-LIBS=$(STD_LIBS)
 
 SRC_DIR=./src
 BLD_DIR=./bld
@@ -94,7 +93,7 @@ cuda: create cuda-build
 
 # Builds all library files.
 std-build: cortex.o population.o utils.o behema_std.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) -o $(BLD_DIR)/libbehema.so
+	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) $(STD_LIBS) -o $(BLD_DIR)/libbehema.so
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
 
