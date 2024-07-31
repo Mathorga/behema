@@ -86,11 +86,6 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations in %llums\n", i, millis() - start_time);
-            c2d_to_file(even_cortex, (char*) "out/test.c2d");
-        }
-
         // Read output.
         c2d_read2d(next_cortex, output);
 
