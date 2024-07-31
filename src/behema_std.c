@@ -4,12 +4,40 @@ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     #pragma omp parallel for collapse(2)
     for (cortex_size_t y = input->y0; y < input->y1; y++) {
         for (cortex_size_t x = input->x0; x < input->x1; x++) {
-            if (pulse_map(cortex->sample_window,
-                          cortex->ticks_count % cortex->sample_window,
-                          input->values[IDX2D(x - input->x0, y - input->y0, input->x1 - input->x0)],
-                          cortex->pulse_mapping)) {
+            // Check whether the current input neuron should be excited or not.
+            bool_t excite = value_to_pulse(
+                cortex->sample_window,
+                cortex->ticks_count % cortex->sample_window,
+                input->values[
+                    IDX2D(
+                        x - input->x0,
+                        y - input->y0,
+                        input->x1 - input->x0
+                    )
+                ],
+                cortex->pulse_mapping
+            );
+
+            if (excite) {
                 cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
             }
+        }
+    }
+}
+
+void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
+    #pragma omp parallel for collapse(2)
+    for (cortex_size_t y = output->y0; y < output->y1; y++) {
+        for (cortex_size_t x = output->x0; x < output->x1; x++) {
+            cortex->sample_window;
+
+            output->values[
+                IDX2D(
+                    x - output->x0,
+                    y - output->y0,
+                    output->x1 - output->x0
+                )
+            ] = pulse_to_value(cortex->sample_window);
         }
     }
 }
@@ -196,23 +224,23 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     next_cortex->ticks_count++;
 }
 
-bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
     bool_t result = FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input < sample_window) {
         switch (pulse_mapping) {
             case PULSE_MAPPING_LINEAR:
-                result = pulse_map_linear(sample_window, sample_step, input);
+                result = value_to_pulse_linear(sample_window, sample_step, input);
                 break;
             case PULSE_MAPPING_FPROP:
-                result = pulse_map_fprop(sample_window, sample_step, input);
+                result = value_to_pulse_fprop(sample_window, sample_step, input);
                 break;
             case PULSE_MAPPING_RPROP:
-                result = pulse_map_rprop(sample_window, sample_step, input);
+                result = value_to_pulse_rprop(sample_window, sample_step, input);
                 break;
             case PULSE_MAPPING_DFPROP:
-                result = pulse_map_dfprop(sample_window, sample_step, input);
+                result = value_to_pulse_dfprop(sample_window, sample_step, input);
                 break;
             default:
                 break;
@@ -222,7 +250,7 @@ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_c
     return result;
 }
 
-bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
     // x = input;
     // |@| | | | | | | | | | -> x = 0;
@@ -238,7 +266,7 @@ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, 
     return sample_step % (sample_window - input) == 0;
 }
 
-bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     bool_t result = FALSE;
     ticks_count_t upper = sample_window - 1;
 
@@ -269,7 +297,7 @@ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     return result;
 }
 
-bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     bool_t result = FALSE;
     double upper = sample_window - 1;
     double d_input = input;
@@ -300,7 +328,7 @@ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, t
     return result;
 }
 
-bool_t pulse_map_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bool_t value_to_pulse_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // TODO
     return FALSE;
 }

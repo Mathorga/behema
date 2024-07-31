@@ -10,7 +10,7 @@ __host__ __device__ uint32_t cuda_xorshf32(uint32_t state) {
     return x;
 }
 
-// Initialization functions.
+// ########################################## Initialization functions ##########################################
 
 dim3 c2d_get_grid_size(cortex2d_t* cortex) {
     // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra block is allocated when needed.
@@ -166,7 +166,7 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex) {
 }
 
 
-// Execution functions.
+// ########################################## Execution functions ##########################################
 
 __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -177,14 +177,35 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
         return;
     }
 
-    if (pulse_map(
-            cortex->sample_window,
-            cortex->ticks_count % cortex->sample_window,
-            input->values[IDX2D(x, y, input->x1 - input->x0)],
-            cortex->pulse_mapping
-        )) {
+    // Check whether the current input neuron should be excited or not.
+    bool_t excite = value_to_pulse(
+        cortex->sample_window,
+        cortex->ticks_count % cortex->sample_window,
+        input->values[
+            IDX2D(
+                x,
+                y,
+                input->x1 - input->x0
+            )
+        ],
+        cortex->pulse_mapping
+    )
+
+    if (excite) {
         cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
     }
+}
+
+__global__ void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
+    cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
+    cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
+
+    // Avoid accessing unallocated memory.
+    if (x >= output->x1 - output->x0 || y >= output->y1 - output->y0) {
+        return;
+    }
+
+    // TODO.
 }
 
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
@@ -375,20 +396,20 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     next_cortex->ticks_count++;
 }
 
-__host__ __device__ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+__host__ __device__ bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
     bool_t result = FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input < sample_window) {
         switch (pulse_mapping) {
             case PULSE_MAPPING_LINEAR:
-                result = pulse_map_linear(sample_window, sample_step, input);
+                result = value_to_pulse_linear(sample_window, sample_step, input);
                 break;
             case PULSE_MAPPING_FPROP:
-                result = pulse_map_fprop(sample_window, sample_step, input);
+                result = value_to_pulse_fprop(sample_window, sample_step, input);
                 break;
             case PULSE_MAPPING_RPROP:
-                result = pulse_map_rprop(sample_window, sample_step, input);
+                result = value_to_pulse_rprop(sample_window, sample_step, input);
                 break;
             default:
                 break;
@@ -398,7 +419,7 @@ __host__ __device__ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t 
     return result;
 }
 
-__host__ __device__ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+__host__ __device__ bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
     // x = input;
     // |@| | | | | | | | | | -> x = 0;
@@ -414,7 +435,7 @@ __host__ __device__ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_c
     return (sample_step % (sample_window - input) == 0) ? TRUE : FALSE;
 }
 
-__host__ __device__ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+__host__ __device__ bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     bool_t result = FALSE;
     ticks_count_t upper = sample_window - 1;
 
@@ -445,7 +466,7 @@ __host__ __device__ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_co
     return result;
 }
 
-__host__ __device__ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+__host__ __device__ bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     bool_t result = FALSE;
     double upper = sample_window - 1;
     double d_input = input;

@@ -25,11 +25,30 @@ error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cor
     (*input)->x1 = x1;
     (*input)->y1 = y1;
     (*input)->exc_value = exc_value;
-    (*input)->pulse_mapping = pulse_mapping;
 
     // Allocate values.
     (*input)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
     if ((*input)->values == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    return ERROR_NONE;
+}
+
+error_code_t o2d_init(output2d_t** output, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
+    // Allocate the input.
+    (*output) = (output2d_t*) malloc(sizeof(output2d_t));
+    if ((*output) == NULL) {
+        return ERROR_FAILED_ALLOC;
+    }
+
+    (*output)->x0 = x0;
+    (*output)->y0 = y0;
+    (*output)->x1 = x1;
+
+    // Allocate values.
+    (*output)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
+    if ((*output)->values == NULL) {
         return ERROR_FAILED_ALLOC;
     }
 
@@ -112,6 +131,16 @@ error_code_t i2d_destroy(input2d_t* input) {
     return ERROR_NONE;
 }
 
+error_code_t o2d_destroy(output2d_t* output) {
+    // Free values.
+    free(output->values);
+
+    // Free output.
+    free(output);
+
+    return ERROR_NONE;
+}
+
 error_code_t c2d_destroy(cortex2d_t* cortex) {
     // Free neurons.
     free(cortex->neurons);
@@ -154,7 +183,7 @@ error_code_t c2d_copy(cortex2d_t* to, cortex2d_t* from) {
 }
 
 
-// ################################################## Setters ###################################################
+// ################################################## Setter functions ###################################################
 
 error_code_t c2d_set_nhradius(cortex2d_t* cortex, nh_radius_t radius) {
     // Make sure the provided radius is valid.
@@ -300,6 +329,9 @@ error_code_t c2d_mutate(cortex2d_t *cortex, chance_t mut_chance) {
     return ERROR_NONE;
 }
 
+
+// ########################################## Getter functions ##################################################
+
 error_code_t c2d_to_string(cortex2d_t* cortex, char* target) {
     int string_length = 0;
 
@@ -315,6 +347,24 @@ error_code_t c2d_to_string(cortex2d_t* cortex, char* target) {
 
     // Footer.
     string_length += sprintf(target + string_length, ")\n");
+
+    return ERROR_NONE;
+}
+
+error_code_t o2d_mean(output2d_t* output, ticks_count_t* target) {
+    // Compute the output size beforehand.
+    cortex_size_t output_width = output->x1 - output->x0;
+    cortex_size_t output_height = output->y1 - output->y0;
+    cortex_size_t output_size = output_width * output_height;
+
+    // Compute the sum of the values.
+    ticks_count_t total = 0;
+    for (cortex_size_t i = 0; i < output_size; i++) {
+        total += output->values[i];
+    }
+
+    // Store the mean value in the provided pointer.
+    (*target) = (ticks_count_t) (total / output_size);
 
     return ERROR_NONE;
 }

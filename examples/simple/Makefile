@@ -35,7 +35,7 @@ ifeq ($(UNAME_S),Darwin)
 	CLINK_FLAGS+=-L/usr/local/lib
 endif
 
-all: clean bench sampled
+all: clean bench sampled output
 
 bench: create
 	@printf "\n"
@@ -44,6 +44,12 @@ bench: create
 	@printf "\nCreated $@!\n"
 
 sampled: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
+	@printf "\nCreated $@!\n"
+
+output: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)

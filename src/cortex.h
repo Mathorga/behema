@@ -114,19 +114,32 @@ typedef enum {
     PULSE_MAPPING_DFPROP = 0x100003,
 } pulse_mapping_t;
 
+/// @brief Convenience data structure for input handling (cortex feeding).
 typedef struct {
     cortex_size_t x0;
     cortex_size_t y0;
     cortex_size_t x1;
     cortex_size_t y1;
+
+    // Value used to excite the target neurons.
     neuron_value_t exc_value;
-    pulse_mapping_t pulse_mapping;
+
+    // Values to be mapped to pulse (input values).
     ticks_count_t* values;
 } input2d_t;
 
-// TODO output2d.
+/// @brief Convenience data structure for output handling (cortex reading).
+typedef struct {
+    cortex_size_t x0;
+    cortex_size_t y0;
+    cortex_size_t x1;
+    cortex_size_t y1;
 
-/// Neuron.
+    // Values mapped from pulse (output values).
+    ticks_count_t* values;
+} output2d_t;
+
+/// @brief Neuron definition data structure.
 typedef struct {
     // Neighborhood connections pattern (SYNapses ACtivation state):
     // 1|1|0
@@ -151,7 +164,7 @@ typedef struct {
     //           |<--pulse_window-->|
     // xxxxxxxxxx01001010001010001001--------> t
     //                              ^
-    // Used to know the pulse frequency in a given moment (e.g. for syngen).
+    // Used to know the pulse frequency at a given moment (e.g. for syngen).
     pulse_mask_t pulse_mask;
     // Amount of activations in the cortex' pulse window.
     spikes_count_t pulse;
@@ -173,7 +186,7 @@ typedef struct {
     chance_t inhexc_ratio;
 } neuron_t;
 
-/// 2D cortex of neurons.
+/// @brief 2D cortex of neurons.
 typedef struct {
     // Width of the cortex.
     //* Mutable.
@@ -229,7 +242,7 @@ typedef struct {
     neuron_t* neurons;
 } cortex2d_t;
 
-// 3D cortex of neurons.
+/// @brief 3D cortex of neurons.
 typedef struct {
     // Width of the cortex.
     cortex_size_t width;
@@ -249,7 +262,7 @@ uint32_t xorshf32(uint32_t state);
 
 // ########################################## Initialization functions ##########################################
 
-/// @brief Initializes the given input with the given values.
+/// @brief Initializes an input2d with the given values.
 /// @param input 
 /// @param x0 
 /// @param y0 
@@ -260,6 +273,14 @@ uint32_t xorshf32(uint32_t state);
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping);
 
+/// @brief Initializes an output2d with the provided values.
+/// @param output 
+/// @param x0 
+/// @param y0 
+/// @param x1 
+/// @param y1 
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t o2d_init(output2d_t** output, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1);
 
 /// @brief Initializes the given cortex with default values.
 /// @param cortex The cortex to initialize.
@@ -272,6 +293,10 @@ error_code_t c2d_init(cortex2d_t** cortex, cortex_size_t width, cortex_size_t he
 /// @brief Destroys the given input2d and frees memory.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t i2d_destroy(input2d_t* input);
+
+/// @brief Destroys the given output2d and frees memory.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t o2d_destroy(output2d_t* output);
 
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
@@ -365,6 +390,12 @@ error_code_t c2d_mutate(cortex2d_t* cortex, chance_t mut_chance);
 /// @param target The string to fill with cortex data.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t c2d_to_string(cortex2d_t* cortex, char* target);
+
+/// @brief Computes the mean value of an output2d values.
+/// @param output The output to compute the mean value from.
+/// @param target Pointer to the result of the computation. The mean value will be stored here.
+/// @return The code for the occurred error, [ERROR_NONE] if none.
+error_code_t o2d_mean(output2d_t* output, ticks_count_t* target);
 
 #ifdef __cplusplus
 }

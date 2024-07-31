@@ -64,32 +64,40 @@ error_code_t i2d_device_destroy(input2d_t* input);
 error_code_t c2d_device_destroy(cortex2d_t* cortex);
 
 
-// Execution functions:
+// ########################################## Execution functions ##########################################
 
-/// Feeds a cortex with the provided input2d.
+/// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
 __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input);
 
-/// Performs a full run cycle over the network cortex.
+/// @brief Reads data from a cortex through the provided output2d. When the mapping is done, output data is stored in the provided output2d.
+/// @param cortex The cortex to read values from.
+/// @param output The output used to read data from the cortex.
+__global__ void c2d_read2d(cortex2d_t* cortex, output2d_t* output);
+
+/// @brief Performs a full run cycle over the provided cortex.
+/// @param prev_cortex The cortex at its current state.
+/// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
 __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 
 
-// Mapping functions.
+// ########################################## Input mapping functions ##########################################
 
 /// Maps a value to a pulse pattern according to the specified input mapping.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 /// @param pulse_mapping The mapping algorithm to apply for mapping.
-__host__ __device__ bool_t pulse_map(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
+__host__ __device__ bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping);
 
 /// Computes a linear mapping for the given input and sample step.
 /// Linear mapping always fire at least once, even if input is 0.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
-__host__ __device__ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+__host__ __device__ bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 /// Computes a proportional mapping for the given input and sample step.
 /// This is computationally cheap if compared to rprop, but it provides a less even distribution. The difference can be seen on big windows.
@@ -97,7 +105,7 @@ __host__ __device__ bool_t pulse_map_linear(ticks_count_t sample_window, ticks_c
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
-__host__ __device__ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+__host__ __device__ bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 /// Computes a proportional mapping for the given input and sample step.
 /// Provides a better distribution if compared to fprop, but is computationally more expensive. The difference can be seen on big windows.
@@ -105,6 +113,6 @@ __host__ __device__ bool_t pulse_map_fprop(ticks_count_t sample_window, ticks_co
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
-__host__ __device__ bool_t pulse_map_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
+__host__ __device__ bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 #endif
