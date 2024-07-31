@@ -91,7 +91,7 @@ int main(int argc, char **argv) {
 
         // Compute output mean.
         o2d_mean(output, &mean_output);
-        print("mean output: %d\n", mean_output);
+        printf("mean output: %d\n", mean_output);
     }
 
     // Copy the cortex back to host to check the results.
