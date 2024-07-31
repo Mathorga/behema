@@ -118,7 +118,7 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->ticks_count), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->evols_count), sizeof(ticks_count_t), 1, out_file);
     fwrite(&(cortex->evol_step), sizeof(ticks_count_t), 1, out_file);
-    fwrite(&(cortex->pulse_window), sizeof(spikes_count_t), 1, out_file);
+    fwrite(&(cortex->pulse_window), sizeof(ticks_count_t), 1, out_file);
 
     fwrite(&(cortex->nh_radius), sizeof(nh_radius_t), 1, out_file);
     fwrite(&(cortex->fire_threshold), sizeof(neuron_value_t), 1, out_file);
@@ -156,7 +156,7 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->ticks_count), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->evols_count), sizeof(ticks_count_t), 1, in_file);
     fread(&(cortex->evol_step), sizeof(ticks_count_t), 1, in_file);
-    fread(&(cortex->pulse_window), sizeof(spikes_count_t), 1, in_file);
+    fread(&(cortex->pulse_window), sizeof(ticks_count_t), 1, in_file);
 
     fread(&(cortex->nh_radius), sizeof(nh_radius_t), 1, in_file);
     fread(&(cortex->fire_threshold), sizeof(neuron_value_t), 1, in_file);

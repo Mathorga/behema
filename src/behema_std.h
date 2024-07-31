@@ -43,7 +43,7 @@ void c2d_read2d(cortex2d_t* cortex, output2d_t* output);
 void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex);
 
 
-// ########################################## Input mapping functions ##########################################.
+// ########################################## Input mapping functions ##########################################
 
 /// Maps a value to a pulse pattern according to the specified pulse mapping.
 /// @param sample_window The width of the sampling window.
@@ -76,11 +76,6 @@ bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_st
 bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
 
 bool_t value_to_pulse_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input);
-
-
-// ########################################## Output mapping functions ##########################################
-
-ticks_count_t pulse_to_value(ticks_count_t sample_window);
 
 
 #ifdef __cplusplus

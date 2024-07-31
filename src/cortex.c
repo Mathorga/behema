@@ -212,7 +212,7 @@ error_code_t c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step) {
     return ERROR_NONE;
 }
 
-error_code_t c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window) {
+error_code_t c2d_set_pulse_window(cortex2d_t* cortex, ticks_count_t window) {
     // The given window size must be between 0 and the pulse mask size (in bits).
     if (window >= 0x00u && window < (sizeof(pulse_mask_t) * 8)) {
         cortex->pulse_window = window;

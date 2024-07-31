@@ -35,7 +35,13 @@ void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
                     y - output->y0,
                     output->x1 - output->x0
                 )
-            ] = pulse_to_value(cortex->sample_window);
+            ] = cortex->neurons[
+                IDX2D(
+                    x,
+                    y,
+                    cortex->width
+                )
+            ].pulse;
         }
     }
 }
@@ -221,6 +227,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
     next_cortex->ticks_count++;
 }
+
+
+// ########################################## Input mapping functions ##########################################
 
 bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
     bool_t result = FALSE;

@@ -91,7 +91,6 @@ typedef uint8_t syn_strength_t;
 typedef uint16_t ticks_count_t;
 typedef uint32_t evol_step_t;
 typedef uint64_t pulse_mask_t;
-typedef int8_t spikes_count_t;
 typedef uint32_t chance_t;
 typedef uint32_t rand_state_t;
 
@@ -167,7 +166,7 @@ typedef struct {
     // Used to know the pulse frequency at a given moment (e.g. for syngen).
     pulse_mask_t pulse_mask;
     // Amount of activations in the cortex' pulse window.
-    spikes_count_t pulse;
+    ticks_count_t pulse;
 
 
     // Current internal value.
@@ -202,7 +201,7 @@ typedef struct {
     ticks_count_t evol_step;
     // Length of the window used to count pulses in the cortex' neurons.
     //* Mutable.
-    spikes_count_t pulse_window;
+    ticks_count_t pulse_window;
 
 
     // Radius of each neuron's neighborhood.
@@ -324,7 +323,7 @@ error_code_t c2d_set_evol_step(cortex2d_t* cortex, evol_step_t evol_step);
 
 /// @brief Sets the pulse window width for the cortex.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t c2d_set_pulse_window(cortex2d_t* cortex, spikes_count_t window);
+error_code_t c2d_set_pulse_window(cortex2d_t* cortex, ticks_count_t window);
 
 /// @brief Sets the sample window for the cortex.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
