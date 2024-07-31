@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
         (cortex_width / 2) - (input_width / 2),
         cortex_height - input_height,
         (cortex_width / 2) + (input_width / 2),
-        input_height,
+        input_height
     );
 
     // Only set input values once.
