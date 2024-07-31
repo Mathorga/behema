@@ -86,12 +86,16 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        // Read output.
-        c2d_read2d(next_cortex, output);
+        if (i % 1000 == 0) {
+            printf("\nPerformed %d iterations\n", i);
 
-        // Compute output mean.
-        o2d_mean(output, &mean_output);
-        printf("mean output: %d\n", mean_output);
+            // Read output.
+            c2d_read2d(next_cortex, output);
+
+            // Compute output mean.
+            o2d_mean(output, &mean_output);
+            printf("mean output: %d\n", mean_output);
+        }
     }
 
     // Copy the cortex back to host to check the results.
