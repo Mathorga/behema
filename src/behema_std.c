@@ -29,8 +29,6 @@ void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
     #pragma omp parallel for collapse(2)
     for (cortex_size_t y = output->y0; y < output->y1; y++) {
         for (cortex_size_t x = output->x0; x < output->x1; x++) {
-            cortex->sample_window;
-
             output->values[
                 IDX2D(
                     x - output->x0,
