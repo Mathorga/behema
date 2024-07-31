@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
             printf("\nPerformed %d iterations\n", i);
 
             // Read output.
-            c2d_read2d(next_cortex, output);
+            c2d_read2d(prev_cortex, output);
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
