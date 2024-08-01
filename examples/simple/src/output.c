@@ -104,7 +104,8 @@ int main(int argc, char **argv) {
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
-            printf("mean output: %d\n", mean_output);
+            printf("mean output: %d\r", mean_output);
+            fflush(stdout);
         }
     }
 
