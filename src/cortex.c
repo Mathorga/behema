@@ -14,6 +14,11 @@ uint32_t xorshf32(uint32_t state) {
 // ########################################## Initialization functions ##########################################
 
 error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1, neuron_value_t exc_value, pulse_mapping_t pulse_mapping) {
+    // Make sure the provided size is correct.
+    if (x1 <= x0 || y1 <= y0) {
+        return ERROR_SIZE_WRONG;
+    }
+
     // Allocate the input.
     (*input) = (input2d_t*) malloc(sizeof(input2d_t));
     if ((*input) == NULL) {
@@ -36,7 +41,11 @@ error_code_t i2d_init(input2d_t** input, cortex_size_t x0, cortex_size_t y0, cor
 }
 
 error_code_t o2d_init(output2d_t** output, cortex_size_t x0, cortex_size_t y0, cortex_size_t x1, cortex_size_t y1) {
-    // Allocate the input.
+    // Make sure the provided size is correct.
+    if (x1 <= x0 || y1 <= y0) {
+        return ERROR_SIZE_WRONG;
+    }
+    // Allocate the output.
     (*output) = (output2d_t*) malloc(sizeof(output2d_t));
     if ((*output) == NULL) {
         return ERROR_FAILED_ALLOC;
@@ -45,10 +54,12 @@ error_code_t o2d_init(output2d_t** output, cortex_size_t x0, cortex_size_t y0, c
     (*output)->x0 = x0;
     (*output)->y0 = y0;
     (*output)->x1 = x1;
+    (*output)->y1 = y1;
 
     // Allocate values.
     (*output)->values = (ticks_count_t*) malloc((x1 - x0) * (y1 - y0) * sizeof(ticks_count_t));
     if ((*output)->values == NULL) {
+        printf("ERROR_ALLOCATING_VALUES\n");
         return ERROR_FAILED_ALLOC;
     }
 

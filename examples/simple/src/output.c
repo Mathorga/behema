@@ -5,10 +5,12 @@
 #include <behema/behema.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 64;
-    cortex_size_t cortex_height = 32;
-    cortex_size_t input_width = 5;
+    cortex_size_t cortex_width = 256;
+    cortex_size_t cortex_height = 128;
+    cortex_size_t input_width = 4;
     cortex_size_t input_height = 1;
+    cortex_size_t output_width = 4;
+    cortex_size_t output_height = 1;
     uint32_t iterations_count = 10000;
     nh_radius_t nh_radius = 2;
     ticks_count_t mean_output = 0;
@@ -22,12 +24,12 @@ int main(int argc, char **argv) {
     cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the even cortex\n");
+        printf("There was an error initializing the even cortex %d\n", error);
         return 1;
     }
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the odd cortex\n");
+        printf("There was an error initializing the odd cortex %d\n", error);
         return 1;
     }
 
@@ -60,7 +62,7 @@ int main(int argc, char **argv) {
         PULSE_MAPPING_FPROP
     );
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the even cortex\n");
+        printf("There was an error initializing input %d\n", error);
         return 1;
     }
 
@@ -68,13 +70,13 @@ int main(int argc, char **argv) {
     output2d_t* output;
     error = o2d_init(
         &output,
-        (cortex_width / 2) - (input_width / 2),
-        cortex_height - input_height,
-        (cortex_width / 2) + (input_width / 2),
-        input_height
+        (cortex_width / 2) - (output_width / 2),
+        cortex_height - 1 - output_height,
+        (cortex_width / 2) + (output_width / 2),
+        cortex_height - 1
     );
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the even cortex\n");
+        printf("There was an error initializing output %d\n", error);
         return 1;
     }
 
@@ -94,16 +96,15 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations\n", i);
-
+        if (i % 10 == 0) {
             // Read output.
             c2d_read2d(prev_cortex, output);
-            printf("test: %d\n", output->values[0]);
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
-            printf("mean output: %d\n", mean_output);
+
+            printf("Performed %d iterations - mean output: %d\r", i, mean_output);
+            fflush(stdout);
         }
     }
 

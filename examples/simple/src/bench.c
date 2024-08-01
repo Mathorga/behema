@@ -21,12 +21,12 @@ int main(int argc, char **argv) {
     cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the even cortex\n");
+        printf("There was an error initializing the even cortex %d\n", error);
         return 1;
     }
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
     if (error != ERROR_NONE) {
-        printf("There was an error initializing the odd cortex\n");
+        printf("There was an error initializing the odd cortex %d\n", error);
         return 1;
     }
 
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
 
     // Input init.
     input2d_t* input;
-    i2d_init(
+    error = i2d_init(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
@@ -58,6 +58,10 @@ int main(int argc, char **argv) {
         DEFAULT_EXC_VALUE * 2,
         PULSE_MAPPING_FPROP
     );
+    if (error != ERROR_NONE) {
+        printf("There was an error allocating input %d\n", error);
+        return 1;
+    }
 
     // Only set input values once.
     for (cortex_size_t i = 0; i < input_width * input_height; i++) {
@@ -75,8 +79,10 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations in %llums\n", i, millis() - start_time);
+        if (i % 100 == 0) {
+            uint64_t elapsed = millis() - start_time;
+            double fps = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i, elapsed, fps);
             c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
