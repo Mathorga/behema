@@ -79,8 +79,10 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations in %llums\n", i, millis() - start_time);
+        if (i % 100 == 0) {
+            uint64_t elapsed = millis() - start_time;
+            double fps = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i, elapsed, fps);
             c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
