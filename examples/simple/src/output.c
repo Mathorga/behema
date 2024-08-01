@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
 
             // Read output.
             c2d_read2d(prev_cortex, output);
+            printf("test: %d\n", output->values[0]);
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
