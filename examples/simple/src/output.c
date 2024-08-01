@@ -50,7 +50,7 @@ int main(int argc, char **argv) {
 
     // Input init.
     input2d_t* input;
-    i2d_init(
+    error = i2d_init(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
@@ -59,16 +59,24 @@ int main(int argc, char **argv) {
         DEFAULT_EXC_VALUE * 2,
         PULSE_MAPPING_FPROP
     );
+    if (error != ERROR_NONE) {
+        printf("There was an error initializing the even cortex\n");
+        return 1;
+    }
 
     // Output init.
     output2d_t* output;
-    o2d_init(
+    error = o2d_init(
         &output,
         (cortex_width / 2) - (input_width / 2),
         cortex_height - input_height,
         (cortex_width / 2) + (input_width / 2),
         input_height
     );
+    if (error != ERROR_NONE) {
+        printf("There was an error initializing the even cortex\n");
+        return 1;
+    }
 
     // Only set input values once.
     for (cortex_size_t i = 0; i < input_width * input_height; i++) {
