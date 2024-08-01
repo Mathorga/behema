@@ -97,14 +97,13 @@ int main(int argc, char **argv) {
         c2d_tick(prev_cortex, next_cortex);
 
         if (i % 10 == 0) {
-            // printf("\nPerformed %d iterations\n", i);
-
             // Read output.
             c2d_read2d(prev_cortex, output);
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
-            printf("mean output: %d\r", mean_output);
+
+            printf("Performed %d iterations - mean output: %d\r", i, mean_output);
             fflush(stdout);
         }
     }
