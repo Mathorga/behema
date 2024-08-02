@@ -1,5 +1,13 @@
 #include "population.h"
 
+
+// ########################################## Initialization functions ##########################################
+
+int idf_compare(const void* a, const void* b) {
+    return (*(indexed_fitness_t*)a).fitness - (*(indexed_fitness_t*)b).fitness;
+}
+
+
 // ########################################## Initialization functions ##########################################
 
 error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex)) {
@@ -58,6 +66,7 @@ error_code_t p2d_populate(population2d_t* population, cortex_size_t width, corte
     return ERROR_NONE;
 }
 
+
 // ########################################## Setter functions ##################################################
 
 error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance) {
@@ -66,11 +75,12 @@ error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance) {
     return ERROR_NONE;
 }
 
+
 // ########################################## Action functions ##################################################
 
 error_code_t p2d_evaluate(population2d_t* population) {
     // Loop through all cortices to evaluate each of them.
-    for (int i = 0; i < population->size; i++) {
+    for (population_size_t i = 0; i < population->size; i++) {
         // Evaluate the current cortex by using the population evaluation function.
         // The computed fitness is stored in the population itself.
         population->cortices_fitness[i] = population->eval_function(&(population->cortices[i]));
@@ -80,14 +90,30 @@ error_code_t p2d_evaluate(population2d_t* population) {
 }
 
 error_code_t p2d_select(population2d_t* population) {
-    // TODO Sort cortices by fitness.
-    population_size_t* sorted_indexes = (population_size_t*) malloc(population->size * sizeof(population_size_t));
+    // Allocate temporary fitnesses.
+    indexed_fitness_t* sorted_indexes = (indexed_fitness_t*) malloc(population->size * sizeof(indexed_fitness_t));
+
+    // Populate temp indexes.
+    for (population_size_t i = 0; i < population->size; i++) {
+        sorted_indexes[i].index = i;
+        sorted_indexes[i].fitness = population->cortices_fitness[i];
+    }
+
+    // Sort cortex fitnesses.
+    qsort(sorted_indexes, population->size, sizeof(indexed_fitness_t), idf_compare);
 
     // Pick the best-fitting cortices and store them as survivors.
-    population->survivors = sorted_indexes;
+    // Survivors are by definition the cortices correspondint to the first elements in the sorted list of fitnesses.
+    for (population_size_t i = 0; i < population->sel_pool_size; i++) {
+        population->survivors[i] = sorted_indexes[i].index;
+    }
 
     // Free up temp indexes array.
     free(sorted_indexes);
 
+    return ERROR_NONE;
+}
+
+error_code_t p2d_crossover(population2d_t* population) {
     return ERROR_NONE;
 }

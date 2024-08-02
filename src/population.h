@@ -23,7 +23,13 @@ extern "C" {
 typedef uint16_t cortex_fitness_t;
 typedef uint16_t population_size_t;
 
-/// Population of 2D cortices.
+/// @brief Utility struct used to keep index consistency while working with fitness arrays.
+typedef struct {
+    population_size_t index;
+    cortex_fitness_t fitness;
+} indexed_fitness_t;
+
+/// @brief Population of 2D cortices.
 typedef struct {
     // Size of the population (number of contained cortices).
     population_size_t size;
@@ -50,6 +56,15 @@ typedef struct {
     population_size_t* survivors;
 } population2d_t;
 
+
+// ########################################## Utility functions ##########################################
+
+/// @brief Compares the provided indexed fitnesses by fitness value.
+/// @param a The first fitness to compare.
+/// @param b The second fitness to compare.
+/// @return 0 if a == b, a strictly negative number if a < b, a strictly positive if a > b.
+int idf_compare(const void* a, const void* b);
+
 // ########################################## Initialization functions ##########################################
 
 /// @brief Initializes the provided population with default values.
@@ -73,6 +88,7 @@ error_code_t p2d_populate(population2d_t* population, cortex_size_t width, corte
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_destroy(population2d_t* population);
+
 
 // ########################################## Setter functions ##################################################
 
@@ -104,6 +120,7 @@ error_code_t p2d_crossover(population2d_t* population);
 /// @param population the population to mutate.
 /// @return The code for the occurred error, [ERROR_NONE] if none.
 error_code_t p2d_mutate(population2d_t* population);
+
 
 #ifdef __cplusplus
 }
