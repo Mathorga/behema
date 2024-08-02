@@ -79,19 +79,15 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 100 == 0) {
+        if ((i + 1) % 100 == 0) {
             uint64_t elapsed = millis() - start_time;
             double fps = i /(elapsed / 1000.0f);
-            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i, elapsed, fps);
+            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i + 1, elapsed, fps);
             c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
         // usleep(100);
     }
-
-    // Stop timer.
-    uint64_t end_time = millis();
-    printf("\nCompleted %d iterations in %llums\n", iterations_count, end_time - start_time);
 
     // Copy the cortex back to host to check the results.
     c2d_to_file(even_cortex, (char*) "out/test.c2d");

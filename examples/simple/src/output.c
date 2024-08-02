@@ -85,6 +85,9 @@ int main(int argc, char **argv) {
         input->values[i] = even_cortex->sample_window - 1;
     }
 
+    printf("\n");
+
+    // Main loop.
     for (uint32_t i = 0; i < iterations_count; i++) {
         cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
@@ -96,17 +99,19 @@ int main(int argc, char **argv) {
 
         c2d_tick(prev_cortex, next_cortex);
 
-        if (i % 10 == 0) {
+        if ((i + 1) % 10 == 0) {
             // Read output.
             c2d_read2d(prev_cortex, output);
 
             // Compute output mean.
             o2d_mean(output, &mean_output);
 
-            printf("Performed %d iterations - mean output: %d\r", i, mean_output);
+            printf("\rPerformed %d iterations - mean output: %d", i + 1, mean_output);
             fflush(stdout);
         }
     }
+    
+    printf("\n");
 
     // Copy the cortex back to host to check the results.
     c2d_to_file(even_cortex, (char*) "out/test.c2d");
