@@ -189,7 +189,7 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
             )
         ],
         cortex->pulse_mapping
-    )
+    );
 
     if (excite) {
         cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
