@@ -2,7 +2,7 @@ CCOMP=gcc
 NVCOMP=nvcc
 ARC=ar
 
-STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g
+STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g -fPIC
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
 CLINK_FLAGS=-Wall -fopenmp
 ARC_FLAGS=-rcs
@@ -92,12 +92,12 @@ std: create std-build
 cuda: create cuda-build
 
 # Builds all library files.
-std-build: cortex.o population.o utils.o behema_std.o
+std-build: cortex.o utils.o population.o behema_std.o
 	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) $(STD_LIBS) -o $(BLD_DIR)/libbehema.so
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
 
-cuda-build: cortex.o population.o utils.o behema_cuda.o
+cuda-build: cortex.o utils.o population.o behema_cuda.o
 	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libbehema.so
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
