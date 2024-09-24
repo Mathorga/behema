@@ -19,7 +19,7 @@ MODE=
 NVCOMP_FLAGS=--compiler-options '-fPIC' -G $(CUDA_ARCH_FLAG)
 NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
-STD_LIBS=-lrt -lm
+STD_LIBS=-lm
 CUDA_STD_LIBS=-lcudart
 
 SRC_DIR=./src
@@ -42,6 +42,7 @@ UNAME_S=$(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	SYSTEM_INCLUDE_DIR=/usr/include
 	SYSTEM_LIB_DIR=/usr/lib
+	STD_LIBS+=-lrt
 endif
 
 # The current OS is MacOS.

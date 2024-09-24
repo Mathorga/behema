@@ -5,20 +5,18 @@
 #include <behema/behema.h>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 512;
-    cortex_size_t cortex_height = 256;
-    cortex_size_t input_width = 32;
-    cortex_size_t input_height = 1;
+    bhm_cortex_size_t cortex_width = 512;
+    bhm_cortex_size_t cortex_height = 256;
+    bhm_cortex_size_t input_width = 32;
+    bhm_cortex_size_t input_height = 1;
     uint32_t iterations_count = 10000;
-    nh_radius_t nh_radius = 2;
-
-    srand(time(NULL));
+    bhm_nh_radius_t nh_radius = 2;
 
     bhm_error_code_t error;
 
     // Cortex init.
-    cortex2d_t* even_cortex;
-    cortex2d_t* odd_cortex;
+    bhm_cortex2d_t* even_cortex;
+    bhm_cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the even cortex %d\n", error);
@@ -32,7 +30,7 @@ int main(int argc, char **argv) {
 
     // Cortex setup.
     c2d_set_evol_step(even_cortex, 0x01U);
-    c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_pulse_mapping(even_cortex, BHM_PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(even_cortex, 24);
     char touchFileName[40];
     char inhexcFileName[40];
@@ -48,15 +46,15 @@ int main(int argc, char **argv) {
     printf("%s", cortex_string);
 
     // Input init.
-    input2d_t* input;
+    bhm_input2d_t* input;
     error = i2d_init(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
         (cortex_width / 2) + (input_width / 2),
         input_height,
-        DEFAULT_EXC_VALUE * 2,
-        PULSE_MAPPING_FPROP
+        BHM_DEFAULT_EXC_VALUE * 2,
+        BHM_PULSE_MAPPING_FPROP
     );
     if (error != BHM_ERROR_NONE) {
         printf("There was an error allocating input %d\n", error);
@@ -64,15 +62,15 @@ int main(int argc, char **argv) {
     }
 
     // Only set input values once.
-    for (cortex_size_t i = 0; i < input_width * input_height; i++) {
+    for (bhm_cortex_size_t i = 0; i < input_width * input_height; i++) {
         input->values[i] = even_cortex->sample_window - 1;
     }
 
     uint64_t start_time = millis();
 
     for (uint32_t i = 0; i < iterations_count; i++) {
-        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+        bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
         // Feed.
         c2d_feed2d(prev_cortex, input);

@@ -41,13 +41,13 @@ typedef struct {
     population_size_t parents_count;
 
     // Chance of mutation during the evolution step.
-    chance_t mut_chance;
+    bhm_chance_t mut_chance;
 
     // Evaluation function.
-    cortex_fitness_t (*eval_function)(cortex2d_t* cortex);
+    cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex);
 
     // List of all cortices in the population.
-    cortex2d_t* cortices;
+    bhm_cortex2d_t* cortices;
 
     // cortices' fitness.
     cortex_fitness_t* cortices_fitness;
@@ -74,7 +74,7 @@ int idf_compare(const void* a, const void* b);
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex));
+bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, bhm_chance_t mut_chance, cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex));
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.
@@ -82,7 +82,7 @@ bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, p
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+bhm_error_code_t p2d_populate(population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
 
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
@@ -96,7 +96,7 @@ bhm_error_code_t p2d_destroy(population2d_t* population);
 /// @param population The population to apply the new mutation rate to.
 /// @param mut_chance The mutation rate to apply to the population.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance);
+bhm_error_code_t p2d_set_mut_rate(population2d_t* population, bhm_chance_t mut_chance);
 
 
 // ########################################## Action functions ##################################################

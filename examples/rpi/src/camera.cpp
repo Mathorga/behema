@@ -10,10 +10,10 @@
 #include <iostream>
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
-    nh_radius_t nh_radius = 2;
-    ticks_count_t sampleWindow = SAMPLE_WINDOW_MID;
+    bhm_cortex_size_t cortex_width = 100;
+    bhm_cortex_size_t cortex_height = 60;
+    bhm_nh_radius_t nh_radius = 2;
+    bhm_ticks_count_t sampleWindow = BHM_SAMPLE_WINDOW_MID;
     cv::Mat frame;
     cv::VideoCapture cam;
 
@@ -54,8 +54,8 @@ int main(int argc, char **argv) {
     srand(time(NULL));
 
     // Create network model.
-    cortex2d_t even_cortex;
-    cortex2d_t odd_cortex;
+    bhm_cortex2d_t even_cortex;
+    bhm_cortex2d_t odd_cortex;
     bhm_error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != 0) {
         printf("Error %d during init\n", error);
@@ -63,23 +63,23 @@ int main(int argc, char **argv) {
     }
     c2d_set_sample_window(&even_cortex, sampleWindow);
     c2d_set_evol_step(&even_cortex, 0x01U);
-    c2d_set_pulse_mapping(&even_cortex, PULSE_MAPPING_FPROP);
+    c2d_set_pulse_mapping(&even_cortex, BHM_PULSE_MAPPING_FPROP);
     c2d_set_max_syn_count(&even_cortex, 24);
     c2d_copy(&odd_cortex, &even_cortex);
 
     int counter = 0;
 
     // Inputs.
-    input2d_t leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 4, PULSE_MAPPING_FPROP);
+    bhm_input2d_t leftEye;
+    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
 
-    input2d_t rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 4, PULSE_MAPPING_FPROP);
+    bhm_input2d_t rightEye;
+    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
 
     cv::Size eyeSize = cv::Size(leftEye.x1 - leftEye.x0, leftEye.y1 - leftEye.y0);
 
-    // cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
-    // cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
+    // bhm_cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
+    // bhm_cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
 
     char touchFileName[40];
     char inhexcFileName[40];
@@ -89,14 +89,14 @@ int main(int argc, char **argv) {
     c2d_touch_from_map(&even_cortex, touchFileName);
     c2d_inhexc_from_map(&even_cortex, inhexcFileName);
 
-    ticks_count_t samplingBound = sampleWindow - 1;
-    ticks_count_t sample_step = samplingBound;
+    bhm_ticks_count_t samplingBound = sampleWindow - 1;
+    bhm_ticks_count_t sample_step = samplingBound;
 
     for (int i = 0; ; i++) {
         counter++;
 
-        cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
+        bhm_cortex2d_t* prev_cortex = i % 2 ? &odd_cortex : &even_cortex;
+        bhm_cortex2d_t* next_cortex = i % 2 ? &even_cortex : &odd_cortex;
 
         if (i % 1000 == 0) {
             printf("\n%d: saved file\n", i);
@@ -117,8 +117,8 @@ int main(int argc, char **argv) {
             cv::resize(frame, resized, eyeSize);
             
             resized.at<uint8_t>(cv::Point(0, 0));
-            for (cortex_size_t y = 0; y < eyeSize.height; y++) {
-                for (cortex_size_t x = 0; x < eyeSize.width; x++) {
+            for (bhm_cortex_size_t y = 0; y < eyeSize.height; y++) {
+                for (bhm_cortex_size_t x = 0; x < eyeSize.width; x++) {
                     cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
                     leftEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[2],
                                                                          0, 255,
@@ -136,11 +136,11 @@ int main(int argc, char **argv) {
         c2d_feed2d(prev_cortex, &leftEye);
         c2d_feed2d(prev_cortex, &rightEye);
 
-        // c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, DEFAULT_EXC_VALUE * 4);
-        // c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, DEFAULT_EXC_VALUE * 4);
+        // c2d_sample_sqfeed(prev_cortex, rInputsCoords[0], rInputsCoords[1], rInputsCoords[2], rInputsCoords[3], sample_step, rInputs, BHM_DEFAULT_EXC_VALUE * 4);
+        // c2d_sample_sqfeed(prev_cortex, bInputsCoords[0], bInputsCoords[1], bInputsCoords[2], bInputsCoords[3], sample_step, bInputs, BHM_DEFAULT_EXC_VALUE * 4);
 
-        // c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
-        // c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], DEFAULT_EXC_VALUE / 3);
+        // c2d_sqfeed(prev_cortex, lTimedInputsCoords[0], lTimedInputsCoords[1], lTimedInputsCoords[2], lTimedInputsCoords[3], BHM_DEFAULT_EXC_VALUE / 3);
+        // c2d_sqfeed(prev_cortex, rTimedInputsCoords[0], rTimedInputsCoords[1], rTimedInputsCoords[2], rTimedInputsCoords[3], BHM_DEFAULT_EXC_VALUE / 3);
 
         // Tick the cortex.
         c2d_tick(prev_cortex, next_cortex);

@@ -10,16 +10,16 @@
 #include <unistd.h>
 #include <iostream>
 
-void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
+void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
             yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
         }
     }
 }
 
-void drawNeurons(cortex2d_t* cortex,
+void drawNeurons(bhm_cortex2d_t* cortex,
                  sf::RenderWindow* window,
                  sf::VideoMode videoMode,
                  float* xNeuronPositions,
@@ -27,11 +27,11 @@ void drawNeurons(cortex2d_t* cortex,
                  bool drawInfo,
                  sf::VideoMode desktopMode,
                  sf::Font font) {
-    for (cortex_size_t i = 0; i < cortex->height; i++) {
-        for (cortex_size_t j = 0; j < cortex->width; j++) {
+    for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
+        for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
             // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
@@ -74,22 +74,22 @@ void drawNeurons(cortex2d_t* cortex,
     }
 }
 
-void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
-    for (cortex_size_t i = 0; i < cortex->height; i++) {
-        for (cortex_size_t j = 0; j < cortex->width; j++) {
-            cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
-            neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
+void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+    for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
+        for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
+            bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
-            cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
+            bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            nh_mask_t acMask = currentNeuron->synac_mask;
-            nh_mask_t excMask = currentNeuron->synex_mask;
-            nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
-            nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
-            nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
+            bhm_nh_mask_t acMask = currentNeuron->synac_mask;
+            bhm_nh_mask_t excMask = currentNeuron->synex_mask;
+            bhm_nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
+            bhm_nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
+            bhm_nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
             
-            for (nh_radius_t k = 0; k < nh_diameter; k++) {
-                for (nh_radius_t l = 0; l < nh_diameter; l++) {
+            for (bhm_nh_radius_t k = 0; k < nh_diameter; k++) {
+                for (bhm_nh_radius_t l = 0; l < nh_diameter; l++) {
                     // Exclude the actual neuron from the list of neighbors.
                     // Also exclude wrapping.
                     if (!(k == cortex->nh_radius && l == cortex->nh_radius) &&
@@ -98,12 +98,12 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
+                        bhm_cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
                                                             WRAP(i + (k - cortex->nh_radius), cortex->height),
                                                             cortex->width);
 
                         // Compute the current synapse strength.
-                        syn_strength_t syn_strength = (str_mask_a & 0x01U) |
+                        bhm_syn_strength_t syn_strength = (str_mask_a & 0x01U) |
                                                 ((str_mask_b & 0x01U) << 0x01U) |
                                                 ((str_mask_c & 0x01U) << 0x02U);
 
@@ -141,10 +141,10 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
 }
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 100;
-    cortex_size_t cortex_height = 60;
-    nh_radius_t nh_radius = 2;
-    ticks_count_t sampleWindow = SAMPLE_WINDOW_MID;
+    bhm_cortex_size_t cortex_width = 100;
+    bhm_cortex_size_t cortex_height = 60;
+    bhm_nh_radius_t nh_radius = 2;
+    bhm_ticks_count_t sampleWindow = BHM_SAMPLE_WINDOW_MID;
     cv::Mat frame;
     cv::VideoCapture cam;
 
@@ -187,8 +187,8 @@ int main(int argc, char **argv) {
     sf::VideoMode desktopMode = sf::VideoMode::getDesktopMode();
 
     // Create network model.
-    cortex2d_t* even_cortex;
-    cortex2d_t* odd_cortex;
+    bhm_cortex2d_t* even_cortex;
+    bhm_cortex2d_t* odd_cortex;
     bhm_error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != 0) {
         printf("Error %d during init\n", error);
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
     // Customize cortex properties.
     c2d_set_sample_window(even_cortex, sampleWindow);
     c2d_set_evol_step(even_cortex, 0x01U);
-    c2d_set_pulse_mapping(even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_pulse_mapping(even_cortex, BHM_PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(even_cortex, 24);
     c2d_copy(odd_cortex, even_cortex);
 
@@ -225,16 +225,16 @@ int main(int argc, char **argv) {
     int counter = 0;
 
     // Inputs.
-    input2d_t* leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    bhm_input2d_t* leftEye;
+    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
 
-    input2d_t* rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, DEFAULT_EXC_VALUE * 2, PULSE_MAPPING_FPROP);
+    bhm_input2d_t* rightEye;
+    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
 
     cv::Size eyeSize = cv::Size(leftEye->x1 - leftEye->x0, leftEye->y1 - leftEye->y0);
 
-    // cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
-    // cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
+    // bhm_cortex_size_t lTimedInputsCoords[] = {0, cortex_height - 5, 1, cortex_height};
+    // bhm_cortex_size_t rTimedInputsCoords[] = {cortex_width - 1, cortex_height - 5, cortex_width, cortex_height};
 
     char touchFileName[40];
     char inhexcFileName[40];
@@ -244,8 +244,8 @@ int main(int argc, char **argv) {
     c2d_touch_from_map(even_cortex, touchFileName);
     c2d_inhexc_from_map(even_cortex, inhexcFileName);
 
-    ticks_count_t samplingBound = sampleWindow - 1;
-    ticks_count_t sample_step = samplingBound;
+    bhm_ticks_count_t samplingBound = sampleWindow - 1;
+    bhm_ticks_count_t sample_step = samplingBound;
 
     sf::Font font;
     if (!font.loadFromFile("res/JetBrainsMono.ttf")) {
@@ -255,8 +255,8 @@ int main(int argc, char **argv) {
     for (int i = 0; window.isOpen(); i++) {
         counter++;
 
-        cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+        bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
@@ -311,8 +311,8 @@ int main(int argc, char **argv) {
                 cv::resize(frame, resized, eyeSize);
 
                 resized.at<uint8_t>(cv::Point(0, 0));
-                for (cortex_size_t y = 0; y < eyeSize.height; y++) {
-                    for (cortex_size_t x = 0; x < eyeSize.width; x++) {
+                for (bhm_cortex_size_t y = 0; y < eyeSize.height; y++) {
+                    for (bhm_cortex_size_t x = 0; x < eyeSize.width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
                         leftEye->values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
                                                                                                0, 255,

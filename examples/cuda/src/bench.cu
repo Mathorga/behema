@@ -4,12 +4,12 @@
 #include <unistd.h>
 #include <behema/behema.h>
 
-void setup_cortices(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_size_t cortex_width, cortex_size_t cortex_height, nh_radius_t nh_radius) {
+void setup_cortices(bhm_cortex2d_t** even_cortex, bhm_cortex2d_t** odd_cortex, bhm_cortex_size_t cortex_width, bhm_cortex_size_t cortex_height, bhm_nh_radius_t nh_radius) {
     // Initialize the first cortex.
     c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);
     c2d_init(odd_cortex, cortex_width, cortex_height, nh_radius);
     c2d_set_evol_step(*even_cortex, 0x01U);
-    c2d_set_pulse_mapping(*even_cortex, PULSE_MAPPING_RPROP);
+    c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(*even_cortex, 24);
     char touchFileName[40];
     char inhexcFileName[40];
@@ -23,10 +23,10 @@ void setup_cortices(cortex2d_t** even_cortex, cortex2d_t** odd_cortex, cortex_si
 }
 
 int main(int argc, char **argv) {
-    cortex_size_t cortex_width = 512;
-    cortex_size_t cortex_height = 256;
-    uint32_t iterations_count = 20000;
-    nh_radius_t nh_radius = 2;
+    bhm_cortex_size_t cortex_width = 512;
+    bhm_cortex_size_t cortex_height = 256;
+    uint32_t iterations_count = 10000;
+    bhm_nh_radius_t nh_radius = 2;
 
     // Input handling.
     switch (argc) {
@@ -52,8 +52,8 @@ int main(int argc, char **argv) {
 
     printf("\nRunning %dx%d cortex\n", cortex_width, cortex_height);
 
-    cortex_size_t input_width = cortex_width / 4;
-    cortex_size_t input_height = 1;
+    bhm_cortex_size_t input_width = cortex_width / 4;
+    bhm_cortex_size_t input_height = 1;
     dim3 input_grid_size(input_width, input_height);
     dim3 input_block_size(1, 1);
 
@@ -62,8 +62,8 @@ int main(int argc, char **argv) {
     bhm_error_code_t error;
 
     // Cortex configuration.
-    cortex2d_t* even_cortex;
-    cortex2d_t* odd_cortex;
+    bhm_cortex2d_t* even_cortex;
+    bhm_cortex2d_t* odd_cortex;
     setup_cortices(
         &even_cortex,
         &odd_cortex,
@@ -75,25 +75,25 @@ int main(int argc, char **argv) {
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
 
     // Copy cortices to device.
-    cortex2d_t* d_even_cortex;
-    cortex2d_t* d_odd_cortex;
-    cudaMalloc((void**) &d_even_cortex, sizeof(cortex2d_t));
+    bhm_cortex2d_t* d_even_cortex;
+    bhm_cortex2d_t* d_odd_cortex;
+    cudaMalloc((void**) &d_even_cortex, sizeof(bhm_cortex2d_t));
     cudaCheckError();
-    cudaMalloc((void**) &d_odd_cortex, sizeof(cortex2d_t));
+    cudaMalloc((void**) &d_odd_cortex, sizeof(bhm_cortex2d_t));
     cudaCheckError();
     error = c2d_to_device(d_even_cortex, even_cortex);
     error = c2d_to_device(d_odd_cortex, odd_cortex);
 
     // Input init.
-    input2d_t* input;
+    bhm_input2d_t* input;
     i2d_init(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
         (cortex_width / 2) + (input_width / 2),
         input_height,
-        DEFAULT_EXC_VALUE * 2,
-        PULSE_MAPPING_FPROP
+        BHM_DEFAULT_EXC_VALUE * 2,
+        BHM_PULSE_MAPPING_FPROP
     );
 
     // Set input values.
@@ -102,8 +102,8 @@ int main(int argc, char **argv) {
     }
 
     // Copy input to device.
-    input2d_t* d_input;
-    cudaMalloc((void**) &d_input, sizeof(input2d_t));
+    bhm_input2d_t* d_input;
+    cudaMalloc((void**) &d_input, sizeof(bhm_input2d_t));
     cudaCheckError();
     i2d_to_device(d_input, input);
 
@@ -111,8 +111,8 @@ int main(int argc, char **argv) {
     uint64_t start_time = millis();
 
     for (uint32_t i = 0; i < iterations_count; i++) {
-        cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
-        cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
+        bhm_cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
+        bhm_cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
         // TODO Fetch input.
 

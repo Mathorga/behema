@@ -5,9 +5,9 @@
 #include <unistd.h>
 #include <iostream>
 
-void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
+void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
             yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
         }
@@ -15,7 +15,7 @@ void initPositions(cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPo
 }
 
 void drawNeurons(
-    cortex2d_t* cortex,
+    bhm_cortex2d_t* cortex,
     sf::RenderWindow* window,
     sf::VideoMode videoMode,
     float* xNeuronPositions,
@@ -24,11 +24,11 @@ void drawNeurons(
     sf::VideoMode desktopMode,
     sf::Font font
 ) {
-    for (cortex_size_t i = 0; i < cortex->height; i++) {
-        for (cortex_size_t j = 0; j < cortex->width; j++) {
+    for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
+        for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
@@ -66,22 +66,22 @@ void drawNeurons(
     }
 }
 
-void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
-    for (cortex_size_t i = 0; i < cortex->height; i++) {
-        for (cortex_size_t j = 0; j < cortex->width; j++) {
-            cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
-            neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
+void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
+    for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
+        for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
+            bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
-            cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
+            bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            nh_mask_t acMask = currentNeuron->synac_mask;
-            nh_mask_t excMask = currentNeuron->synex_mask;
-            nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
-            nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
-            nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
+            bhm_nh_mask_t acMask = currentNeuron->synac_mask;
+            bhm_nh_mask_t excMask = currentNeuron->synex_mask;
+            bhm_nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
+            bhm_nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
+            bhm_nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
             
-            for (nh_radius_t k = 0; k < nh_diameter; k++) {
-                for (nh_radius_t l = 0; l < nh_diameter; l++) {
+            for (bhm_nh_radius_t k = 0; k < nh_diameter; k++) {
+                for (bhm_nh_radius_t l = 0; l < nh_diameter; l++) {
                     // Exclude the actual neuron from the list of neighbors.
                     // Also exclude wrapping.
                     if (!(k == cortex->nh_radius && l == cortex->nh_radius) &&
@@ -90,7 +90,7 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        cortex_size_t neighborIndex = IDX2D(
+                        bhm_cortex_size_t neighborIndex = IDX2D(
                             WRAP(j + (l - cortex->nh_radius), cortex->width),
                             WRAP(i + (k - cortex->nh_radius), cortex->height),
                             cortex->width
@@ -135,7 +135,7 @@ void drawSynapses(cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode vi
 }
 
 void highlightNeuron(
-    cortex2d_t* cortex,
+    bhm_cortex2d_t* cortex,
     sf::RenderWindow* window,
     sf::VideoMode videoMode,
     int* passedNeurons,
@@ -148,23 +148,23 @@ void highlightNeuron(
     passedNeurons[*passedNeuronsSize] = IDX2D(xFocus, yFocus, cortex->width);
     (*passedNeuronsSize)++;
 
-    cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
+    bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
     int neuronIndex = IDX2D(xFocus, yFocus, cortex->width);
 
-    neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
+    bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
-    nh_mask_t acMask = currentNeuron->synac_mask;
-    nh_mask_t excMask = currentNeuron->synex_mask;
+    bhm_nh_mask_t acMask = currentNeuron->synac_mask;
+    bhm_nh_mask_t excMask = currentNeuron->synex_mask;
     
     // Loop through neighbors.
-    for (nh_radius_t y = 0; y < nh_diameter; y++) {
-        for (nh_radius_t x = 0; x < nh_diameter; x++) {
+    for (bhm_nh_radius_t y = 0; y < nh_diameter; y++) {
+        for (bhm_nh_radius_t x = 0; x < nh_diameter; x++) {
             // Exclude the actual neuron from the list of neighbors.
             // Also exclude wrapping.
             if (!(x == cortex->nh_radius && y == cortex->nh_radius)) {
                 // Fetch the current neighbor.
-                cortex_size_t neighborIndex = IDX2D(WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                bhm_cortex_size_t neighborIndex = IDX2D(WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
                                                     WRAP(yFocus + (y - cortex->nh_radius), cortex->height),
                                                     cortex->width);
 
@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
     sf::VideoMode desktopMode(800, 500);
 
     // Create network model.
-    cortex2d_t cortex;
+    bhm_cortex2d_t cortex;
     c2d_from_file(&cortex, cortexFileName);
 
     float* xNeuronPositions = (float*) malloc(cortex.width * cortex.height * sizeof(float));

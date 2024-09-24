@@ -103,7 +103,7 @@ uint64_t nanos() {
 }
 
 
-void c2d_to_file(cortex2d_t* cortex, char* file_name) {
+void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
@@ -113,79 +113,79 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name) {
     }
 
     // Write cortex metadata to the output file.
-    fwrite(&(cortex->width), sizeof(cortex_size_t), 1, out_file);
-    fwrite(&(cortex->height), sizeof(cortex_size_t), 1, out_file);
-    fwrite(&(cortex->ticks_count), sizeof(ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evols_count), sizeof(ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evol_step), sizeof(ticks_count_t), 1, out_file);
-    fwrite(&(cortex->pulse_window), sizeof(ticks_count_t), 1, out_file);
+    fwrite(&(cortex->width), sizeof(bhm_cortex_size_t), 1, out_file);
+    fwrite(&(cortex->height), sizeof(bhm_cortex_size_t), 1, out_file);
+    fwrite(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, out_file);
+    fwrite(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, out_file);
+    fwrite(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, out_file);
+    fwrite(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, out_file);
 
-    fwrite(&(cortex->nh_radius), sizeof(nh_radius_t), 1, out_file);
-    fwrite(&(cortex->fire_threshold), sizeof(neuron_value_t), 1, out_file);
-    fwrite(&(cortex->recovery_value), sizeof(neuron_value_t), 1, out_file);
-    fwrite(&(cortex->exc_value), sizeof(neuron_value_t), 1, out_file);
-    fwrite(&(cortex->decay_value), sizeof(neuron_value_t), 1, out_file);
+    fwrite(&(cortex->nh_radius), sizeof(bhm_nh_radius_t), 1, out_file);
+    fwrite(&(cortex->fire_threshold), sizeof(bhm_neuron_value_t), 1, out_file);
+    fwrite(&(cortex->recovery_value), sizeof(bhm_neuron_value_t), 1, out_file);
+    fwrite(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, out_file);
+    fwrite(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, out_file);
 
-    fwrite(&(cortex->syngen_chance), sizeof(chance_t), 1, out_file);
-    fwrite(&(cortex->synstr_chance), sizeof(chance_t), 1, out_file);
+    fwrite(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, out_file);
+    fwrite(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, out_file);
 
-    fwrite(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, out_file);
-    fwrite(&(cortex->max_syn_count), sizeof(syn_count_t), 1, out_file);
-    fwrite(&(cortex->inhexc_range), sizeof(chance_t), 1, out_file);
+    fwrite(&(cortex->max_tot_strength), sizeof(bhm_syn_strength_t), 1, out_file);
+    fwrite(&(cortex->max_syn_count), sizeof(bhm_syn_count_t), 1, out_file);
+    fwrite(&(cortex->inhexc_range), sizeof(bhm_chance_t), 1, out_file);
 
-    fwrite(&(cortex->sample_window), sizeof(ticks_count_t), 1, out_file);
-    fwrite(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, out_file);
+    fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
+    fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
 
     // Write all neurons.
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
-            fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(neuron_t), 1, out_file);
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
         }
     }
 
     fclose(out_file);
 }
 
-void c2d_from_file(cortex2d_t* cortex, char* file_name) {
+void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
     FILE* in_file = fopen(file_name, "rb");
 
     // Read cortex metadata from the output file.
-    fread(&(cortex->width), sizeof(cortex_size_t), 1, in_file);
-    fread(&(cortex->height), sizeof(cortex_size_t), 1, in_file);
-    fread(&(cortex->ticks_count), sizeof(ticks_count_t), 1, in_file);
-    fread(&(cortex->evols_count), sizeof(ticks_count_t), 1, in_file);
-    fread(&(cortex->evol_step), sizeof(ticks_count_t), 1, in_file);
-    fread(&(cortex->pulse_window), sizeof(ticks_count_t), 1, in_file);
+    fread(&(cortex->width), sizeof(bhm_cortex_size_t), 1, in_file);
+    fread(&(cortex->height), sizeof(bhm_cortex_size_t), 1, in_file);
+    fread(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, in_file);
+    fread(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, in_file);
+    fread(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, in_file);
+    fread(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, in_file);
 
-    fread(&(cortex->nh_radius), sizeof(nh_radius_t), 1, in_file);
-    fread(&(cortex->fire_threshold), sizeof(neuron_value_t), 1, in_file);
-    fread(&(cortex->recovery_value), sizeof(neuron_value_t), 1, in_file);
-    fread(&(cortex->exc_value), sizeof(neuron_value_t), 1, in_file);
-    fread(&(cortex->decay_value), sizeof(neuron_value_t), 1, in_file);
+    fread(&(cortex->nh_radius), sizeof(bhm_nh_radius_t), 1, in_file);
+    fread(&(cortex->fire_threshold), sizeof(bhm_neuron_value_t), 1, in_file);
+    fread(&(cortex->recovery_value), sizeof(bhm_neuron_value_t), 1, in_file);
+    fread(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, in_file);
+    fread(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, in_file);
 
-    fread(&(cortex->syngen_chance), sizeof(chance_t), 1, in_file);
-    fread(&(cortex->synstr_chance), sizeof(chance_t), 1, in_file);
+    fread(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, in_file);
+    fread(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, in_file);
 
-    fread(&(cortex->max_tot_strength), sizeof(syn_strength_t), 1, in_file);
-    fread(&(cortex->max_syn_count), sizeof(syn_count_t), 1, in_file);
-    fread(&(cortex->inhexc_range), sizeof(chance_t), 1, in_file);
+    fread(&(cortex->max_tot_strength), sizeof(bhm_syn_strength_t), 1, in_file);
+    fread(&(cortex->max_syn_count), sizeof(bhm_syn_count_t), 1, in_file);
+    fread(&(cortex->inhexc_range), sizeof(bhm_chance_t), 1, in_file);
 
-    fread(&(cortex->sample_window), sizeof(ticks_count_t), 1, in_file);
-    fread(&(cortex->pulse_mapping), sizeof(pulse_mapping_t), 1, in_file);
+    fread(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, in_file);
+    fread(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, in_file);
 
     // Read all neurons.
-    cortex->neurons = (neuron_t*) malloc(cortex->width * cortex->height * sizeof(neuron_t));
-    for (cortex_size_t y = 0; y < cortex->height; y++) {
-        for (cortex_size_t x = 0; x < cortex->width; x++) {
-            fread(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(neuron_t), 1, in_file);
+    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            fread(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, in_file);
         }
     }
 
     fclose(in_file);
 }
 
-bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {
     pgm_content_t pgm_content;
 
     // Read file.
@@ -196,7 +196,7 @@ bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
 
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
-        for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+        for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
             cortex->neurons[i].max_syn_count = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
         }
     } else {
@@ -207,7 +207,7 @@ bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_inhexc_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {
     pgm_content_t pgm_content;
 
     // Read file.
@@ -218,7 +218,7 @@ bhm_error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
 
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
-        for (cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+        for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
             cortex->neurons[i].inhexc_ratio = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
         }
     } else {

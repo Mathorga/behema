@@ -1,9 +1,9 @@
 #include "behema_std.h"
 
-void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
+void c2d_feed2d(bhm_cortex2d_t* cortex, bhm_input2d_t* input) {
     #pragma omp parallel for collapse(2)
-    for (cortex_size_t y = input->y0; y < input->y1; y++) {
-        for (cortex_size_t x = input->x0; x < input->x1; x++) {
+    for (bhm_cortex_size_t y = input->y0; y < input->y1; y++) {
+        for (bhm_cortex_size_t x = input->x0; x < input->x1; x++) {
             // Check whether the current input neuron should be excited or not.
             bhm_bool_t excite = value_to_pulse(
                 cortex->sample_window,
@@ -25,10 +25,10 @@ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     }
 }
 
-void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
+void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     #pragma omp parallel for collapse(2)
-    for (cortex_size_t y = output->y0; y < output->y1; y++) {
-        for (cortex_size_t x = output->x0; x < output->x1; x++) {
+    for (bhm_cortex_size_t y = output->y0; y < output->y1; y++) {
+        for (bhm_cortex_size_t x = output->x0; x < output->x1; x++) {
             output->values[
                 IDX2D(
                     x - output->x0,
@@ -46,14 +46,14 @@ void c2d_read2d(cortex2d_t* cortex, output2d_t* output) {
     }
 }
 
-void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
+void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
     #pragma omp parallel for collapse(2)
-    for (cortex_size_t y = 0; y < prev_cortex->height; y++) {
-        for (cortex_size_t x = 0; x < prev_cortex->width; x++) {
+    for (bhm_cortex_size_t y = 0; y < prev_cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < prev_cortex->width; x++) {
             // Retrieve the involved neurons.
-            cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
-            neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
-            neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
+            bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
+            bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
+            bhm_neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
 
             // Copy prev neuron values to the new one.
             *next_neuron = prev_neuron;
@@ -71,53 +71,53 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
               |             |
               +-|-|-|-|-|-|-+
             */
-            cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
+            bhm_cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
 
-            nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
-            nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
-            nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
-            nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
-            nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
+            bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
+            bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
+            bhm_nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
+            bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
+            bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
 
             // Defines whether to evolve or not.
             // evol_step is incremented by 1 to account for edge cases and human readable behavior:
             // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
             // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-            bhm_bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
+            bhm_bool_t evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
             // Increment the current neuron value by reading its connected neighbors.
-            for (nh_radius_t j = 0; j < nh_diameter; j++) {
-                for (nh_radius_t i = 0; i < nh_diameter; i++) {
-                    cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
-                    cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
+            for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
+                for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
+                    bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
+                    bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
 
                     // Exclude the central neuron from the list of neighbors.
                     if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
                         (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // The index of the current neighbor in the current neuron's neighborhood.
-                        cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                        cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
+                        bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
+                        bhm_cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
                                                              WRAP(neighbor_y, prev_cortex->height),
                                                              prev_cortex->width);
 
                         // Fetch the current neighbor.
-                        neuron_t neighbor = prev_cortex->neurons[neighbor_index];
+                        bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
 
                         // Compute the current synapse strength.
-                        syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
+                        bhm_syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
                                                       ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
                         // Pick a random number for each neighbor, capped to the max uint16 value.
                         next_neuron->rand_state = xorshf32(next_neuron->rand_state);
-                        chance_t random = next_neuron->rand_state % 0xFFFFU;
+                        bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
 
                         // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
-                        syn_strength_t strength_diff = MAX_SYN_STRENGTH - syn_strength;
+                        bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                         if (prev_ac_mask & 0x01U) {
-                            neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
+                            bhm_neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
                             if (neighbor.value > prev_cortex->fire_threshold) {
                                 if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
                                     next_neuron->value = prev_cortex->recovery_value;
@@ -133,7 +133,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
                             if (!(prev_ac_mask & 0x01U) &&
                                 prev_neuron.syn_count < next_neuron->max_syn_count &&
                                 // Frequency component.
-                                random < prev_cortex->syngen_chance * (chance_t) neighbor.pulse) {
+                                random < prev_cortex->syngen_chance * (bhm_chance_t) neighbor.pulse) {
                                 // Add synapse.
                                 next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -165,9 +165,9 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
                             // Functional plasticity: strengthen or weaken a synapse.
                             if (prev_ac_mask & 0x01U) {
-                                if (syn_strength < MAX_SYN_STRENGTH &&
+                                if (syn_strength < BHM_MAX_SYN_STRENGTH &&
                                     prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
-                                    random < prev_cortex->synstr_chance * (chance_t) neighbor.pulse * (chance_t) strength_diff) {
+                                    random < prev_cortex->synstr_chance * (bhm_chance_t) neighbor.pulse * (bhm_chance_t) strength_diff) {
                                     syn_strength++;
                                     next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                                     next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
@@ -231,22 +231,22 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
 // ########################################## Input mapping functions ##########################################
 
-bhm_bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+bhm_bool_t value_to_pulse(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input, bhm_pulse_mapping_t pulse_mapping) {
     bhm_bool_t result = BHM_FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input < sample_window) {
         switch (pulse_mapping) {
-            case PULSE_MAPPING_LINEAR:
+            case BHM_PULSE_MAPPING_LINEAR:
                 result = value_to_pulse_linear(sample_window, sample_step, input);
                 break;
-            case PULSE_MAPPING_FPROP:
+            case BHM_PULSE_MAPPING_FPROP:
                 result = value_to_pulse_fprop(sample_window, sample_step, input);
                 break;
-            case PULSE_MAPPING_RPROP:
+            case BHM_PULSE_MAPPING_RPROP:
                 result = value_to_pulse_rprop(sample_window, sample_step, input);
                 break;
-            case PULSE_MAPPING_DFPROP:
+            case BHM_PULSE_MAPPING_DFPROP:
                 result = value_to_pulse_dfprop(sample_window, sample_step, input);
                 break;
             default:
@@ -257,7 +257,7 @@ bhm_bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step
     return result;
 }
 
-bhm_bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_linear(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input) {
     // sample_window = 10;
     // x = input;
     // |@| | | | | | | | | | -> x = 0;
@@ -273,9 +273,9 @@ bhm_bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t samp
     return sample_step % (sample_window - input) == 0;
 }
 
-bhm_bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_fprop(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input) {
     bhm_bool_t result = BHM_FALSE;
-    ticks_count_t upper = sample_window - 1;
+    bhm_ticks_count_t upper = sample_window - 1;
 
     // sample_window = 10;
     // upper = sample_window - 1 = 9;
@@ -304,7 +304,7 @@ bhm_bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sampl
     return result;
 }
 
-bhm_bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_rprop(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input) {
     bhm_bool_t result = BHM_FALSE;
     double upper = sample_window - 1;
     double d_input = input;
@@ -323,11 +323,11 @@ bhm_bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sampl
     // | |@|@|@|@|@|@|@|@|@| -> x = 9;
     if ((double) input < ((double) sample_window) / 2) {
         if ((sample_step <= 0) ||
-            (input > 0 && sample_step % (ticks_count_t) round(upper / d_input) == 0)) {
+            (input > 0 && sample_step % (bhm_ticks_count_t) round(upper / d_input) == 0)) {
             result = BHM_TRUE;
         }
     } else {
-        if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
+        if (input >= upper || sample_step % (bhm_ticks_count_t) round(upper / (upper - d_input)) != 0) {
             result = BHM_TRUE;
         }
     }
@@ -335,7 +335,7 @@ bhm_bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sampl
     return result;
 }
 
-bhm_bool_t value_to_pulse_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_dfprop(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input) {
     // TODO
     return BHM_FALSE;
 }

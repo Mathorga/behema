@@ -61,17 +61,17 @@ uint64_t nanos();
 /// The file is created if not already present, overwritten otherwise.
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
-void c2d_to_file(cortex2d_t* cortex, char* file_name);
+void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
 
 /// Reads the content from a file and initializes the provided cortex accordingly.
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
-void c2d_from_file(cortex2d_t* cortex, char* file_name);
+void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name);
 
 /// Sets each neurons's touch from a pgm map file
-bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
 
-bhm_error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_inhexc_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
 
 #ifdef __cplusplus
 }
