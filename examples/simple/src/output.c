@@ -17,18 +17,18 @@ int main(int argc, char **argv) {
 
     srand(time(NULL));
 
-    error_code_t error;
+    bhm_error_code_t error;
 
     // Cortex init.
     cortex2d_t* even_cortex;
     cortex2d_t* odd_cortex;
     error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-    if (error != ERROR_NONE) {
+    if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the even cortex %d\n", error);
         return 1;
     }
     error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
-    if (error != ERROR_NONE) {
+    if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the odd cortex %d\n", error);
         return 1;
     }
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
         DEFAULT_EXC_VALUE * 2,
         PULSE_MAPPING_FPROP
     );
-    if (error != ERROR_NONE) {
+    if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing input %d\n", error);
         return 1;
     }
@@ -75,7 +75,7 @@ int main(int argc, char **argv) {
         (cortex_width / 2) + (output_width / 2),
         cortex_height - 1
     );
-    if (error != ERROR_NONE) {
+    if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing output %d\n", error);
         return 1;
     }

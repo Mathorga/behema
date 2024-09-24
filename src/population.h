@@ -73,21 +73,21 @@ int idf_compare(const void* a, const void* b);
 /// @param sel_pool_size The size of the pool of fittest individuals.
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex));
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, chance_t mut_chance, cortex_fitness_t (*eval_function)(cortex2d_t* cortex));
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.
 /// @param width The width of the cortex.
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_populate(population2d_t* population, cortex_size_t width, cortex_size_t height, nh_radius_t nh_radius);
 
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_destroy(population2d_t* population);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_destroy(population2d_t* population);
 
 
 // ########################################## Setter functions ##################################################
@@ -95,31 +95,31 @@ error_code_t p2d_destroy(population2d_t* population);
 /// @brief Sets the provided population the appropriate mutation rate
 /// @param population The population to apply the new mutation rate to.
 /// @param mut_chance The mutation rate to apply to the population.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_set_mut_rate(population2d_t* population, chance_t mut_chance);
 
 
 // ########################################## Action functions ##################################################
 
 /// @brief Evaluates the provided population by individually evaluating each cortex and then populating their fitnes values.
 /// @param population The population to evaluate.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_evaluate(population2d_t* population);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_evaluate(population2d_t* population);
 
 /// @brief Selects the fittest individuals in the given population and stores them for crossover.
 /// @param population The population to select.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_select(population2d_t* population);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_select(population2d_t* population);
 
 /// @brief Breeds the currently selected survivors and generates a new population starting from them.
 /// @param population The population to breed.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_crossover(population2d_t* population);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_crossover(population2d_t* population);
 
 /// @brief Mutates the given population in order to provide variability in the pool.
 /// @param population the population to mutate.
-/// @return The code for the occurred error, [ERROR_NONE] if none.
-error_code_t p2d_mutate(population2d_t* population);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_mutate(population2d_t* population);
 
 
 #ifdef __cplusplus

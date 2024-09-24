@@ -59,7 +59,7 @@ int main(int argc, char **argv) {
 
     srand(time(NULL));
 
-    error_code_t error;
+    bhm_error_code_t error;
 
     // Cortex configuration.
     cortex2d_t* even_cortex;

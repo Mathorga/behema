@@ -17,14 +17,14 @@ void ignoreComments(FILE* fp) {
     }
 }
 
-error_code_t pgm_read(pgm_content_t* pgm, const char* filename) {
+bhm_error_code_t pgm_read(pgm_content_t* pgm, const char* filename) {
     // Open the image file in read mode.
     FILE* pgmfile = fopen(filename, "r");
  
     // If file does not exist, then return.
     if (pgmfile == NULL) {
         printf("File does not exist: %s\n", filename);
-        return ERROR_FILE_DOES_NOT_EXIST;
+        return BHM_ERROR_FILE_DOES_NOT_EXIST;
     }
  
     ignoreComments(pgmfile);
@@ -68,7 +68,7 @@ error_code_t pgm_read(pgm_content_t* pgm, const char* filename) {
     // Close the file
     fclose(pgmfile);
  
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
@@ -185,11 +185,11 @@ void c2d_from_file(cortex2d_t* cortex, char* file_name) {
     fclose(in_file);
 }
 
-error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
     pgm_content_t pgm_content;
 
     // Read file.
-    error_code_t error = pgm_read(&pgm_content, map_file_name);
+    bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
     if (error) {
         return error;
     }
@@ -201,17 +201,17 @@ error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name) {
         }
     } else {
         printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
-        return ERROR_FILE_SIZE_WRONG;
+        return BHM_ERROR_FILE_SIZE_WRONG;
     }
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
     pgm_content_t pgm_content;
 
     // Read file.
-    error_code_t error = pgm_read(&pgm_content, map_file_name);
+    bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
     if (error) {
         return error;
     }
@@ -223,8 +223,8 @@ error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name) {
         }
     } else {
         printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");
-        return ERROR_FILE_SIZE_WRONG;
+        return BHM_ERROR_FILE_SIZE_WRONG;
     }
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }

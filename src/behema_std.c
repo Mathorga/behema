@@ -5,7 +5,7 @@ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     for (cortex_size_t y = input->y0; y < input->y1; y++) {
         for (cortex_size_t x = input->x0; x < input->x1; x++) {
             // Check whether the current input neuron should be excited or not.
-            bool_t excite = value_to_pulse(
+            bhm_bool_t excite = value_to_pulse(
                 cortex->sample_window,
                 cortex->ticks_count % cortex->sample_window,
                 input->values[
@@ -83,7 +83,7 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
             // evol_step is incremented by 1 to account for edge cases and human readable behavior:
             // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
             // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-            bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
+            bhm_bool_t evolve = (prev_cortex->ticks_count % (((evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
             // Increment the current neuron value by reading its connected neighbors.
             for (nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -231,8 +231,8 @@ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
 
 // ########################################## Input mapping functions ##########################################
 
-bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
-    bool_t result = FALSE;
+bhm_bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+    bhm_bool_t result = BHM_FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input < sample_window) {
@@ -257,7 +257,7 @@ bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ti
     return result;
 }
 
-bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
     // x = input;
     // |@| | | | | | | | | | -> x = 0;
@@ -273,8 +273,8 @@ bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_s
     return sample_step % (sample_window - input) == 0;
 }
 
-bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool_t result = FALSE;
+bhm_bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bhm_bool_t result = BHM_FALSE;
     ticks_count_t upper = sample_window - 1;
 
     // sample_window = 10;
@@ -293,19 +293,19 @@ bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_st
     if (input < sample_window / 2) {
         if ((sample_step <= 0) ||
             (input > 0 && sample_step % (upper / input) == 0)) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     } else {
         if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     }
 
     return result;
 }
 
-bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool_t result = FALSE;
+bhm_bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bhm_bool_t result = BHM_FALSE;
     double upper = sample_window - 1;
     double d_input = input;
 
@@ -324,18 +324,18 @@ bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_st
     if ((double) input < ((double) sample_window) / 2) {
         if ((sample_step <= 0) ||
             (input > 0 && sample_step % (ticks_count_t) round(upper / d_input) == 0)) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     } else {
         if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     }
 
     return result;
 }
 
-bool_t value_to_pulse_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+bhm_bool_t value_to_pulse_dfprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // TODO
-    return FALSE;
+    return BHM_FALSE;
 }

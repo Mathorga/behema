@@ -69,9 +69,9 @@ void c2d_to_file(cortex2d_t* cortex, char* file_name);
 void c2d_from_file(cortex2d_t* cortex, char* file_name);
 
 /// Sets each neurons's touch from a pgm map file
-error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_touch_from_map(cortex2d_t* cortex, char* map_file_name);
 
-error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_inhexc_from_map(cortex2d_t* cortex, char* map_file_name);
 
 #ifdef __cplusplus
 }

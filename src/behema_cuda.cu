@@ -22,13 +22,13 @@ dim3 c2d_get_block_size(cortex2d_t* cortex) {
     return dim3(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
 }
 
-error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
+bhm_error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
     cudaError_t cuda_error;
 
     // Allocate tmp input on the host.
     input2d_t* tmp_input = (input2d_t*) malloc(sizeof(input2d_t));
     if (tmp_input == NULL) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Copy host input to tmp input.
@@ -38,7 +38,7 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
     cuda_error = cudaMalloc((void**) &(tmp_input->values), (host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0) * sizeof(ticks_count_t));
     cudaCheckError();
     if (cuda_error != cudaSuccess) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Copy values to device.
@@ -62,21 +62,21 @@ error_code_t i2d_to_device(input2d_t* device_input, input2d_t* host_input) {
     // Cleanup.
     free(tmp_input);
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t i2d_to_host(input2d_t* host_input, input2d_t* device_input) {
+bhm_error_code_t i2d_to_host(input2d_t* host_input, input2d_t* device_input) {
     // TODO
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
+bhm_error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
     cudaError_t cuda_error;
 
     // Allocate tmp cortex on the host.
     cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
     if (tmp_cortex == NULL) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Copy host cortex to tmp cortex.
@@ -86,7 +86,7 @@ error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
     cuda_error = cudaMalloc((void**) &(tmp_cortex->neurons), host_cortex->width * host_cortex->height * sizeof(neuron_t));
     cudaCheckError();
     if (cuda_error != cudaSuccess) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Copy neurons to device.
@@ -105,14 +105,14 @@ error_code_t c2d_to_device(cortex2d_t* device_cortex, cortex2d_t* host_cortex) {
     // Cleanup.
     free(tmp_cortex);
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
+bhm_error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
     // Allocate tmp cortex on the host.
     cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
     if (tmp_cortex == NULL) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Copy tmp cortex to device.
@@ -132,19 +132,19 @@ error_code_t c2d_to_host(cortex2d_t* host_cortex, cortex2d_t* device_cortex) {
     // Cleanup.
     free(tmp_cortex);
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t i2d_device_destroy(input2d_t* input) {
+bhm_error_code_t i2d_device_destroy(input2d_t* input) {
     // TODO
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
-error_code_t c2d_device_destroy(cortex2d_t* cortex) {
+bhm_error_code_t c2d_device_destroy(cortex2d_t* cortex) {
     // Allocate tmp cortex on the host.
     cortex2d_t* tmp_cortex = (cortex2d_t*) malloc(sizeof(cortex2d_t));
     if (tmp_cortex == NULL) {
-        return ERROR_FAILED_ALLOC;
+        return BHM_ERROR_FAILED_ALLOC;
     }
     
     // Copy device cortex to host in order to free its neurons.
@@ -162,7 +162,7 @@ error_code_t c2d_device_destroy(cortex2d_t* cortex) {
     cudaFree(cortex);
     cudaCheckError();
 
-    return ERROR_NONE;
+    return BHM_ERROR_NONE;
 }
 
 
@@ -178,7 +178,7 @@ __global__ void c2d_feed2d(cortex2d_t* cortex, input2d_t* input) {
     }
 
     // Check whether the current input neuron should be excited or not.
-    bool_t excite = value_to_pulse(
+    bhm_bool_t excite = value_to_pulse(
         cortex->sample_window,
         cortex->ticks_count % cortex->sample_window,
         input->values[
@@ -396,8 +396,8 @@ __global__ void c2d_tick(cortex2d_t* prev_cortex, cortex2d_t* next_cortex) {
     next_cortex->ticks_count++;
 }
 
-__host__ __device__ bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
-    bool_t result = FALSE;
+__host__ __device__ bhm_bool_t value_to_pulse(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input, pulse_mapping_t pulse_mapping) {
+    bhm_bool_t result = BHM_FALSE;
 
     // Make sure the provided input correctly lies inside the provided window.
     if (input < sample_window) {
@@ -419,7 +419,7 @@ __host__ __device__ bool_t value_to_pulse(ticks_count_t sample_window, ticks_cou
     return result;
 }
 
-__host__ __device__ bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+__host__ __device__ bhm_bool_t value_to_pulse_linear(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
     // sample_window = 10;
     // x = input;
     // |@| | | | | | | | | | -> x = 0;
@@ -432,11 +432,11 @@ __host__ __device__ bool_t value_to_pulse_linear(ticks_count_t sample_window, ti
     // |@| | |@| | |@| | |@| -> x = 7;
     // |@| |@| |@| |@| |@| | -> x = 8;
     // |@|@|@|@|@|@|@|@|@|@| -> x = 9;
-    return (sample_step % (sample_window - input) == 0) ? TRUE : FALSE;
+    return (sample_step % (sample_window - input) == 0) ? BHM_TRUE : BHM_FALSE;
 }
 
-__host__ __device__ bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool_t result = FALSE;
+__host__ __device__ bhm_bool_t value_to_pulse_fprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bhm_bool_t result = BHM_FALSE;
     ticks_count_t upper = sample_window - 1;
 
     // sample_window = 10;
@@ -455,19 +455,19 @@ __host__ __device__ bool_t value_to_pulse_fprop(ticks_count_t sample_window, tic
     if (input < sample_window / 2) {
         if ((sample_step <= 0) ||
             (sample_step % (upper / input) == 0)) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     } else {
         if (input >= upper || sample_step % (upper / (upper - input)) != 0) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     }
 
     return result;
 }
 
-__host__ __device__ bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
-    bool_t result = FALSE;
+__host__ __device__ bhm_bool_t value_to_pulse_rprop(ticks_count_t sample_window, ticks_count_t sample_step, ticks_count_t input) {
+    bhm_bool_t result = BHM_FALSE;
     double upper = sample_window - 1;
     double d_input = input;
 
@@ -486,11 +486,11 @@ __host__ __device__ bool_t value_to_pulse_rprop(ticks_count_t sample_window, tic
     if ((double) input < ((double) sample_window) / 2) {
         if ((sample_step <= 0) ||
             sample_step % (ticks_count_t) round(upper / d_input) == 0) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     } else {
         if (input >= upper || sample_step % (ticks_count_t) round(upper / (upper - d_input)) != 0) {
-            result = TRUE;
+            result = BHM_TRUE;
         }
     }
 
