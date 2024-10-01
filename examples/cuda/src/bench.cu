@@ -50,8 +50,6 @@ int main(int argc, char **argv) {
             break;
     }
 
-    printf("\nRunning %dx%d cortex\n", cortex_width, cortex_height);
-
     bhm_cortex_size_t input_width = cortex_width / 4;
     bhm_cortex_size_t input_height = 1;
     dim3 input_grid_size(input_width, input_height);
@@ -73,6 +71,11 @@ int main(int argc, char **argv) {
     );
     dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
+
+    // Print the cortex out.
+    char cortex_string[100];
+    c2d_to_string(even_cortex, cortex_string);
+    printf("%s", cortex_string);
 
     // Copy cortices to device.
     bhm_cortex2d_t* d_even_cortex;
@@ -129,16 +132,15 @@ int main(int argc, char **argv) {
         cudaCheckError();
         cudaDeviceSynchronize();
 
-        if (i % 1000 == 0) {
-            printf("\nPerformed %d iterations in %ldms\n", i, millis() - start_time);
+        if ((i + 1) % 1000 == 0) {
+            uint64_t elapsed = millis() - start_time;
+            double fps = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i + 1, elapsed, fps);
+            c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
         // usleep(100);
     }
-
-    // Stop timer.
-    uint64_t end_time = millis();
-    printf("\nCompleted %d iterations in %ldms\n", iterations_count, end_time - start_time);
 
     // Copy the cortex back to host and save it to file.
     c2d_to_host(even_cortex, d_even_cortex);
