@@ -117,7 +117,7 @@ bhm_error_code_t c2d_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].synstr_mask_c = 0x00U;
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
-            // Also the starting state should not be 0, so an arbitrary integer is added to every state.
+            // Also the starting state should never be 0, so an arbitrary integer is added to every state.
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].rand_state = 31 + x * y;
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse_mask = 0x00U;
             (*cortex)->neurons[IDX2D(x, y, (*cortex)->width)].pulse = 0x00U;
@@ -312,7 +312,12 @@ bhm_error_code_t c2d_syn_disable(bhm_cortex2d_t* cortex, bhm_cortex_size_t x0, b
 
 bhm_error_code_t c2d_mutate(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
     // Start by mutating the network itself, then go on to single neurons.
-    // TODO Mutate the cortex shape.
+
+    // Mutate the cortex shape.
+    bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
 
     // Mutate pulse window.
     cortex->rand_state = xorshf32(cortex->rand_state);
@@ -331,12 +336,49 @@ bhm_error_code_t c2d_mutate(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
     // Mutate synstr chance.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the syngen chance.
+        // Decide whether to increase or decrease the synstr chance.
         cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
     }
 
     // TODO Mutate neurons.
+    // But how to know which neurons are new and which are not??
+    // Should all neurons be reset to default values and only then mutated?
+    // Surely not, since no mutation would ever be persistent this way.
 
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
+    bhm_cortex_size_t new_width = cortex->width;
+    bhm_cortex_size_t new_height = cortex->height;
+
+    // Mutate the cortex width.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the cortex width.
+        new_width += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate the cortex height.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the cortex height.
+        new_height += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    if (new_width != cortex->width || new_height != cortex->height) {
+        // Resize neurons.
+        cortex->neurons = (bhm_neuron_t*) realloc(cortex->neurons, new_width * new_height * sizeof(bhm_neuron_t));
+        if (cortex->neurons == NULL) {
+            return BHM_ERROR_FAILED_ALLOC;
+        }
+
+        // TODO Handle neurons' properties.
+
+        // Store updated cortex shape.
+        cortex->width = new_width;
+        cortex->height = new_height;
+    }
     return BHM_ERROR_NONE;
 }
 

@@ -68,10 +68,23 @@ void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
 /// @param file_name The file to read the cortex from.
 void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name);
 
-/// Sets each neurons's touch from a pgm map file
+/// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
+/// @param cortex The cortex to apply changes to.
+/// @param map_file_name The path to the pgm map file to read.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
 
+/// @brief Sets inhexc ratio for each neuron in the provided cortex by reading it from a pgm map file.
+/// @param cortex The cortex to apply changes to.
+/// @param map_file_name The path to the pgm map file to read.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_inhexc_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
+
+/// @brief Sets fire threshold for each neuron in the provided cortex by reading it from a pgm map file.
+/// @param cortex The cortex to apply changes to.
+/// @param map_file_name The path to the pgm map file to read.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_fthold_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
 
 #ifdef __cplusplus
 }

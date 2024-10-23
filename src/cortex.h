@@ -378,9 +378,15 @@ bhm_error_code_t c2d_syn_disable(bhm_cortex2d_t* cortex, bhm_cortex_size_t x0, b
 
 /// @brief Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
-/// @param mut_chance The probability of applying mutation to any mutable property of the cortex.
+/// @param mut_chance The probability of applying a mutation to any mutable property of the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_mutate(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
+
+/// @brief Randomly mutates the cortex shape.
+/// @param cortex The cortex to edit.
+/// @param mut_chance The probability of applying a mutation to the cortex shape.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
 
 
 // ########################################## Getter functions ##################################################
@@ -391,7 +397,7 @@ bhm_error_code_t c2d_mutate(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* target);
 
-/// @brief Computes the mean value of an output2d values.
+/// @brief Computes the mean value of an output2d's values.
 /// @param output The output to compute the mean value from.
 /// @param target Pointer to the result of the computation. The mean value will be stored here.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
