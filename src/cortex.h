@@ -206,6 +206,8 @@ typedef struct {
 
     // Radius of each neuron's neighborhood.
     bhm_nh_radius_t nh_radius;
+
+    // TODO Move to single neurons!
     bhm_neuron_value_t fire_threshold;
     bhm_neuron_value_t recovery_value;
     bhm_neuron_value_t exc_value;
