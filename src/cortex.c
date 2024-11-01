@@ -310,44 +310,6 @@ bhm_error_code_t c2d_syn_disable(bhm_cortex2d_t* cortex, bhm_cortex_size_t x0, b
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_mutate(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
-    // Start by mutating the network itself, then go on to single neurons.
-
-    // Mutate the cortex shape.
-    bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
-
-    // Mutate pulse window.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the pulse window.
-        cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
-    }
-
-    // Mutate syngen chance.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the syngen chance.
-        cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
-    }
-
-    // Mutate synstr chance.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the synstr chance.
-        cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
-    }
-
-    // TODO Mutate neurons.
-    // But how to know which neurons are new and which are not??
-    // Should all neurons be reset to default values and only then mutated?
-    // Surely not, since no mutation would ever be persistent this way.
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
     bhm_cortex_size_t new_width = cortex->width;
     bhm_cortex_size_t new_height = cortex->height;
@@ -374,11 +336,69 @@ bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t *cortex, bhm_chance_t mut_chanc
         }
 
         // TODO Handle neurons' properties.
+        // Loop
 
         // Store updated cortex shape.
         cortex->width = new_width;
         cortex->height = new_height;
     }
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_mutate(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
+    // Start by mutating the network itself, then go on to single neurons.
+
+    // TODO Mutate the cortex shape.
+    // bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
+    // if (error != BHM_ERROR_NONE) {
+    //     return error;
+    // }
+
+    // Mutate pulse window.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the pulse window.
+        cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate syngen chance.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the syngen chance.
+        cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate synstr chance.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the synstr chance.
+        cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate neurons.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            n2d_mutate(&(cortex->neurons[IDX2D(x, y, cortex->width)]), mut_chance);
+        }
+    }
+
+    return BHM_ERROR_NONE;
+}
+bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance) {
+    // Mutate max syn count.
+    neuron->rand_state = xorshf32(neuron->rand_state);
+    if (neuron->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the max syn count.
+        neuron->max_syn_count += neuron->rand_state % 2 == 0 ? 1 : -1;
+    }
+
+    // Mutate inhexc ratio.
+    neuron->rand_state = xorshf32(neuron->rand_state);
+    if (neuron->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the inhexc ratio.
+        neuron->inhexc_ratio += neuron->rand_state % 2 == 0 ? 1 : -1;
+    }
+
     return BHM_ERROR_NONE;
 }
 

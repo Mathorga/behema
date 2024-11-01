@@ -378,17 +378,23 @@ bhm_error_code_t c2d_set_wrapped(bhm_cortex2d_t* cortex, bhm_bool_t wrapped);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_syn_disable(bhm_cortex2d_t* cortex, bhm_cortex_size_t x0, bhm_cortex_size_t y0, bhm_cortex_size_t x1, bhm_cortex_size_t y1);
 
+/// @brief Randomly mutates the cortex shape.
+/// @param cortex The cortex to edit.
+/// @param mut_chance The probability of applying a mutation to the cortex shape.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
+
 /// @brief Randomly mutates the cortex.
 /// @param cortex The cortex to edit.
 /// @param mut_chance The probability of applying a mutation to any mutable property of the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_mutate(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
 
-/// @brief Randomly mutates the cortex shape.
-/// @param cortex The cortex to edit.
-/// @param mut_chance The probability of applying a mutation to the cortex shape.
+/// @brief Randomly mutates the provided neuron.
+/// @param neuron The neuron to mutate.
+/// @param mut_chance The probability of applying a mutation to any mutable property of the neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_mutate_shape(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
+bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance);
 
 
 // ########################################## Getter functions ##################################################
