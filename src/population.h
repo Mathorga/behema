@@ -20,40 +20,40 @@ extern "C" {
 #define DEFAULT_PARENTS_COUNT 0x0002U
 #define DEFAULT_MUT_CHANCE 0x000002A0U
 
-typedef uint16_t cortex_fitness_t;
-typedef uint16_t population_size_t;
+typedef uint16_t bhm_cortex_fitness_t;
+typedef uint16_t bhm_population_size_t;
 
 /// @brief Utility struct used to keep index consistency while working with fitness arrays.
 typedef struct {
-    population_size_t index;
-    cortex_fitness_t fitness;
+    bhm_population_size_t index;
+    bhm_cortex_fitness_t fitness;
 } bhm_indexed_fitness_t;
 
 /// @brief Population of 2D cortices.
 typedef struct {
     // Size of the population (number of contained cortices).
-    population_size_t size;
+    bhm_population_size_t size;
 
     // Size of the pool of fittest individuals to be selected as reproductors.
-    population_size_t sel_pool_size;
+    bhm_population_size_t sel_pool_size;
 
     // Amount of parents needed to generate offspring during crossover.
-    population_size_t parents_count;
+    bhm_population_size_t parents_count;
 
     // Chance of mutation during the evolution step.
     bhm_chance_t mut_chance;
 
     // Evaluation function.
-    cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex);
+    bhm_cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex);
 
     // List of all cortices in the population.
     bhm_cortex2d_t* cortices;
 
     // cortices' fitness.
-    cortex_fitness_t* cortices_fitness;
+    bhm_cortex_fitness_t* cortices_fitness;
 
     // Indexes of all survivors to the current round of selection.
-    population_size_t* survivors;
+    bhm_population_size_t* survivors;
 } bhm_population2d_t;
 
 
@@ -74,7 +74,7 @@ int idf_compare(const void* a, const void* b);
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_init(bhm_population2d_t** population, population_size_t size, population_size_t sel_pool_size, bhm_chance_t mut_chance, cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex));
+bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex));
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.
