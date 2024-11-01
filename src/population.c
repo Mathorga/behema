@@ -4,15 +4,15 @@
 // ########################################## Initialization functions ##########################################
 
 int idf_compare(const void* a, const void* b) {
-    return (*(indexed_fitness_t*)a).fitness - (*(indexed_fitness_t*)b).fitness;
+    return (*(bhm_indexed_fitness_t*)a).fitness - (*(bhm_indexed_fitness_t*)b).fitness;
 }
 
 
 // ########################################## Initialization functions ##########################################
 
-bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, population_size_t sel_pool_size, bhm_chance_t mut_chance, cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex)) {
+bhm_error_code_t p2d_init(bhm_population2d_t** population, population_size_t size, population_size_t sel_pool_size, bhm_chance_t mut_chance, cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex)) {
     // Allocate the population.
-    (*population) = (population2d_t *) malloc(sizeof(bhm_cortex2d_t));
+    (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_cortex2d_t));
     if ((*population) == NULL) {
         return BHM_ERROR_FAILED_ALLOC;
     }
@@ -45,7 +45,7 @@ bhm_error_code_t p2d_init(population2d_t** population, population_size_t size, p
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_populate(population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius) {
+bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius) {
     for (population_size_t i = 0; i < population->size; i++) {
         // Allocate a temporary pointer to the ith cortex.
         bhm_cortex2d_t* cortex = &(population->cortices[i]);
@@ -69,7 +69,7 @@ bhm_error_code_t p2d_populate(population2d_t* population, bhm_cortex_size_t widt
 
 // ########################################## Setter functions ##################################################
 
-bhm_error_code_t p2d_set_mut_rate(population2d_t* population, bhm_chance_t mut_chance) {
+bhm_error_code_t p2d_set_mut_rate(bhm_population2d_t* population, bhm_chance_t mut_chance) {
     population->mut_chance = mut_chance;
 
     return BHM_ERROR_NONE;
@@ -78,7 +78,7 @@ bhm_error_code_t p2d_set_mut_rate(population2d_t* population, bhm_chance_t mut_c
 
 // ########################################## Action functions ##################################################
 
-bhm_error_code_t p2d_evaluate(population2d_t* population) {
+bhm_error_code_t p2d_evaluate(bhm_population2d_t* population) {
     // Loop through all cortices to evaluate each of them.
     for (population_size_t i = 0; i < population->size; i++) {
         // Evaluate the current cortex by using the population evaluation function.
@@ -89,9 +89,9 @@ bhm_error_code_t p2d_evaluate(population2d_t* population) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_select(population2d_t* population) {
+bhm_error_code_t p2d_select(bhm_population2d_t* population) {
     // Allocate temporary fitnesses.
-    indexed_fitness_t* sorted_indexes = (indexed_fitness_t*) malloc(population->size * sizeof(indexed_fitness_t));
+    bhm_indexed_fitness_t* sorted_indexes = (bhm_indexed_fitness_t*) malloc(population->size * sizeof(bhm_indexed_fitness_t));
 
     // Populate temp indexes.
     for (population_size_t i = 0; i < population->size; i++) {
@@ -100,7 +100,7 @@ bhm_error_code_t p2d_select(population2d_t* population) {
     }
 
     // Sort cortex fitnesses.
-    qsort(sorted_indexes, population->size, sizeof(indexed_fitness_t), idf_compare);
+    qsort(sorted_indexes, population->size, sizeof(bhm_indexed_fitness_t), idf_compare);
 
     // Pick the best-fitting cortices and store them as survivors.
     // Survivors are by definition the cortices correspondint to the first elements in the sorted list of fitnesses.
@@ -114,7 +114,7 @@ bhm_error_code_t p2d_select(population2d_t* population) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_crossover(population2d_t* population) {
+bhm_error_code_t p2d_crossover(bhm_population2d_t* population) {
     // TODO.
 
     return BHM_ERROR_NONE;
