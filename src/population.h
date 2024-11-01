@@ -44,7 +44,7 @@ typedef struct {
     bhm_chance_t mut_chance;
 
     // Evaluation function.
-    bhm_cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex);
+    bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness);
 
     // List of all cortices in the population.
     bhm_cortex2d_t* cortices;
@@ -74,7 +74,7 @@ int idf_compare(const void* a, const void* b);
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex));
+bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness));
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.

@@ -10,7 +10,7 @@ int idf_compare(const void* a, const void* b) {
 
 // ########################################## Initialization functions ##########################################
 
-bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_cortex_fitness_t (*eval_function)(bhm_cortex2d_t* cortex)) {
+bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)) {
     // Allocate the population.
     (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_cortex2d_t));
     if ((*population) == NULL) {
@@ -83,7 +83,10 @@ bhm_error_code_t p2d_evaluate(bhm_population2d_t* population) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Evaluate the current cortex by using the population evaluation function.
         // The computed fitness is stored in the population itself.
-        population->cortices_fitness[i] = population->eval_function(&(population->cortices[i]));
+        bhm_error_code_t error = population->eval_function(&(population->cortices[i]), &(population->cortices_fitness[i]));
+        if (error != BHM_ERROR_NONE) {
+            return error;
+        }
     }
 
     return BHM_ERROR_NONE;

@@ -8,7 +8,8 @@ typedef enum {
     BHM_ERROR_FILE_SIZE_WRONG = 3,
     BHM_ERROR_FAILED_ALLOC = 4,
     BHM_ERROR_CORTEX_UNALLOC = 5,
-    BHM_ERROR_SIZE_WRONG = 6
+    BHM_ERROR_SIZE_WRONG = 6,
+    BHM_ERROR_EXTERNAL_CAUSES = 7
 } bhm_error_code_t;
 
 #endif
