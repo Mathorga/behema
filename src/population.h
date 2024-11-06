@@ -35,13 +35,15 @@ typedef struct {
     bhm_population_size_t size;
 
     // Size of the pool of fittest individuals to be selected as reproductors.
-    bhm_population_size_t sel_pool_size;
+    bhm_population_size_t selection_pool_size;
 
     // Amount of parents needed to generate offspring during crossover.
     bhm_population_size_t parents_count;
 
     // Chance of mutation during the evolution step.
     bhm_chance_t mut_chance;
+
+    bhm_rand_state_t rand_state;
 
     // Evaluation function.
     bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness);
@@ -52,8 +54,8 @@ typedef struct {
     // cortices' fitness.
     bhm_cortex_fitness_t* cortices_fitness;
 
-    // Indexes of all survivors to the current round of selection.
-    bhm_population_size_t* survivors;
+    // Indexes of all selection_pool to the current round of selection.
+    bhm_population_size_t* selection_pool;
 } bhm_population2d_t;
 
 
@@ -70,11 +72,11 @@ int idf_compare(const void* a, const void* b);
 /// @brief Initializes the provided population with default values.
 /// @param population The population to initialize.
 /// @param size The population size to start with.
-/// @param sel_pool_size The size of the pool of fittest individuals.
+/// @param selection_pool_size The size of the pool of fittest individuals.
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t sel_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness));
+bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t selection_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness));
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.
@@ -111,10 +113,19 @@ bhm_error_code_t p2d_evaluate(bhm_population2d_t* population);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_select(bhm_population2d_t* population);
 
-/// @brief Breeds the currently selected survivors and generates a new population starting from them.
-/// @param population The population to breed.
+/// @brief Produces a single child by breeding individuals from the population's selection pool.
+/// @param population The population from which to pick parents.
+/// @param child The resulting child.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_crossover(bhm_population2d_t* population);
+bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t* child);
+
+/// @brief Breeds the currently selected selection_pool and generates a new population starting from them.
+/// @param population The population to breed.
+/// @param mutate Whether the newly generated population should also be mutated in place.
+/// Setting this to TRUE allows for faster cycles, since mutation occurs right after generating the offspring, without relooping the population all over.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+/// @warning When [mutate] is TRUE, the new population is automatically mutated, so there's no need to call p2d_mutate afterwards.
+bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate);
 
 /// @brief Mutates the given population in order to provide variability in the pool.
 /// @param population the population to mutate.
