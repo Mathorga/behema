@@ -75,8 +75,19 @@ extern "C" {
 #define BHM_DEFAULT_SYNGEN_CHANCE 0x02A0U
 #define BHM_DEFAULT_SYNSTR_CHANCE 0x00A0U
 
+#define BHM_MAX_EVOL_STEP BHM_EVOL_STEP_NEVER
+#define BHM_MAX_PULSE_WINDOW 0xFFU
+#define BHM_MAX_THRESHOLD 0xFFU
+/// Recovery value should vary between -0xFF and 0x00. This value is a convenience value used to scale
+#define BHM_MAX_RECOVERY_VALUE 0xFFU
+#define BHM_MAX_EXC_VALUE 0xFFU
+#define BHM_MAX_DECAY_RATE 0xFFU
 #define BHM_MAX_SYNGEN_CHANCE 0xFFFFU
 #define BHM_MAX_SYNSTR_CHANCE 0xFFFFU
+#define BHM_MAX_MAX_TOT_STRENGTH 0xFFU
+#define BHM_MAX_MAX_TOUCH 0xFFU
+#define BHM_MAX_INHEXC_RANGE 0xFFU
+#define BHM_MAX_SAMPLE_WINDOW 0xFFU
 
 typedef uint8_t bhm_byte;
 
@@ -104,13 +115,13 @@ typedef enum {
 typedef enum {
     // Values are forced to 32 bit integers by using big enough values: 100000 is 17 bits long, so 32 bits are automatically allocated.
     // Linear.
-    BHM_PULSE_MAPPING_LINEAR = 0x100000,
+    BHM_PULSE_MAPPING_LINEAR = 0x100000U,
     // Floored proportional.
-    BHM_PULSE_MAPPING_FPROP = 0x100001,
+    BHM_PULSE_MAPPING_FPROP = 0x100001U,
     // Rounded proportional.
-    BHM_PULSE_MAPPING_RPROP = 0x100002,
+    BHM_PULSE_MAPPING_RPROP = 0x100002U,
     // Double floored proportional.
-    BHM_PULSE_MAPPING_DFPROP = 0x100003,
+    BHM_PULSE_MAPPING_DFPROP = 0x100003U,
 } bhm_pulse_mapping_t;
 
 /// @brief Convenience data structure for input handling (cortex feeding).
@@ -262,7 +273,9 @@ typedef struct {
 uint32_t xorshf32(uint32_t state);
 
 
-// ########################################## Initialization functions ##########################################
+// ##########################################
+// Initialization functions.
+// ##########################################
 
 /// @brief Initializes an input2d with the given values.
 /// @param input 
@@ -292,6 +305,14 @@ bhm_error_code_t o2d_init(bhm_output2d_t** output, bhm_cortex_size_t x0, bhm_cor
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
 
+/// @brief Initializes the given cortex with random values.
+/// @param cortex The cortex to initialize.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_rand_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
+
 /// @brief Destroys the given input2d and frees memory.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t i2d_destroy(bhm_input2d_t* input);
@@ -309,8 +330,13 @@ bhm_error_code_t c2d_destroy(bhm_cortex2d_t* cortex);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_copy(bhm_cortex2d_t* to, bhm_cortex2d_t* from);
 
+// ##########################################
+// ##########################################
 
-// ########################################## Setter functions ##################################################
+
+// ##########################################
+// Setter functions.
+// ##########################################
 
 /// @brief Sets the neighborhood radius for all neurons in the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
@@ -396,8 +422,13 @@ bhm_error_code_t c2d_mutate(bhm_cortex2d_t* cortex, bhm_chance_t mut_chance);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance);
 
+// ##########################################
+// ##########################################
 
-// ########################################## Getter functions ##################################################
+
+// ##########################################
+// Getter functions
+// ##########################################
 
 /// @brief Stores the string representation of the given cortex to the provided string [target].
 /// @param cortex The cortex to inspect.
@@ -410,6 +441,9 @@ bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* target);
 /// @param target Pointer to the result of the computation. The mean value will be stored here.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* target);
+
+// ##########################################
+// ##########################################
 
 #ifdef __cplusplus
 }
