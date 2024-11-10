@@ -45,21 +45,21 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex);
 
 // ########################################## Input mapping functions ##########################################
 
-/// Maps a value to a pulse pattern according to the specified pulse mapping.
+/// @brief Maps a value to a pulse pattern according to the specified pulse mapping.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..(sample_window - 1)).
 /// @param pulse_mapping The mapping algorithm to apply for mapping.
 bhm_bool_t value_to_pulse(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input, bhm_pulse_mapping_t pulse_mapping);
 
-/// Computes a linear mapping for the given input and sample step.
+/// @brief Computes a linear mapping for the given input and sample step.
 /// Linear mapping always fire at least once, even if input is 0.
 /// @param sample_window The width of the sampling window.
 /// @param sample_step The step to test inside the specified window (e.g. w=10 s=3 => | | | |X| | | | | | |).
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bhm_bool_t value_to_pulse_linear(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input);
 
-/// Computes a proportional mapping for the given input and sample step.
+/// @brief Computes a proportional mapping for the given input and sample step.
 /// This is computationally cheap if compared to rprop, but it provides a less even distribution. The difference can be seen on big windows.
 /// This is to be preferred if a narrow window is being used or an even distribution is not critical.
 /// @param sample_window The width of the sampling window.
@@ -67,7 +67,7 @@ bhm_bool_t value_to_pulse_linear(bhm_ticks_count_t sample_window, bhm_ticks_coun
 /// @param input The actual input to map to a pulse (must be in range 0..sample_window).
 bhm_bool_t value_to_pulse_fprop(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input);
 
-/// Computes a proportional mapping for the given input and sample step.
+/// @brief Computes a proportional mapping for the given input and sample step.
 /// Provides a better distribution if compared to fprop, but is computationally more expensive. The difference can be seen on big windows.
 /// This is to be preferred if a wide window is being used and an even distribution are critical, otherwise go for fprop.
 /// @param sample_window The width of the sampling window.

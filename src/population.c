@@ -52,7 +52,7 @@ bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t 
         bhm_cortex2d_t* cortex = &(population->cortices[i]);
 
         // Randomly init the ith cortex.
-        bhm_error_code_t error = c2d_rand_init(&cortex, width, height, nh_radius);
+        bhm_error_code_t error = c2d_init(&cortex, width, height, nh_radius);
 
         if (error != BHM_ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
