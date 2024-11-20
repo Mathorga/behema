@@ -432,15 +432,21 @@ bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance);
 
 /// @brief Stores the string representation of the given cortex to the provided string [target].
 /// @param cortex The cortex to inspect.
-/// @param target The string to fill with cortex data.
+/// @param result The string to fill with cortex data.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* target);
+bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* result);
+
+/// @brief Computes the mean value of an input2d's values.
+/// @param input The input to compute the mean value from.
+/// @param result Pointer to the result of the computation. The mean value will be stored here.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t i2d_mean(bhm_input2d_t* input, bhm_ticks_count_t* result);
 
 /// @brief Computes the mean value of an output2d's values.
 /// @param output The output to compute the mean value from.
-/// @param target Pointer to the result of the computation. The mean value will be stored here.
+/// @param result Pointer to the result of the computation. The mean value will be stored here.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* target);
+bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* result);
 
 // ##########################################
 // ##########################################

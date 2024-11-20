@@ -491,26 +491,44 @@ bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance) {
 
 // ########################################## Getter functions ##################################################
 
-bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* target) {
+bhm_error_code_t c2d_to_string(bhm_cortex2d_t* cortex, char* result) {
     int string_length = 0;
 
     // Header.
-    string_length += sprintf(target + string_length, "\ncortex(\n");
+    string_length += sprintf(result + string_length, "\ncortex(\n");
 
     // Data.
-    string_length += sprintf(target + string_length, "\twidth:%d\n", cortex->width);
-    string_length += sprintf(target + string_length, "\theight:%d\n", cortex->height);
-    string_length += sprintf(target + string_length, "\tnh_radius:%d\n", cortex->nh_radius);
-    string_length += sprintf(target + string_length, "\tpulse_window:%d\n", cortex->pulse_window);
-    string_length += sprintf(target + string_length, "\tsample_window:%d\n", cortex->sample_window);
+    string_length += sprintf(result + string_length, "\twidth:%d\n", cortex->width);
+    string_length += sprintf(result + string_length, "\theight:%d\n", cortex->height);
+    string_length += sprintf(result + string_length, "\tnh_radius:%d\n", cortex->nh_radius);
+    string_length += sprintf(result + string_length, "\tpulse_window:%d\n", cortex->pulse_window);
+    string_length += sprintf(result + string_length, "\tsample_window:%d\n", cortex->sample_window);
 
     // Footer.
-    string_length += sprintf(target + string_length, ")\n");
+    string_length += sprintf(result + string_length, ")\n");
 
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* target) {
+bhm_error_code_t i2d_mean(bhm_input2d_t* input, bhm_ticks_count_t* result) {
+    // Compute the input size beforehand.
+    bhm_cortex_size_t input_width = input->x1 - input->x0;
+    bhm_cortex_size_t input_height = input->y1 - input->y0;
+    bhm_cortex_size_t input_size = input_width * input_height;
+
+    // Compute the sum of the values.
+    bhm_ticks_count_t total = 0;
+    for (bhm_cortex_size_t i = 0; i < input_size; i++) {
+        total += input->values[i];
+    }
+
+    // Store the mean value in the provided pointer.
+    (*result) = (bhm_ticks_count_t) (total / input_size);
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* result) {
     // Compute the output size beforehand.
     bhm_cortex_size_t output_width = output->x1 - output->x0;
     bhm_cortex_size_t output_height = output->y1 - output->y0;
@@ -523,7 +541,7 @@ bhm_error_code_t o2d_mean(bhm_output2d_t* output, bhm_ticks_count_t* target) {
     }
 
     // Store the mean value in the provided pointer.
-    (*target) = (bhm_ticks_count_t) (total / output_size);
+    (*result) = (bhm_ticks_count_t) (total / output_size);
 
     return BHM_ERROR_NONE;
 }
