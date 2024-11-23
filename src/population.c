@@ -1,10 +1,10 @@
 #include "population.h"
 
 
-// ########################################## Initialization functions ##########################################
+// ########################################## Utility functions ##########################################
 
 int idf_compare(const void* a, const void* b) {
-    return (*(bhm_indexed_fitness_t*)a).fitness - (*(bhm_indexed_fitness_t*)b).fitness;
+    return (*(bhm_indexed_fitness_t*)b).fitness - (*(bhm_indexed_fitness_t*)a).fitness;
 }
 
 
@@ -13,9 +13,11 @@ int idf_compare(const void* a, const void* b) {
 bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t selection_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)) {
     // Allocate the population.
     (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_cortex2d_t));
-    if ((*population) == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if ((*population) == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // Make sure the selection pool size does not exceed the total population size
+    // since it would make no sense.
+    if (selection_pool_size > size) return BHM_ERROR_SIZE_WRONG;
 
     // Setup population properties.
     (*population)->size = size;
