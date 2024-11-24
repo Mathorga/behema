@@ -61,11 +61,17 @@ typedef struct {
 
 // ########################################## Utility functions ##########################################
 
-/// @brief Compares the provided indexed fitnesses by fitness value.
+/// @brief Compares the provided indexed fitnesses by fitness value. Results in a descending order if used as a comparator for sorting.
 /// @param a The first fitness to compare.
 /// @param b The second fitness to compare.
 /// @return 0 if a == b, a strictly negative number if a < b, a strictly positive if a > b.
-int idf_compare(const void* a, const void* b);
+int idf_compare_desc(const void* a, const void* b);
+
+/// @brief Compares the provided indexed fitnesses by fitness value. Results in an ascending order if used as a comparator for sorting.
+/// @param a The first fitness to compare.
+/// @param b The second fitness to compare.
+/// @return 0 if a == b, a strictly negative number if b < a, a strictly positive if b > a.
+int idf_compare_desc(const void* a, const void* b);
 
 // ########################################## Initialization functions ##########################################
 

@@ -3,8 +3,12 @@
 
 // ########################################## Utility functions ##########################################
 
-int idf_compare(const void* a, const void* b) {
+int idf_compare_desc(const void* a, const void* b) {
     return (*(bhm_indexed_fitness_t*)b).fitness - (*(bhm_indexed_fitness_t*)a).fitness;
+}
+
+int idf_compare_asc(const void* a, const void* b) {
+    return (*(bhm_indexed_fitness_t*)a).fitness - (*(bhm_indexed_fitness_t*)b).fitness;
 }
 
 
@@ -135,8 +139,8 @@ bhm_error_code_t p2d_select(bhm_population2d_t* population) {
         sorted_indexes[i].fitness = population->cortices_fitness[i];
     }
 
-    // Sort cortex fitnesses.
-    qsort(sorted_indexes, population->size, sizeof(bhm_indexed_fitness_t), idf_compare);
+    // Sort cortex fitnesses descending.
+    qsort(sorted_indexes, population->size, sizeof(bhm_indexed_fitness_t), idf_compare_desc);
 
     // Pick the best-fitting cortices and store them as selection_pool.
     // Survivors are by definition the cortices correspondint to the first elements in the sorted list of fitnesses.
