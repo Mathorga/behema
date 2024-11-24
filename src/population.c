@@ -303,6 +303,8 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
 
     // Replace the old generation with the new one.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
+        // TODO This command causes a "double free or corruption (out)" after the first loop.
+        // TODO It looks like the first cortex is being freed twice: check this out.
         error = c2d_destroy(&(population->cortices[i]));
         if (error != BHM_ERROR_NONE) {
             return error;
