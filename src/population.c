@@ -161,17 +161,16 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     bhm_population_size_t* parents_indexes = (bhm_population_size_t*) malloc(population->parents_count * sizeof(bhm_population_size_t));
     if (parents_indexes == NULL) return BHM_ERROR_FAILED_ALLOC;
 
-    printf("breeding\n");
-
     // Pick parents from the selection pool.
     for (bhm_population_size_t i = 0; i < population->parents_count; i++) {
         bhm_population_size_t parent_index;
-        bhm_bool_t index_is_valid = BHM_TRUE;
+        bhm_bool_t index_is_valid;
 
         do {
             // Pick a random parent.
             population->rand_state = xorshf32(population->rand_state);
             parent_index = population->selection_pool[population->rand_state % population->selection_pool_size];
+            index_is_valid = BHM_TRUE;
 
             // Make sure the selected index is not already been selected.
             for (bhm_population_size_t j = 0; j < i; j++) {
@@ -308,8 +307,9 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         if (error != BHM_ERROR_NONE) {
             return error;
         }
-        population->cortices[i] = offspring[i];
+        // population->cortices[i] = offspring[i];
     }
+    population->cortices = offspring;
 
     return BHM_ERROR_NONE;
 }
