@@ -154,16 +154,14 @@ bhm_error_code_t p2d_select(bhm_population2d_t* population) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t* child) {
+bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** child) {
     // Allocate parents.
     bhm_cortex2d_t* parents = (bhm_cortex2d_t*) malloc(population->parents_count * sizeof(bhm_cortex2d_t));
-    if (parents == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (parents == NULL) return BHM_ERROR_FAILED_ALLOC;
     bhm_population_size_t* parents_indexes = (bhm_population_size_t*) malloc(population->parents_count * sizeof(bhm_population_size_t));
-    if (parents_indexes == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (parents_indexes == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    printf("breeding\n");
 
     // Pick parents from the selection pool.
     for (bhm_population_size_t i = 0; i < population->parents_count; i++) {
@@ -189,84 +187,66 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t* child
 
     // Init child with default values.
     bhm_error_code_t error = c2d_init(
-        &child,
+        child,
         parents[0].width,
         parents[0].height,
         parents[0].nh_radius
     );
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    if (error != BHM_ERROR_NONE) return error;
 
     bhm_population_size_t winner_parent_index;
 
     // Pick pulse window from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_pulse_window(child, parents[winner_parent_index].pulse_window);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_pulse_window(*child, parents[winner_parent_index].pulse_window);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick fire threshold from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_fire_threshold(child, parents[winner_parent_index].fire_threshold);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_fire_threshold(*child, parents[winner_parent_index].fire_threshold);
+    if (error != BHM_ERROR_NONE) return error;
 
     // TODO Set recovery value and exc/decay values.
 
     // Pick syngen chance from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_syngen_chance(child, parents[winner_parent_index].syngen_chance);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_syngen_chance(*child, parents[winner_parent_index].syngen_chance);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick synstrength chance from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_synstr_chance(child, parents[winner_parent_index].synstr_chance);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_synstr_chance(*child, parents[winner_parent_index].synstr_chance);
+    if (error != BHM_ERROR_NONE) return error;
 
     // TODO Set max tot strength.
 
     // Pick max syn count from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_max_syn_count(child, parents[winner_parent_index].max_tot_strength);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_max_syn_count(*child, parents[winner_parent_index].max_tot_strength);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick inhexc range from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_inhexc_range(child, parents[winner_parent_index].inhexc_range);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_inhexc_range(*child, parents[winner_parent_index].inhexc_range);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick sample window from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_sample_window(child, parents[winner_parent_index].sample_window);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_sample_window(*child, parents[winner_parent_index].sample_window);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick pulse mapping from a random parent.
     population->rand_state = xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = c2d_set_pulse_mapping(child, parents[winner_parent_index].pulse_mapping);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    error = c2d_set_pulse_mapping(*child, parents[winner_parent_index].pulse_mapping);
+    if (error != BHM_ERROR_NONE) return error;
 
     // Pick neurons' max syn count from a random parent.
     population->rand_state = xorshf32(population->rand_state);
@@ -279,10 +259,10 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t* child
     bhm_cortex2d_t inhexc_parent = parents[winner_parent_index];
 
     // Pick neuron values from parents.
-    for (bhm_cortex_size_t y = 0; y < child->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < child->width; x++) {
-            child->neurons[IDX2D(x, y, child->width)].max_syn_count = msc_parent.neurons[IDX2D(x, y, child->width)].max_syn_count;
-            child->neurons[IDX2D(x, y, child->width)].inhexc_ratio = inhexc_parent.neurons[IDX2D(x, y, child->width)].inhexc_ratio;
+    for (bhm_cortex_size_t y = 0; y < (*child)->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < (*child)->width; x++) {
+            (*child)->neurons[IDX2D(x, y, (*child)->width)].max_syn_count = msc_parent.neurons[IDX2D(x, y, (*child)->width)].max_syn_count;
+            (*child)->neurons[IDX2D(x, y, (*child)->width)].inhexc_ratio = inhexc_parent.neurons[IDX2D(x, y, (*child)->width)].inhexc_ratio;
         }
     }
 
@@ -305,7 +285,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Create a new child by breeding parents from the population's selection pool.
         bhm_cortex2d_t* child;
-        error = p2d_breed(population, child);
+        error = p2d_breed(population, &child);
         if (error != BHM_ERROR_NONE) {
             return error;
         }

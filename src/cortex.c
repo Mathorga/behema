@@ -470,6 +470,7 @@ bhm_error_code_t c2d_mutate(bhm_cortex2d_t *cortex, bhm_chance_t mut_chance) {
 
     return BHM_ERROR_NONE;
 }
+
 bhm_error_code_t n2d_mutate(bhm_neuron_t* neuron, bhm_chance_t mut_chance) {
     // Mutate max syn count.
     neuron->rand_state = xorshf32(neuron->rand_state);

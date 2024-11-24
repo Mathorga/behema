@@ -132,7 +132,7 @@ bhm_error_code_t p2d_select(bhm_population2d_t* population);
 /// @param population The population from which to pick parents.
 /// @param child The resulting child.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t* child);
+bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** child);
 
 /// @brief Breeds the currently selected selection_pool and generates a new population starting from them.
 /// @param population The population to breed.
