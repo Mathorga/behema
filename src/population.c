@@ -265,8 +265,9 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
         }
     }
 
-    // Free up temp array.
+    // Free up temp arrays.
     free(parents);
+    free(parents_indexes);
 
     return BHM_ERROR_NONE;
 }
