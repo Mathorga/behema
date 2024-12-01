@@ -14,7 +14,13 @@ int idf_compare_asc(const void* a, const void* b) {
 
 // ########################################## Initialization functions ##########################################
 
-bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t selection_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)) {
+bhm_error_code_t p2d_init(
+    bhm_population2d_t** population,
+    bhm_population_size_t size,
+    bhm_population_size_t selection_pool_size,
+    bhm_chance_t mut_chance,
+    bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)
+) {
     // Allocate the population.
     (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_cortex2d_t));
     if ((*population) == NULL) return BHM_ERROR_FAILED_ALLOC;
@@ -52,7 +58,12 @@ bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius) {
+bhm_error_code_t p2d_populate(
+    bhm_population2d_t* population,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Allocate a temporary pointer to the ith cortex.
         bhm_cortex2d_t* cortex;
@@ -74,7 +85,12 @@ bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t 
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_rand_populate(bhm_population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius) {
+bhm_error_code_t p2d_rand_populate(
+    bhm_population2d_t* population,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Allocate a temporary pointer to the ith cortex.
         bhm_cortex2d_t* cortex;
