@@ -239,11 +239,15 @@ bhm_error_code_t o2d_destroy(bhm_output2d_t* output) {
 }
 
 bhm_error_code_t c2d_destroy(bhm_cortex2d_t* cortex) {
+    printf("%p %p\n", (void*) cortex, (void*) cortex->neurons);
     // Free neurons.
     free(cortex->neurons);
 
+    printf("GIANFREDA\n");
     // Free cortex.
     free(cortex);
+
+    printf("GIANFREDONIO\n");
 
     return BHM_ERROR_NONE;
 }

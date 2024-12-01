@@ -286,7 +286,15 @@ uint32_t xorshf32(uint32_t state);
 /// @param exc_value 
 /// @param pulse_mapping 
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t i2d_init(bhm_input2d_t** input, bhm_cortex_size_t x0, bhm_cortex_size_t y0, bhm_cortex_size_t x1, bhm_cortex_size_t y1, bhm_neuron_value_t exc_value, bhm_pulse_mapping_t pulse_mapping);
+bhm_error_code_t i2d_init(
+    bhm_input2d_t** input,
+    bhm_cortex_size_t x0,
+    bhm_cortex_size_t y0,
+    bhm_cortex_size_t x1,
+    bhm_cortex_size_t y1,
+    bhm_neuron_value_t exc_value,
+    bhm_pulse_mapping_t pulse_mapping
+);
 
 /// @brief Initializes an output2d with the provided values.
 /// @param output 
@@ -295,7 +303,13 @@ bhm_error_code_t i2d_init(bhm_input2d_t** input, bhm_cortex_size_t x0, bhm_corte
 /// @param x1 
 /// @param y1 
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t o2d_init(bhm_output2d_t** output, bhm_cortex_size_t x0, bhm_cortex_size_t y0, bhm_cortex_size_t x1, bhm_cortex_size_t y1);
+bhm_error_code_t o2d_init(
+    bhm_output2d_t** output,
+    bhm_cortex_size_t x0,
+    bhm_cortex_size_t y0,
+    bhm_cortex_size_t x1,
+    bhm_cortex_size_t y1
+);
 
 /// @brief Initializes the given cortex with default values.
 /// @param cortex The cortex to initialize.
@@ -303,7 +317,12 @@ bhm_error_code_t o2d_init(bhm_output2d_t** output, bhm_cortex_size_t x0, bhm_cor
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
+bhm_error_code_t c2d_init(
+    bhm_cortex2d_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
 
 /// @brief Initializes the given cortex with random values.
 /// @param cortex The cortex to initialize.
@@ -311,7 +330,12 @@ bhm_error_code_t c2d_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_rand_init(bhm_cortex2d_t** cortex, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
+bhm_error_code_t c2d_rand_init(
+    bhm_cortex2d_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
 
 /// @brief Destroys the given input2d and frees memory.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
@@ -402,7 +426,13 @@ bhm_error_code_t c2d_set_wrapped(bhm_cortex2d_t* cortex, bhm_bool_t wrapped);
 
 /// @brief Disables self connections whithin the specified bounds.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_syn_disable(bhm_cortex2d_t* cortex, bhm_cortex_size_t x0, bhm_cortex_size_t y0, bhm_cortex_size_t x1, bhm_cortex_size_t y1);
+bhm_error_code_t c2d_syn_disable(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t x0,
+    bhm_cortex_size_t y0,
+    bhm_cortex_size_t x1,
+    bhm_cortex_size_t y1
+);
 
 /// @brief Randomly mutates the cortex shape.
 /// @param cortex The cortex to edit.

@@ -82,15 +82,26 @@ int idf_compare_desc(const void* a, const void* b);
 /// @param mut_chance The probability of mutation for each evolution step.
 /// @param eval_function The function used to evaluate each cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_init(bhm_population2d_t** population, bhm_population_size_t size, bhm_population_size_t selection_pool_size, bhm_chance_t mut_chance, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness));
+bhm_error_code_t p2d_init(
+    bhm_population2d_t** population,
+    bhm_population_size_t size,
+    bhm_population_size_t selection_pool_size,
+    bhm_chance_t mut_chance,
+    bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)
+);
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @param population The population whose cortices to setup.
-/// @param width The width of the cortex.
-/// @param height The height of the cortex.
+/// @param width The width of the cortices in the population.
+/// @param height The height of the cortices in the population.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
+bhm_error_code_t p2d_populate(
+    bhm_population2d_t* population,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
 
 /// @brief Populates the starting pool of cortices with the provided values.
 /// @brief Cortices will be initialized with random values.
@@ -99,7 +110,12 @@ bhm_error_code_t p2d_populate(bhm_population2d_t* population, bhm_cortex_size_t 
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_rand_populate(bhm_population2d_t* population, bhm_cortex_size_t width, bhm_cortex_size_t height, bhm_nh_radius_t nh_radius);
+bhm_error_code_t p2d_rand_populate(
+    bhm_population2d_t* population,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
 
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
