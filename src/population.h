@@ -117,7 +117,12 @@ bhm_error_code_t p2d_rand_populate(
     bhm_nh_radius_t nh_radius
 );
 
-/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
+/// @brief Destroys the given population cortices by correctly freeing the memory they use.
+/// @param population 
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_destroy_cortices(bhm_population2d_t* population);
+
+/// @brief Destroys the given population and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_destroy(bhm_population2d_t* population);

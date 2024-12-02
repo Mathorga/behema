@@ -82,8 +82,20 @@ bhm_error_code_t o2d_init(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_alloc(
+    bhm_cortex2d_t** cortex
+) {
+    // Allocate the cortex.
+    (*cortex) = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
+    if ((*cortex) == NULL) {
+        return BHM_ERROR_FAILED_ALLOC;
+    }
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_init(
-    bhm_cortex2d_t** cortex,
+    bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
@@ -93,45 +105,39 @@ bhm_error_code_t c2d_init(
         return BHM_ERROR_NH_RADIUS_TOO_BIG;
     }
 
-    // Allocate the cortex.
-    (*cortex) = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
-    if ((*cortex) == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
-
     // Setup cortex properties.
-    (*cortex)->width = width;
-    (*cortex)->height = height;
-    (*cortex)->ticks_count = 0x00U;
-    (*cortex)->evols_count = 0x00U;
-    (*cortex)->evol_step = BHM_DEFAULT_EVOL_STEP;
-    (*cortex)->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
+    cortex->width = width;
+    cortex->height = height;
+    cortex->ticks_count = 0x00U;
+    cortex->evols_count = 0x00U;
+    cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
+    cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
 
-    (*cortex)->nh_radius = nh_radius;
-    (*cortex)->fire_threshold = BHM_DEFAULT_THRESHOLD;
-    (*cortex)->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
-    (*cortex)->exc_value = BHM_DEFAULT_EXC_VALUE;
-    (*cortex)->decay_value = BHM_DEFAULT_DECAY_RATE;
-    (*cortex)->rand_state = (bhm_rand_state_t) time(NULL);
-    (*cortex)->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
-    (*cortex)->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
-    (*cortex)->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
-    (*cortex)->max_syn_count = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
-    (*cortex)->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
+    cortex->nh_radius = nh_radius;
+    cortex->fire_threshold = BHM_DEFAULT_THRESHOLD;
+    cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
+    cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
+    cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
+    cortex->rand_state = (bhm_rand_state_t) time(NULL);
+    cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
+    cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
+    cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
+    cortex->max_syn_count = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    cortex->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
 
-    (*cortex)->sample_window = BHM_DEFAULT_SAMPLE_WINDOW;
-    (*cortex)->pulse_mapping = BHM_PULSE_MAPPING_LINEAR;
+    cortex->sample_window = BHM_DEFAULT_SAMPLE_WINDOW;
+    cortex->pulse_mapping = BHM_PULSE_MAPPING_LINEAR;
 
     // Allocate neurons.
-    (*cortex)->neurons = (bhm_neuron_t*) malloc((*cortex)->width * (*cortex)->height * sizeof(bhm_neuron_t));
-    if ((*cortex)->neurons == NULL) {
+    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
+    if (cortex->neurons == NULL) {
         return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Setup neurons' properties.
-    for (bhm_cortex_size_t y = 0; y < (*cortex)->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < (*cortex)->width; x++) {
-            bhm_neuron_t* neuron = &(*cortex)->neurons[IDX2D(x, y, (*cortex)->width)];
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_neuron_t* neuron = &(cortex->neurons[IDX2D(x, y, cortex->width)]);
 
             neuron->synac_mask = 0x00U;
             neuron->synex_mask = 0x00U;
@@ -145,7 +151,7 @@ bhm_error_code_t c2d_init(
             neuron->pulse_mask = 0x00U;
             neuron->pulse = 0x00U;
             neuron->value = BHM_DEFAULT_STARTING_VALUE;
-            neuron->max_syn_count = (*cortex)->max_syn_count;
+            neuron->max_syn_count = cortex->max_syn_count;
             neuron->syn_count = 0x00U;
             neuron->tot_syn_strength = 0x00U;
             neuron->inhexc_ratio = BHM_DEFAULT_INHEXC_RATIO;
@@ -156,7 +162,7 @@ bhm_error_code_t c2d_init(
 }
 
 bhm_error_code_t c2d_rand_init(
-    bhm_cortex2d_t** cortex,
+    bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
@@ -167,58 +173,58 @@ bhm_error_code_t c2d_rand_init(
     }
 
     // Allocate the cortex.
-    (*cortex) = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
-    if ((*cortex) == NULL) {
+    cortex = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
+    if (cortex == NULL) {
         return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Setup cortex properties.
-    (*cortex)->width = width;
-    (*cortex)->height = height;
-    (*cortex)->ticks_count = 0x00U;
-    (*cortex)->evols_count = 0x00U;
-    (*cortex)->rand_state = (bhm_rand_state_t) time(NULL);
-    (*cortex)->evol_step = (*cortex)->rand_state % BHM_EVOL_STEP_NEVER;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->pulse_window = (*cortex)->rand_state % BHM_MAX_PULSE_WINDOW;
+    cortex->width = width;
+    cortex->height = height;
+    cortex->ticks_count = 0x00U;
+    cortex->evols_count = 0x00U;
+    cortex->rand_state = (bhm_rand_state_t) time(NULL);
+    cortex->evol_step = cortex->rand_state % BHM_EVOL_STEP_NEVER;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->pulse_window = cortex->rand_state % BHM_MAX_PULSE_WINDOW;
 
-    (*cortex)->nh_radius = nh_radius;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->fire_threshold = (*cortex)->rand_state % BHM_MAX_THRESHOLD;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->recovery_value = ((*cortex)->rand_state % BHM_MAX_RECOVERY_VALUE) - BHM_MAX_RECOVERY_VALUE;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->exc_value = (*cortex)->rand_state % BHM_MAX_EXC_VALUE;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->decay_value = (*cortex)->rand_state % BHM_MAX_DECAY_RATE;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->syngen_chance = (*cortex)->rand_state % BHM_MAX_SYNGEN_CHANCE;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->synstr_chance = (*cortex)->rand_state % BHM_MAX_SYNSTR_CHANCE;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->max_tot_strength = (*cortex)->rand_state % BHM_MAX_MAX_TOT_STRENGTH;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->max_syn_count = (*cortex)->rand_state % ((bhm_syn_count_t) (BHM_MAX_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius))));
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->inhexc_range = (*cortex)->rand_state % BHM_MAX_INHEXC_RANGE;
+    cortex->nh_radius = nh_radius;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->fire_threshold = cortex->rand_state % BHM_MAX_THRESHOLD;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->recovery_value = (cortex->rand_state % BHM_MAX_RECOVERY_VALUE) - BHM_MAX_RECOVERY_VALUE;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->exc_value = cortex->rand_state % BHM_MAX_EXC_VALUE;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->decay_value = cortex->rand_state % BHM_MAX_DECAY_RATE;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->syngen_chance = cortex->rand_state % BHM_MAX_SYNGEN_CHANCE;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->synstr_chance = cortex->rand_state % BHM_MAX_SYNSTR_CHANCE;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->max_tot_strength = cortex->rand_state % BHM_MAX_MAX_TOT_STRENGTH;
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->max_syn_count = cortex->rand_state % ((bhm_syn_count_t) (BHM_MAX_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius))));
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->inhexc_range = cortex->rand_state % BHM_MAX_INHEXC_RANGE;
 
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
-    (*cortex)->sample_window = (*cortex)->rand_state % BHM_MAX_SAMPLE_WINDOW;
-    (*cortex)->rand_state = xorshf32((*cortex)->rand_state);
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->sample_window = cortex->rand_state % BHM_MAX_SAMPLE_WINDOW;
+    cortex->rand_state = xorshf32(cortex->rand_state);
     // There are 4 possible pulse mappings, so pick one and assign it.
-    int pulse_mapping = (*cortex)->rand_state % 4 + 0x100000;
-    (*cortex)->pulse_mapping = pulse_mapping;
+    int pulse_mapping = cortex->rand_state % 4 + 0x100000;
+    cortex->pulse_mapping = pulse_mapping;
 
     // Allocate neurons.
-    (*cortex)->neurons = (bhm_neuron_t*) malloc((*cortex)->width * (*cortex)->height * sizeof(bhm_neuron_t));
-    if ((*cortex)->neurons == NULL) {
+    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
+    if (cortex->neurons == NULL) {
         return BHM_ERROR_FAILED_ALLOC;
     }
 
     // Setup neurons' properties.
-    for (bhm_cortex_size_t y = 0; y < (*cortex)->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < (*cortex)->width; x++) {
-            bhm_neuron_t* neuron = &(*cortex)->neurons[IDX2D(x, y, (*cortex)->width)];
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_neuron_t* neuron = &cortex->neurons[IDX2D(x, y, cortex->width)];
 
             neuron->synac_mask = 0x00U;
             neuron->synex_mask = 0x00U;
@@ -233,12 +239,35 @@ bhm_error_code_t c2d_rand_init(
             neuron->pulse = 0x00U;
             neuron->value = BHM_DEFAULT_STARTING_VALUE;
             neuron->rand_state = xorshf32(neuron->rand_state);
-            neuron->max_syn_count = neuron->rand_state % (*cortex)->max_syn_count;
+            neuron->max_syn_count = neuron->rand_state % cortex->max_syn_count;
             neuron->syn_count = 0x00U;
             neuron->tot_syn_strength = 0x00U;
             neuron->rand_state = xorshf32(neuron->rand_state);
-            neuron->inhexc_ratio = neuron->rand_state % (*cortex)->inhexc_range;
+            neuron->inhexc_ratio = neuron->rand_state % cortex->inhexc_range;
         }
+    }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_create(
+    bhm_cortex2d_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
+    bhm_error_code_t error;
+
+    // Allocate the cortex.
+    error = c2d_alloc(cortex);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    // Initialize its values.
+    error = c2d_init(*cortex, width, height, nh_radius);
+    if (error != BHM_ERROR_NONE) {
+        return error;
     }
 
     return BHM_ERROR_NONE;
@@ -271,15 +300,11 @@ bhm_error_code_t o2d_destroy(
 bhm_error_code_t c2d_destroy(
     bhm_cortex2d_t* cortex
 ) {
-    printf("%p %p\n", (void*) cortex, (void*) cortex->neurons);
     // Free neurons.
     free(cortex->neurons);
 
-    printf("GIANFREDA\n");
     // Free cortex.
     free(cortex);
-
-    printf("GIANFREDONIO\n");
 
     return BHM_ERROR_NONE;
 }

@@ -65,13 +65,8 @@ bhm_error_code_t p2d_populate(
     bhm_nh_radius_t nh_radius
 ) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        // Allocate a temporary pointer to the ith cortex.
-        // TODO A temporary pointer is probably not needed: just pass population->cortices[i] to c2d_init.
-        bhm_cortex2d_t* cortex;
-
         // Randomly init the ith cortex.
-        bhm_error_code_t error = c2d_init(&cortex, width, height, nh_radius);
-        population->cortices[i] = *cortex;
+        bhm_error_code_t error = c2d_init(&(population->cortices[i]), width, height, nh_radius);
 
         if (error != BHM_ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
@@ -93,12 +88,8 @@ bhm_error_code_t p2d_rand_populate(
     bhm_nh_radius_t nh_radius
 ) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        // Allocate a temporary pointer to the ith cortex.
-        bhm_cortex2d_t* cortex;
-
         // Randomly init the ith cortex.
-        bhm_error_code_t error = c2d_rand_init(&cortex, width, height, nh_radius);
-        population->cortices[i] = *cortex;
+        bhm_error_code_t error = c2d_rand_init(&(population->cortices[i]), width, height, nh_radius);
 
         if (error != BHM_ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
@@ -109,6 +100,27 @@ bhm_error_code_t p2d_rand_populate(
             return error;
         }
     }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t p2d_destroy_cortices(bhm_population2d_t* population) {
+    for (bhm_population_size_t i = 0; i < population->size; i++) {
+        free(population->cortices[i].neurons);
+    }
+
+    free(population->cortices);
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t p2d_destroy(bhm_population2d_t* population) {
+    bhm_error_code_t error = p2d_destroy_cortices(population);
+    if (error != BHM_ERROR_NONE) return error;
+
+    free(population->cortices_fitness);
+    free(population->selection_pool);
+    free(population);
 
     return BHM_ERROR_NONE;
 }
@@ -202,7 +214,7 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     }
 
     // Init child with default values.
-    bhm_error_code_t error = c2d_init(
+    bhm_error_code_t error = c2d_create(
         child,
         parents[0].width,
         parents[0].height,
@@ -320,17 +332,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
     }
 
     // Replace the old generation with the new one.
-    for (bhm_population_size_t i = 0; i < population->size; i++) {
-    // for (bhm_population_size_t i = population->size - 1; i >= 0; i--) {
-        // TODO This command causes a "double free or corruption (out)" after the first loop.
-        // TODO It looks like the first cortex is being freed twice: check this out.
-        printf("%p %p\n", (void*) &(population->cortices[i]), (void*) (population->cortices[i]).neurons);
-        error = c2d_destroy(&(population->cortices[i]));
-        if (error != BHM_ERROR_NONE) {
-            return error;
-        }
-        // population->cortices[i] = offspring[i];
-    }
+    error = p2d_destroy_cortices(population);
     population->cortices = offspring;
 
     return BHM_ERROR_NONE;
