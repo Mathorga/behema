@@ -66,6 +66,7 @@ bhm_error_code_t p2d_populate(
 ) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Allocate a temporary pointer to the ith cortex.
+        // TODO A temporary pointer is probably not needed: just pass population->cortices[i] to c2d_init.
         bhm_cortex2d_t* cortex;
 
         // Randomly init the ith cortex.
