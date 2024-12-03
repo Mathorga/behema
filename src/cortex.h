@@ -312,7 +312,7 @@ bhm_error_code_t o2d_init(
 );
 
 /// @brief Allocates a new cortex.
-/// @param cortex 
+/// @param cortex The cortex to be allocated.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_alloc(
     bhm_cortex2d_t** cortex
@@ -345,10 +345,10 @@ bhm_error_code_t c2d_rand_init(
 );
 
 /// @brief Allocates and initializes a new cortex.
-/// @param cortex 
-/// @param width 
-/// @param height 
-/// @param nh_radius 
+/// @param cortex The cortex to be created.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_create(
     bhm_cortex2d_t** cortex,
@@ -377,6 +377,8 @@ bhm_error_code_t c2d_destroy(
 );
 
 /// @brief Returns a cortex with the same properties as the given one.
+/// @param to The destination cortex.
+/// @param from The source cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_copy(
     bhm_cortex2d_t* to,

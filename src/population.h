@@ -59,7 +59,9 @@ typedef struct {
 } bhm_population2d_t;
 
 
-// ########################################## Utility functions ##########################################
+// ##########################################
+// Utility functions.
+// ##########################################
 
 /// @brief Compares the provided indexed fitnesses by fitness value. Results in a descending order if used as a comparator for sorting.
 /// @param a The first fitness to compare.
@@ -73,7 +75,13 @@ int idf_compare_desc(const void* a, const void* b);
 /// @return 0 if a == b, a strictly negative number if b < a, a strictly positive if b > a.
 int idf_compare_desc(const void* a, const void* b);
 
-// ########################################## Initialization functions ##########################################
+// ##########################################
+// ##########################################
+
+
+// ##########################################
+// Initialization functions.
+// ##########################################
 
 /// @brief Initializes the provided population with default values.
 /// @param population The population to initialize.
@@ -127,8 +135,13 @@ bhm_error_code_t p2d_destroy_cortices(bhm_population2d_t* population);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_destroy(bhm_population2d_t* population);
 
+// ##########################################
+// ##########################################
 
-// ########################################## Setter functions ##################################################
+
+// ##########################################
+// Setter functions
+// ##########################################
 
 /// @brief Sets the provided population the appropriate mutation rate
 /// @param population The population to apply the new mutation rate to.
@@ -136,8 +149,13 @@ bhm_error_code_t p2d_destroy(bhm_population2d_t* population);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_set_mut_rate(bhm_population2d_t* population, bhm_chance_t mut_chance);
 
+// ##########################################
+// ##########################################
 
-// ########################################## Action functions ##################################################
+
+// ##########################################
+// Action functions
+// ##########################################
 
 /// @brief Evaluates the provided population by individually evaluating each cortex and then populating their fitnes values.
 /// @param population The population to evaluate.
@@ -167,6 +185,9 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
 /// @param population the population to mutate.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_mutate(bhm_population2d_t* population);
+
+// ##########################################
+// ##########################################
 
 
 #ifdef __cplusplus

@@ -1,7 +1,9 @@
 #include "population.h"
 
 
-// ########################################## Utility functions ##########################################
+// ##########################################
+// Utility functions.
+// ##########################################
 
 int idf_compare_desc(const void* a, const void* b) {
     return (*(bhm_indexed_fitness_t*)b).fitness - (*(bhm_indexed_fitness_t*)a).fitness;
@@ -11,8 +13,13 @@ int idf_compare_asc(const void* a, const void* b) {
     return (*(bhm_indexed_fitness_t*)a).fitness - (*(bhm_indexed_fitness_t*)b).fitness;
 }
 
+// ##########################################
+// ##########################################
 
-// ########################################## Initialization functions ##########################################
+
+// ##########################################
+// Initialization functions.
+// ##########################################
 
 bhm_error_code_t p2d_init(
     bhm_population2d_t** population,
@@ -124,6 +131,9 @@ bhm_error_code_t p2d_destroy(bhm_population2d_t* population) {
 
     return BHM_ERROR_NONE;
 }
+
+// ##########################################
+// ##########################################
 
 
 // ##########################################
