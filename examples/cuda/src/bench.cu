@@ -6,8 +6,8 @@
 
 void setup_cortices(bhm_cortex2d_t** even_cortex, bhm_cortex2d_t** odd_cortex, bhm_cortex_size_t cortex_width, bhm_cortex_size_t cortex_height, bhm_nh_radius_t nh_radius) {
     // Initialize the first cortex.
-    c2d_init(even_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_init(odd_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_create(even_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_create(odd_cortex, cortex_width, cortex_height, nh_radius);
     c2d_set_evol_step(*even_cortex, 0x01U);
     c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(*even_cortex, 24);

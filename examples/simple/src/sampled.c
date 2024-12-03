@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 
     bhm_cortex2d_t even_cortex;
     bhm_cortex2d_t odd_cortex;
-    c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    c2d_create(&even_cortex, cortex_width, cortex_height, nh_radius);
     c2d_set_evol_step(&even_cortex, 0x20U);
     c2d_set_pulse_window(&even_cortex, 0x3A);
     c2d_set_syngen_beat(&even_cortex, 0.1F);

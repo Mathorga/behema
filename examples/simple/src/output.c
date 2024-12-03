@@ -22,12 +22,12 @@ int main(int argc, char **argv) {
     // Cortex init.
     bhm_cortex2d_t* even_cortex;
     bhm_cortex2d_t* odd_cortex;
-    error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_create(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the even cortex %d\n", error);
         return 1;
     }
-    error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_create(&odd_cortex, cortex_width, cortex_height, nh_radius);
     if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the odd cortex %d\n", error);
         return 1;
