@@ -58,8 +58,8 @@ cortex2d_t even_cortex;
 cortex2d_t odd_cortex;
 
 // Initialize the two cortices.
-c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
-c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+c2d_create(&even_cortex, cortex_width, cortex_height, nh_radius);
+c2d_create(&odd_cortex, cortex_width, cortex_height, nh_radius);
 ```
 This will setup two identical 100x60 cortices with default values.<br/>
 Optionally, before copying the first cortex to the second, its properties can be set by:

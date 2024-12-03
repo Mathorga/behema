@@ -189,12 +189,12 @@ int main(int argc, char **argv) {
     // Create network model.
     bhm_cortex2d_t* even_cortex;
     bhm_cortex2d_t* odd_cortex;
-    bhm_error_code_t error = c2d_init(&even_cortex, cortex_width, cortex_height, nh_radius);
+    bhm_error_code_t error = c2d_create(&even_cortex, cortex_width, cortex_height, nh_radius);
     if (error != 0) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    error = c2d_init(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_create(&odd_cortex, cortex_width, cortex_height, nh_radius);
     if (error != 0) {
         printf("Error %d during init\n", error);
         exit(1);
