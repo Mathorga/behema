@@ -577,11 +577,11 @@ bhm_error_code_t c2d_mutate(
     }
 
     // Mutate neurons.
-    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            n2d_mutate(&(cortex->neurons[IDX2D(x, y, cortex->width)]), mut_chance);
-        }
-    }
+    // for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+    //     for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+    //         n2d_mutate(&(cortex->neurons[IDX2D(x, y, cortex->width)]), mut_chance);
+    //     }
+    // }
 
     return BHM_ERROR_NONE;
 }
