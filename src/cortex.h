@@ -572,6 +572,21 @@ bhm_error_code_t o2d_mean(
 // ##########################################
 // ##########################################
 
+
+// ##########################################
+// Utility functions
+// ##########################################
+
+/// @brief Transposes the provided cortex' neurons. Width and height are switched as well.
+/// @param cortex The cortex whose neurons to transpose.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_transpose(
+    bhm_cortex2d_t* cortex
+);
+
+// ##########################################
+// ##########################################
+
 #ifdef __cplusplus
 }
 #endif

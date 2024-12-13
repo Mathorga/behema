@@ -673,3 +673,29 @@ bhm_error_code_t o2d_mean(
 
     return BHM_ERROR_NONE;
 }
+
+bhm_error_code_t c2d_transpose(
+    bhm_cortex2d_t* cortex
+) {
+    // Allocate a temporary neurons array.
+    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
+    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // Transpose the neurons matrix by 
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            tmp_neurons[IDX2D(y, x, cortex->height)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+        }
+    }
+
+    // Store the newly populated neurons in the cortex.
+    free(cortex->neurons);
+    cortex->neurons = tmp_neurons;
+
+    // Swap width with height.
+    bhm_cortex_size_t cortex_width = cortex->width;
+    cortex->width = cortex->height;
+    cortex->height = cortex_width;
+
+    return BHM_ERROR_NONE;
+}
