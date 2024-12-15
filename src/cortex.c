@@ -509,37 +509,40 @@ bhm_error_code_t c2d_mutate_shape(
     bhm_cortex2d_t *cortex,
     bhm_chance_t mut_chance
 ) {
-    bhm_cortex_size_t new_width = cortex->width;
-    bhm_cortex_size_t new_height = cortex->height;
+    // Mutate the cortex height.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state > mut_chance) {
+        // Decide whether to increase or decrease the cortex height.
+        cortex->height += cortex->rand_state % 2 == 0 ? 1 : -1;
+
+        // Resize neurons.
+        cortex->neurons = (bhm_neuron_t*) realloc(cortex->neurons, cortex->width * cortex->height * sizeof(bhm_neuron_t));
+        if (cortex->neurons == NULL) {
+            return BHM_ERROR_FAILED_ALLOC;
+        }
+
+        // TODO Decide the index at which to insert the row.
+        // TODO Move all neurons to their new location (starting from the end).
+        // TODO Populate the generated gap by inserting new neurons.
+        // TODO Initialize the new neurons with values from their neighbors.
+    }
 
     // Mutate the cortex width.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state > mut_chance) {
         // Decide whether to increase or decrease the cortex width.
-        new_width += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->width += cortex->rand_state % 2 == 0 ? 1 : -1;
+
+        c2d_transpose(cortex);
+
+        // TODO Decide the index at which to insert the row.
+        // TODO Move all neurons to their new location (starting from the end).
+        // TODO Populate the generated gap by inserting new neurons.
+        // TODO Initialize the new neurons with values from their neighbors.
+
+        c2d_transpose(cortex);
     }
 
-    // Mutate the cortex height.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the cortex height.
-        new_height += cortex->rand_state % 2 == 0 ? 1 : -1;
-    }
-
-    if (new_width != cortex->width || new_height != cortex->height) {
-        // Resize neurons.
-        cortex->neurons = (bhm_neuron_t*) realloc(cortex->neurons, new_width * new_height * sizeof(bhm_neuron_t));
-        if (cortex->neurons == NULL) {
-            return BHM_ERROR_FAILED_ALLOC;
-        }
-
-        // TODO Handle neurons' properties.
-        // Loop
-
-        // Store updated cortex shape.
-        cortex->width = new_width;
-        cortex->height = new_height;
-    }
     return BHM_ERROR_NONE;
 }
 
