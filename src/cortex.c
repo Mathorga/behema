@@ -13,7 +13,9 @@ uint32_t xorshf32(
 }
 
 
-// ########################################## Initialization functions ##########################################
+// ##########################################
+// Initialization functions.
+// ##########################################
 
 bhm_error_code_t i2d_init(
     bhm_input2d_t** input,
@@ -343,8 +345,13 @@ bhm_error_code_t c2d_copy(
     return BHM_ERROR_NONE;
 }
 
+// ##########################################
+// ##########################################
 
-// ################################################## Setter functions ###################################################
+
+// ##########################################
+// Setter functions
+// ##########################################
 
 bhm_error_code_t c2d_set_nhradius(
     bhm_cortex2d_t* cortex,
@@ -512,35 +519,33 @@ bhm_error_code_t c2d_mutate_shape(
     // Mutate the cortex height.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state > mut_chance) {
+        // Decide the index at which to insert/delete the row.
+        bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
+
         // Decide whether to increase or decrease the cortex height.
-        cortex->height += cortex->rand_state % 2 == 0 ? 1 : -1;
+        bhm_cortex_size_t size_delta = cortex->rand_state % 2 == 0 ? 1 : -1;
 
-        // Resize neurons.
-        cortex->neurons = (bhm_neuron_t*) realloc(cortex->neurons, cortex->width * cortex->height * sizeof(bhm_neuron_t));
-        if (cortex->neurons == NULL) {
-            return BHM_ERROR_FAILED_ALLOC;
+        if (size_delta > 0) {
+            c2d_add_row(cortex, row_index);
+        } else if (size_delta < 0) {
+            c2d_remove_row(cortex, row_index);
         }
-
-        // TODO Decide the index at which to insert the row.
-        // TODO Move all neurons to their new location (starting from the end).
-        // TODO Populate the generated gap by inserting new neurons.
-        // TODO Initialize the new neurons with values from their neighbors.
     }
 
     // Mutate the cortex width.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state > mut_chance) {
-        // Decide whether to increase or decrease the cortex width.
-        cortex->width += cortex->rand_state % 2 == 0 ? 1 : -1;
+        // Decide the index at which to insert/delete the row.
+        bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
 
-        c2d_transpose(cortex);
+        // Decide whether to increase or decrease the cortex height.
+        bhm_cortex_size_t size_delta = cortex->rand_state % 2 == 0 ? 1 : -1;
 
-        // TODO Decide the index at which to insert the row.
-        // TODO Move all neurons to their new location (starting from the end).
-        // TODO Populate the generated gap by inserting new neurons.
-        // TODO Initialize the new neurons with values from their neighbors.
-
-        c2d_transpose(cortex);
+        if (size_delta > 0) {
+            c2d_add_column(cortex, row_index);
+        } else if (size_delta < 0) {
+            c2d_remove_column(cortex, row_index);
+        }
     }
 
     return BHM_ERROR_NONE;
@@ -552,11 +557,11 @@ bhm_error_code_t c2d_mutate(
 ) {
     // Start by mutating the network itself, then go on to single neurons.
 
-    // TODO Mutate the cortex shape.
-    // bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
-    // if (error != BHM_ERROR_NONE) {
-    //     return error;
-    // }
+    // Mutate the cortex shape.
+    bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
 
     // Mutate pulse window.
     cortex->rand_state = xorshf32(cortex->rand_state);
@@ -610,8 +615,13 @@ bhm_error_code_t n2d_mutate(
     return BHM_ERROR_NONE;
 }
 
+// ##########################################
+// ##########################################
 
-// ########################################## Getter functions ##################################################
+
+// ##########################################
+// Getter functions
+// ##########################################
 
 bhm_error_code_t c2d_to_string(
     bhm_cortex2d_t* cortex,
@@ -677,6 +687,173 @@ bhm_error_code_t o2d_mean(
     return BHM_ERROR_NONE;
 }
 
+// ##########################################
+// ##########################################
+
+
+// ##########################################
+// Utility Functions.
+// ##########################################
+
+bhm_error_code_t c2d_add_row(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+) {
+    if (index > cortex->width - 1) return BHM_ERROR_SIZE_WRONG;
+
+    bhm_cortex_size_t new_height = cortex->height - 1;
+
+    // Allocate a temporary array of neurons.
+    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_t));
+    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // Move all neurons to their new location.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            if (y < index) {
+                cortex->neurons[IDX2D(x, y, cortex->width)] = tmp_neurons[IDX2D(x, y, cortex->width)];
+            } else if (y > index) {
+                cortex->neurons[IDX2D(x, y, cortex->width)] = tmp_neurons[IDX2D(x, y + 1, cortex->width)];
+            }
+        }
+    }
+
+    // Initialize any new neurons with values from their neighbors.
+    for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+        bhm_cortex_size_t y = index;
+        bhm_neuron_t* neuron = &(cortex->neurons[IDX2D(x, y, cortex->width)]);
+
+        neuron->synac_mask = 0x00U;
+        neuron->synex_mask = 0x00U;
+        neuron->synstr_mask_a = 0x00U;
+        neuron->synstr_mask_b = 0x00U;
+        neuron->synstr_mask_c = 0x00U;
+
+        neuron->rand_state = 31 + x * y;
+        neuron->syn_count = 0x00U;
+        neuron->tot_syn_strength = 0x00U;
+        neuron->value = BHM_DEFAULT_STARTING_VALUE;
+
+        int32_t pulse_mask = 0x00;
+        int32_t pulse = 0x00U;
+        int32_t max_syn_count = 0x00;
+        int32_t inhexc_ratio = 0x00;
+
+        bhm_cortex_size_t nh_diameter = NH_DIAM_2D(cortex->nh_radius);
+
+        // Fetch neighbors' values.
+        for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
+            for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
+                if (i == x && j == y) continue;
+
+                bhm_cortex_size_t neighbor_index = IDX2D(
+                    WRAP(i, cortex->width),
+                    WRAP(j, cortex->height),
+                    cortex->width
+                );
+
+                bhm_neuron_t neighbor = cortex->neurons[neighbor_index];
+
+                pulse_mask += neighbor.pulse_mask;
+                pulse += neighbor.pulse;
+                max_syn_count += neighbor.max_syn_count;
+                inhexc_ratio += neighbor.inhexc_ratio;
+            }
+        }
+
+        int32_t neighbors_count = (nh_diameter * nh_diameter - 1);
+
+        neuron->pulse_mask = pulse_mask / neighbors_count;
+        neuron->pulse = pulse / neighbors_count;
+        neuron->max_syn_count = max_syn_count / neighbors_count;
+        neuron->inhexc_ratio = inhexc_ratio / neighbors_count;;
+    }
+
+    cortex->height = new_height;
+    free(cortex->neurons);
+    cortex->neurons = tmp_neurons;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_add_column(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+) {
+    bhm_error_code_t error;
+
+    error = c2d_transpose(cortex);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    error = c2d_add_row(cortex, index);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    error = c2d_transpose(cortex);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_remove_row(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+) {
+    if (index > cortex->width - 1) return BHM_ERROR_SIZE_WRONG;
+
+    bhm_cortex_size_t new_height = cortex->height - 1;
+
+    // Allocate a temporary array of neurons.
+    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_t));
+    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // Move all neurons to their new location.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            if (y < index) {
+                cortex->neurons[IDX2D(x, y, cortex->width)] = tmp_neurons[IDX2D(x, y, cortex->width)];
+            } else if (y > index) {
+                cortex->neurons[IDX2D(x, y, cortex->width)] = tmp_neurons[IDX2D(x, y + 1, cortex->width)];
+            }
+        }
+    }
+
+    cortex->height = new_height;
+    free(cortex->neurons);
+    cortex->neurons = tmp_neurons;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_remove_column(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+) {
+    bhm_error_code_t error;
+
+    error = c2d_transpose(cortex);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    error = c2d_remove_row(cortex, index);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    error = c2d_transpose(cortex);
+    if (error != BHM_ERROR_NONE) {
+        return error;
+    }
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_transpose(
     bhm_cortex2d_t* cortex
 ) {
@@ -702,3 +879,6 @@ bhm_error_code_t c2d_transpose(
 
     return BHM_ERROR_NONE;
 }
+
+// ##########################################
+// ##########################################

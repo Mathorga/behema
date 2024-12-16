@@ -577,6 +577,42 @@ bhm_error_code_t o2d_mean(
 // Utility functions
 // ##########################################
 
+/// @brief Adds a row of neurons at the provided index.
+/// @param cortex The cortex to add a row to.
+/// @param index The index at which to add the new row of neurons.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_add_row(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+);
+
+/// @brief Adds a column of neurons at the provided index.
+/// @param cortex The cortex to add a column to.
+/// @param index The index at which to add the new column of neurons.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_add_column(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+);
+
+/// @brief Removes the row of neurons at the provided index.
+/// @param cortex The cortex to remove a row from.
+/// @param index The index of the row to remove.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_remove_row(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+);
+
+/// @brief Removes the column of neurons at the provided index.
+/// @param cortex The cortex to remove a column from.
+/// @param index The index of the column to remove.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_remove_column(
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index
+);
+
 /// @brief Transposes the provided cortex' neurons. Width and height are switched as well.
 /// @param cortex The cortex whose neurons to transpose.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
