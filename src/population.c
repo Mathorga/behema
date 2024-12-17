@@ -223,16 +223,24 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
         parents[i] = population->cortices[parent_index];
     }
 
+    bhm_population_size_t winner_parent_index;
+
+    // Pick width and height from a random parent.
+    population->rand_state = xorshf32(population->rand_state);
+    winner_parent_index = population->rand_state % population->parents_count;
+    bhm_cortex_size_t child_width = parents[winner_parent_index].width;
+    population->rand_state = xorshf32(population->rand_state);
+    winner_parent_index = population->rand_state % population->parents_count;
+    bhm_cortex_size_t child_height = parents[winner_parent_index].height;
+
     // Init child with default values.
     bhm_error_code_t error = c2d_create(
         child,
-        parents[0].width,
-        parents[0].height,
+        child_width,
+        child_height,
         parents[0].nh_radius
     );
     if (error != BHM_ERROR_NONE) return error;
-
-    bhm_population_size_t winner_parent_index;
 
     // Pick pulse window from a random parent.
     population->rand_state = xorshf32(population->rand_state);
