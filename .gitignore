@@ -37,3 +37,6 @@ bin/*
 
 # VSCode files
 *.vscode
+
+# Misc
+*.DS_Store
