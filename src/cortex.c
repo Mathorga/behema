@@ -600,14 +600,14 @@ bhm_error_code_t n2d_mutate(
 ) {
     // Mutate max syn count.
     neuron->rand_state = xorshf32(neuron->rand_state);
-    if (neuron->rand_state > mut_chance) {
+    if (neuron->rand_state < mut_chance) {
         // Decide whether to increase or decrease the max syn count.
         neuron->max_syn_count += neuron->rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate inhexc ratio.
     neuron->rand_state = xorshf32(neuron->rand_state);
-    if (neuron->rand_state > mut_chance) {
+    if (neuron->rand_state < mut_chance) {
         // Decide whether to increase or decrease the inhexc ratio.
         neuron->inhexc_ratio += neuron->rand_state % 2 == 0 ? 1 : -1;
     }
