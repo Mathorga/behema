@@ -20,7 +20,6 @@ void drawNeurons(
     sf::VideoMode videoMode,
     float* xNeuronPositions,
     float* yNeuronPositions,
-    bool drawInfo,
     sf::VideoMode desktopMode,
     sf::Font font
 ) {
@@ -48,18 +47,6 @@ void drawNeurons(
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
-
-            if (drawInfo) {
-                sf::Text pulseText;
-                pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
-                pulseText.setString(std::to_string(currentNeuron->pulse));
-                pulseText.setFont(font);
-                pulseText.setCharacterSize(8);
-                pulseText.setFillColor(sf::Color::White);
-                if (currentNeuron->pulse != 0) {
-                    window->draw(pulseText);
-                }
-            }
 
             window->draw(neuronSpot);
         }
@@ -319,27 +306,37 @@ int main(int argc, char **argv) {
 
         // Draw neurons.
         if (nDraw) {
-            drawNeurons(&cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, showInfo, desktopMode, font);
+            drawNeurons(&cortex, &window, desktopMode, xNeuronPositions, yNeuronPositions, desktopMode, font);
         }
 
-        if (mouseIn && xFocus != -1 && yFocus != -1) {
-            // Keep track of visited neurons.
-            int passedNeurons[cortex.width * cortex.height];
-            int* passedNeuronsSize = (int*) malloc(sizeof(int));
-            (*passedNeuronsSize) = 0;
-
-            highlightNeuron(
-                &cortex,
-                &window,
-                desktopMode,
-                passedNeurons,
-                passedNeuronsSize,
-                xNeuronPositions,
-                yNeuronPositions,
-                xFocus,
-                yFocus
-            );
+        if (showInfo) {
+            sf::Text cortexInfoText;
+            cortexInfoText.setPosition(10.0, 10.0);
+            cortexInfoText.setString("width: " + std::to_string(cortex.width) + "\n" + "height: " + std::to_string(cortex.height));
+            cortexInfoText.setFont(font);
+            cortexInfoText.setCharacterSize(12);
+            cortexInfoText.setFillColor(sf::Color::White);
+            window.draw(cortexInfoText);
         }
+
+        // if (mouseIn && xFocus != -1 && yFocus != -1) {
+        //     // Keep track of visited neurons.
+        //     int passedNeurons[cortex.width * cortex.height];
+        //     int* passedNeuronsSize = (int*) malloc(sizeof(int));
+        //     (*passedNeuronsSize) = 0;
+
+        //     highlightNeuron(
+        //         &cortex,
+        //         &window,
+        //         desktopMode,
+        //         passedNeurons,
+        //         passedNeuronsSize,
+        //         xNeuronPositions,
+        //         yNeuronPositions,
+        //         xFocus,
+        //         yFocus
+        //     );
+        // }
 
         // End the current frame.
         window.display();
