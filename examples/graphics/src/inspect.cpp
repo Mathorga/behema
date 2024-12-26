@@ -312,7 +312,10 @@ int main(int argc, char **argv) {
         if (showInfo) {
             sf::Text cortexInfoText;
             cortexInfoText.setPosition(10.0, 10.0);
-            cortexInfoText.setString("width: " + std::to_string(cortex.width) + "\n" + "height: " + std::to_string(cortex.height));
+            cortexInfoText.setString(
+                "width: " + std::to_string(cortex.width) + "\n" +
+                "height: " + std::to_string(cortex.height) + "\n" + 
+                "inhexc_range: " + std::to_string(cortex.inhexc_range) + "\n");
             cortexInfoText.setFont(font);
             cortexInfoText.setCharacterSize(12);
             cortexInfoText.setFillColor(sf::Color::White);
