@@ -120,7 +120,7 @@ bhm_error_code_t c2d_init(
     cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
     cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
     cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
-    cortex->rand_state = (bhm_rand_state_t) time(NULL);
+    cortex->rand_state = BHM_STARTING_RAND;
     cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
     cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
     cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
@@ -149,7 +149,7 @@ bhm_error_code_t c2d_init(
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
             // Also the starting state should never be 0, so an arbitrary integer is added to every state.
-            neuron->rand_state = 31 + x * y;
+            neuron->rand_state = BHM_STARTING_RAND + x * y;
             neuron->pulse_mask = 0x00U;
             neuron->pulse = 0x00U;
             neuron->value = BHM_DEFAULT_STARTING_VALUE;
@@ -699,7 +699,7 @@ bhm_error_code_t c2d_add_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
-    if (index > cortex->width - 1) return BHM_ERROR_SIZE_WRONG;
+    if (index > cortex->height - 1) return BHM_ERROR_SIZE_WRONG;
 
     bhm_cortex_size_t new_height = cortex->height + 1;
 
@@ -804,7 +804,8 @@ bhm_error_code_t c2d_remove_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
-    if (index > cortex->width - 1) return BHM_ERROR_SIZE_WRONG;
+    if (cortex->height <= 1) return BHM_ERROR_SIZE_WRONG;
+    if (index > cortex->height - 1) return BHM_ERROR_SIZE_WRONG;
 
     bhm_cortex_size_t new_height = cortex->height - 1;
 
@@ -818,7 +819,7 @@ bhm_error_code_t c2d_remove_row(
             if (y < index) {
                 tmp_neurons[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
             } else if (y > index) {
-                tmp_neurons[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y + 1, cortex->width)];
+                tmp_neurons[IDX2D(x, y - 1, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
             }
         }
     }

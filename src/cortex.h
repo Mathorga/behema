@@ -46,6 +46,9 @@ extern "C" {
 // |n| is the size of the second dimension.
 #define IDX3D(i, j, k, m, n) (((m) * (n) * (k)) + ((m) * (j)) + (i))
 
+// Starting values for internal random states. Using a prime number as a starting value ensures a good grade of randomness, while still ensuring full reproducibility.
+#define BHM_STARTING_RAND 0x1FU
+
 #define BHM_EVOL_STEP_NEVER 0x0000FFFFU
 
 #define BHM_PULSE_WINDOW_LARGE 0x3FU

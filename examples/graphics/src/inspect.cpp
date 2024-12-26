@@ -234,7 +234,7 @@ int main(int argc, char **argv) {
     settings.antialiasingLevel = 8;
     sf::RenderWindow window(desktopMode, cortexFileName, sf::Style::Default, settings);
     
-    bool showInfo = false;
+    bool showInfo = true;
     bool nDraw = true;
     bool sDraw = true;
     int xFocus = -1;
