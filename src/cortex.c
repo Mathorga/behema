@@ -555,7 +555,7 @@ bhm_error_code_t c2d_mutate(
     bhm_cortex2d_t *cortex,
     bhm_chance_t mut_chance
 ) {
-    // Start by mutating the network itself, then go on to single neurons.
+    // Start by mutating the cortex itself, then go on to single neurons.
 
     // Mutate the cortex shape.
     bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);

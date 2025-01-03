@@ -74,8 +74,6 @@ bhm_error_code_t p2d_populate(
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Randomly init the ith cortex.
         bhm_error_code_t error = c2d_init(&(population->cortices[i]), width, height, nh_radius);
-        population->cortices[i].rand_state += i;
-
         if (error != BHM_ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
             for (bhm_population_size_t j = 0; j < i - 1; j++) {
@@ -84,6 +82,8 @@ bhm_error_code_t p2d_populate(
             }
             return error;
         }
+
+        population->cortices[i].rand_state = population->rand_state + BHM_STARTING_RAND * i;
     }
 
     return BHM_ERROR_NONE;
@@ -98,7 +98,6 @@ bhm_error_code_t p2d_rand_populate(
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Randomly init the ith cortex.
         bhm_error_code_t error = c2d_rand_init(&(population->cortices[i]), width, height, nh_radius);
-
         if (error != BHM_ERROR_NONE) {
             // There was an error initializing a cortex, so abort population setup, clean what's been initialized up to now and return the error.
             for (bhm_population_size_t j = 0; j < i - 1; j++) {
@@ -337,6 +336,8 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         if (error != BHM_ERROR_NONE) {
             return error;
         }
+
+        child->rand_state = population->rand_state + BHM_STARTING_RAND * i;
 
         // Mutate the newborn if so specified.
         if (mutate) {
