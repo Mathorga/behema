@@ -493,13 +493,6 @@ bhm_error_code_t c2d_set_inhexc_ratio(
     bhm_chance_t inhexc_ratio
 );
 
-/// @brief Sets whether the tick pass should wrap around the edges (pacman effect).
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_wrapped(
-    bhm_cortex2d_t* cortex,
-    bhm_bool_t wrapped
-);
-
 /// @brief Disables self connections whithin the specified bounds.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_syn_disable(

@@ -314,8 +314,10 @@ int main(int argc, char **argv) {
             cortexInfoText.setPosition(10.0, 10.0);
             cortexInfoText.setString(
                 "width: " + std::to_string(cortex.width) + "\n" +
-                "height: " + std::to_string(cortex.height) + "\n" + 
-                "inhexc_range: " + std::to_string(cortex.inhexc_range) + "\n");
+                "height: " + std::to_string(cortex.height) + "\n" +
+                "pulse_window: " + std::to_string(cortex.pulse_window) + "\n" +
+                "syngen_chance: " + std::to_string(cortex.syngen_chance) + "\n" +
+                "synstr_chance: " + std::to_string(cortex.synstr_chance) + "\n");
             cortexInfoText.setFont(font);
             cortexInfoText.setCharacterSize(12);
             cortexInfoText.setFillColor(sf::Color::White);
@@ -343,6 +345,8 @@ int main(int argc, char **argv) {
 
         // End the current frame.
         window.display();
+
+        usleep(500000);
     }
 
 
