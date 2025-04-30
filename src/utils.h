@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <math.h>
 #include "cortex.h"
+#include "population.h"
 #include "error.h"
 
 #ifdef __cplusplus
@@ -67,6 +68,17 @@ void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
 void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name);
+
+/// Dumps the population's content to a file.
+/// The file is created if not already present, overwritten otherwise.
+/// @param population The population to be written to file.
+/// @param file_name The destination file to write the population to.
+void p2d_to_file(bhm_population2d_t* population, char* file_name);
+
+/// Reads the content from a file and initializes the provided population accordingly.
+/// @param cortex The population to init from file.
+/// @param file_name The file to read the population from.
+void p2d_from_file(bhm_population2d_t* population, char* file_name);
 
 /// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.

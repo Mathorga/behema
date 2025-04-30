@@ -103,13 +103,12 @@ uint64_t nanos() {
 }
 
 
-void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
+bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
         printf("File does not exist: %s\n", file_name);
-        // TODO Return ERROR_FILE_NOT_FOUND.
-        return;
+        return BHM_ERROR_FILE_DOES_NOT_EXIST;
     }
 
     // Write cortex metadata to the output file.
@@ -125,6 +124,8 @@ void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->recovery_value), sizeof(bhm_neuron_value_t), 1, out_file);
     fwrite(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, out_file);
     fwrite(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, out_file);
+
+    fwrite(&(cortex->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
 
     fwrite(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, out_file);
     fwrite(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, out_file);
@@ -144,6 +145,8 @@ void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     }
 
     fclose(out_file);
+
+    return BHM_ERROR_NONE;
 }
 
 void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
@@ -164,6 +167,8 @@ void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
     fread(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, in_file);
     fread(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, in_file);
 
+    fread(&(cortex->rand_state), sizeof(bhm_rand_state_t), 1, in_file);
+
     fread(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, in_file);
     fread(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, in_file);
 
@@ -183,6 +188,36 @@ void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
     }
 
     fclose(in_file);
+}
+
+void p2d_to_file(bhm_population2d_t* population, char* file_name) {
+    // Open output file if possible.
+    FILE* out_file = fopen(file_name, "wb");
+    if (out_file == NULL) {
+        printf("File does not exist: %s\n", file_name);
+        return BHM_ERROR_FILE_DOES_NOT_EXIST;
+    }
+
+    // Write cortex metadata to the output file.
+    fwrite(&(population->size), sizeof(bhm_population_size_t), 1, out_file);
+    fwrite(&(population->selection_pool_size), sizeof(bhm_population_size_t), 1, out_file);
+    fwrite(&(population->parents_count), sizeof(bhm_population_size_t), 1, out_file);
+    // TODO Write other fields.
+
+    // TODO Write all cortices.
+    // for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+    //     for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+    //         fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
+    //     }
+    // }
+
+    fclose(out_file);
+
+    return BHM_ERROR_NONE;
+}
+
+void p2d_from_file(bhm_population2d_t* population, char* file_name) {
+    // TODO
 }
 
 bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {
