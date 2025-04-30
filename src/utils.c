@@ -202,14 +202,11 @@ void p2d_to_file(bhm_population2d_t* population, char* file_name) {
     fwrite(&(population->size), sizeof(bhm_population_size_t), 1, out_file);
     fwrite(&(population->selection_pool_size), sizeof(bhm_population_size_t), 1, out_file);
     fwrite(&(population->parents_count), sizeof(bhm_population_size_t), 1, out_file);
-    // TODO Write other fields.
 
-    // TODO Write all cortices.
-    // for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
-    //     for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-    //         fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
-    //     }
-    // }
+    fwrite(&(population->mut_chance), sizeof(bhm_chance_t), 1, out_file);
+    fwrite(&(population->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
+
+    // TODO Write all cortices, fitnesses and selection pool.
 
     fclose(out_file);
 
