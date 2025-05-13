@@ -168,7 +168,7 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
 
-    char* file_name strtok(file_name, "/");
+    // char* file_name strtok(file_name, "/");
 
     // Write all neurons.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
