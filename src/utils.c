@@ -241,7 +241,7 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
 
     // TODO Write all cortices, fitnesses and selection pool.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        c2d_to_file(population->cortices[i], (char*) file_name);
+        // c2d_to_file(population->cortices[i], (char*) file_name);
     }
 
     fclose(out_file);
