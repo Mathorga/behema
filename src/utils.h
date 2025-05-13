@@ -44,6 +44,28 @@ typedef struct pgm_content_t {
     uint32_t max_value;
 } pgm_content_t;
 
+/// @brief Splits the provided source string by the provided delimiter and isolates the first token obtained.
+/// @param src_str The string to split.
+/// @param dst_str The string in which the result will be stored.
+/// @param delimiter The delimiter by which to split the source string.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t strsplit_first(char* src_str, char* dst_str, char* delimiter);
+
+/// @brief Splits the provided source string by the provided delimiter and isolates the last token obtained.
+/// @param src_str The string to split.
+/// @param dst_str The string in which the result will be stored.
+/// @param delimiter The delimiter by which to split the source string.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter);
+
+/// @brief Splits the provided source string by the provided delimiter and isolates the token at the provided index.
+/// @param src_str The string to split.
+/// @param dst_str The string in which the result will be stored.
+/// @param delimiter The delimiter by which to split the source string.
+/// @param index The indedx of the token to retrieve.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uint32_t index);
+
 // Maps a value to the specified output domain.
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
 // Maps a value to the specified output domain while preserving decimal integrity.

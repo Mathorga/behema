@@ -71,6 +71,37 @@ bhm_error_code_t pgm_read(pgm_content_t* pgm, const char* filename) {
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t strsplit_first(char* src_str, char* dst_str, char* delimiter) {
+    char* out_token = src_str;
+    char* tmp_token = strtok(src_str, delimiter);
+
+    if (tmp_token != NULL) out_token = tmp_token;
+}
+
+bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter) {
+    char* out_token = src_str;
+    char* tmp_token = strtok(src_str, delimiter);
+
+    while (tmp_token != NULL) {
+        out_token = tmp_token;
+        tmp_token = strtok(NULL, delimiter);
+    }
+
+    dst_str = out_token;
+}
+
+bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uint32_t index) {
+    char* out_token = src_str;
+    char* tmp_token = strtok(src_str, delimiter);
+
+    for (uint32_t i = 0; tmp_token != NULL && i <= index; i++) {
+        out_token = tmp_token;
+        tmp_token = strtok(NULL, delimiter);
+    }
+
+    dst_str = out_token;
+}
+
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
     uint32_t slope = (output_end - output_start) / (input_end - input_start);
     return output_start + slope * (input - input_start);
@@ -136,6 +167,8 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
 
     fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
+
+    char* file_name strtok(file_name, "/");
 
     // Write all neurons.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
@@ -207,6 +240,9 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
     fwrite(&(population->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
 
     // TODO Write all cortices, fitnesses and selection pool.
+    for (bhm_population_size_t i = 0; i < population->size; i++) {
+        c2d_to_file(population->cortices[i], (char*) file_name);
+    }
 
     fclose(out_file);
 
