@@ -62,7 +62,7 @@ uint64_t nanos();
 /// The file is created if not already present, overwritten otherwise.
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
-void c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
+bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
 
 /// Reads the content from a file and initializes the provided cortex accordingly.
 /// @param cortex The cortex to init from file.
@@ -73,7 +73,7 @@ void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name);
 /// The file is created if not already present, overwritten otherwise.
 /// @param population The population to be written to file.
 /// @param file_name The destination file to write the population to.
-void p2d_to_file(bhm_population2d_t* population, char* file_name);
+bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name);
 
 /// Reads the content from a file and initializes the provided population accordingly.
 /// @param cortex The population to init from file.

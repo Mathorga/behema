@@ -190,7 +190,7 @@ void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
     fclose(in_file);
 }
 
-void p2d_to_file(bhm_population2d_t* population, char* file_name) {
+bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
