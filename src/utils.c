@@ -248,7 +248,7 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
     // TODO Write all cortices, fitnesses and selection pool.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Prepare the cortex file name.
-        char* cortex_file_name;
+        char* cortex_file_name = NULL;
         strcpy(cortex_file_name, file_name);
         size_t split_index = strcspn(cortex_file_name, ".");
         cortex_file_name[split_index] = (char) ('0' + i);
