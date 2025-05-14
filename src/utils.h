@@ -34,8 +34,7 @@ extern "C" {
 /// Convert nanoseconds to microseconds
 #define NS_TO_US(ns) ((ns) / 1e3)
 
-// Structure for storing the
-// image data
+// Structure for storing the image data
 typedef struct pgm_content_t {
     char pgmType[3];
     uint8_t* data;
@@ -66,41 +65,57 @@ bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uint32_t index);
 
-// Maps a value to the specified output domain.
+/// @brief Maps a value to the specified output domain.
+/// @param input The input value to be mapped.
+/// @param input_start The lower bound of the input domain.
+/// @param input_end The upper bound of the input domain.
+/// @param output_start The lower bound of the output domain.
+/// @param output_end The upper bound of the output domain.
+/// @return The value mapped to the provided output domain.
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
-// Maps a value to the specified output domain while preserving decimal integrity.
+
+/// @brief Maps a value to the specified output domain while preserving decimal integrity.
+/// @param input The input value to be mapped.
+/// @param input_start The lower bound of the input domain.
+/// @param input_end The upper bound of the input domain.
+/// @param output_start The lower bound of the output domain.
+/// @param output_end The upper bound of the output domain.
+/// @return The value mapped to the provided output domain.
 uint32_t fmap(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end);
 
-/// Get a time stamp in milliseconds.
+/// @brief Computes and returns the current time in milliseconds since the epoch.
+/// @return The current time in milliseconds since the epoch.
 uint64_t millis();
 
-/// Get a time stamp in microseconds.
+/// @brief Computes and returns the current time in microseconds since the epoch.
+/// @return The current time in microseconds since the epoch.
 uint64_t micros();
 
-/// Get a time stamp in nanoseconds.
+/// @brief Computes and returns the current time in nanoseconds since the epoch.
+/// @return The current time in nanoseconds since the epoch.
 uint64_t nanos();
 
 /// Dumps the cortex' content to a file.
 /// The file is created if not already present, overwritten otherwise.
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
-bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name);
+bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name);
 
 /// Reads the content from a file and initializes the provided cortex accordingly.
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
-void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name);
+void c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name);
 
 /// Dumps the population's content to a file.
 /// The file is created if not already present, overwritten otherwise.
 /// @param population The population to be written to file.
 /// @param file_name The destination file to write the population to.
-bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name);
+bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name);
 
 /// Reads the content from a file and initializes the provided population accordingly.
 /// @param cortex The population to init from file.
 /// @param file_name The file to read the population from.
-void p2d_from_file(bhm_population2d_t* population, char* file_name);
+void p2d_from_file(bhm_population2d_t* population, const char* file_name);
 
 /// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.

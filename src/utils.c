@@ -76,6 +76,10 @@ bhm_error_code_t strsplit_first(char* src_str, char* dst_str, char* delimiter) {
     char* tmp_token = strtok(src_str, delimiter);
 
     if (tmp_token != NULL) out_token = tmp_token;
+
+    dst_str = out_token;
+
+    return BHM_ERROR_NONE;
 }
 
 bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter) {
@@ -88,6 +92,8 @@ bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter) {
     }
 
     dst_str = out_token;
+
+    return BHM_ERROR_NONE;
 }
 
 bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uint32_t index) {
@@ -100,6 +106,8 @@ bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uin
     }
 
     dst_str = out_token;
+
+    return BHM_ERROR_NONE;
 }
 
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
@@ -134,7 +142,7 @@ uint64_t nanos() {
 }
 
 
-bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
+bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
@@ -168,8 +176,6 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
 
-    // char* file_name strtok(file_name, "/");
-
     // Write all neurons.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
@@ -182,7 +188,7 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, char* file_name) {
     return BHM_ERROR_NONE;
 }
 
-void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
+void c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Open output file if possible.
     FILE* in_file = fopen(file_name, "rb");
 
@@ -223,7 +229,7 @@ void c2d_from_file(bhm_cortex2d_t* cortex, char* file_name) {
     fclose(in_file);
 }
 
-bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
+bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
@@ -241,7 +247,13 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
 
     // TODO Write all cortices, fitnesses and selection pool.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        // c2d_to_file(population->cortices[i], (char*) file_name);
+        // Prepare the cortex file name.
+        char* cortex_file_name;
+        strcpy(cortex_file_name, file_name);
+        size_t split_index = strcspn(cortex_file_name, ".");
+        cortex_file_name[split_index] = (char) ('0' + i);
+
+        c2d_to_file(&population->cortices[i], (char*) file_name);
     }
 
     fclose(out_file);
@@ -249,7 +261,7 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, char* file_name) {
     return BHM_ERROR_NONE;
 }
 
-void p2d_from_file(bhm_population2d_t* population, char* file_name) {
+void p2d_from_file(bhm_population2d_t* population, const char* file_name) {
     // TODO
 }
 
