@@ -110,6 +110,55 @@ bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uin
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t strins(char* string, size_t index, char* substr) {
+    size_t substr_len = strlen(substr);
+    size_t string_len = strlen(string);
+
+    if (index >= string_len) return BHM_ERROR_SIZE_WRONG;
+
+    // Move the final part of the string forward.
+    // Here memmove is critical, since it's safe to use when the src and dst pointers overlap.
+    memmove(
+        &string[index + substr_len], 
+        &string[index], 
+        sizeof(char) * (string_len - index)
+    );
+
+    // Insert the value in the provided index.
+    memcpy(
+        &string[index],
+        substr,
+        sizeof(char) * substr_len
+    );
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t strrep(char* string, char* target, char* content) {
+    size_t string_len = strlen(string);
+    size_t target_len = strlen(target);
+    size_t content_len = strlen(content);
+
+    char* rep = strstr(string, target);
+
+    // Move the final part of the string forward by target length.
+    // Here memmove is critical, since it's safe to use when the src and dst pointers overlap.
+    memmove(
+        &rep[content_len],
+        &rep[target_len],
+        sizeof(char) * (string_len - target_len)
+    );
+
+    // Insert the content.
+    memcpy(
+        rep,
+        content,
+        sizeof(char) * content_len
+    );
+
+    return BHM_ERROR_NONE;
+}
+
 uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t output_start, uint32_t output_end) {
     uint32_t slope = (output_end - output_start) / (input_end - input_start);
     return output_start + slope * (input - input_start);
@@ -247,13 +296,18 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
 
     // TODO Write all cortices, fitnesses and selection pool.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        // Prepare the cortex file name.
-        char* cortex_file_name = NULL;
-        strcpy(cortex_file_name, file_name);
-        size_t split_index = strcspn(cortex_file_name, ".");
-        cortex_file_name[split_index] = (char) ('0' + i);
+        // Prepare the cortex file name:
+        // The cortex file name is longer than the provided population file name by a few digits depending on the size of the population.
+        char cortex_file_name[strlen(file_name) + 10];
 
-        c2d_to_file(&population->cortices[i], (char*) file_name);
+        // Copy the population file name as-is.
+        strcpy(cortex_file_name, file_name);
+
+        // Replace the extension separator with the current cortex index and the right extension.
+        strrep(cortex_file_name, ".p2d", "_123.c2d");
+
+        // TODO Working on this.
+        // c2d_to_file(&population->cortices[i], (char*) file_name);
     }
 
     fclose(out_file);

@@ -65,6 +65,20 @@ bhm_error_code_t strsplit_last(char* src_str, char* dst_str, char* delimiter);
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t strsplit_nth(char* src_str, char* dst_str, char* delimiter, uint32_t index);
 
+/// @brief Inserts the provided substring in the provided string at the provided index.
+/// @param string The string in which to insert the value.
+/// @param index The index at which to insert the substring.
+/// @param substr The string to insert.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t strins(char* string, size_t index, char* substr);
+
+/// @brief Replaces target with content in string.
+/// @param string The string in which to replace a substring.
+/// @param target The substring to replace from string.
+/// @param content The string to replace target with.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t strrep(char* string, char* target, char* content);
+
 /// @brief Maps a value to the specified output domain.
 /// @param input The input value to be mapped.
 /// @param input_start The lower bound of the input domain.
