@@ -294,7 +294,7 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
     fwrite(&(population->mut_chance), sizeof(bhm_chance_t), 1, out_file);
     fwrite(&(population->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
 
-    // TODO Write all cortices, fitnesses and selection pool.
+    // Write down all cortices and fitnesses.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Prepare the cortex file name:
         // The cortex file name is longer than the provided population file name by a few digits depending on the size of the population.
@@ -311,6 +311,14 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
 
         // Write the current cortex to file.
         c2d_to_file(&population->cortices[i], (char*) cortex_file_name);
+
+        // Write down the current fitness to the population file.
+        fwrite(&(population->cortices_fitness[i]), sizeof(bhm_cortex_fitness_t), 1, out_file);
+    }
+
+    // Write down the population's selection pool.
+    for (bhm_population_size_t i = 0; i < population->selection_pool_size; i++) {
+        fwrite(&(population->selection_pool[i]), sizeof(bhm_population_size_t), 1, out_file);
     }
 
     fclose(out_file);
