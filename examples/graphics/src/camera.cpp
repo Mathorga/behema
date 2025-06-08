@@ -140,7 +140,7 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
     }
 }
 
-int main(int argc, char **argv) {
+int main(int argc, char** argv) {
     bhm_cortex_size_t cortex_width = 100;
     bhm_cortex_size_t cortex_height = 60;
     bhm_nh_radius_t nh_radius = 2;

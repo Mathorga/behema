@@ -708,6 +708,7 @@ bhm_error_code_t c2d_add_row(
     if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Move all neurons to their new location.
+    // TODO Could this be performed using memmove?
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             if (y < index) {

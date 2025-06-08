@@ -237,11 +237,11 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
     return BHM_ERROR_NONE;
 }
 
-void c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
-    // Open output file if possible.
+bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
+    // Open input file if possible.
     FILE* in_file = fopen(file_name, "rb");
 
-    // Read cortex metadata from the output file.
+    // Read cortex metadata from the input file.
     fread(&(cortex->width), sizeof(bhm_cortex_size_t), 1, in_file);
     fread(&(cortex->height), sizeof(bhm_cortex_size_t), 1, in_file);
     fread(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, in_file);
@@ -276,6 +276,8 @@ void c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
     }
 
     fclose(in_file);
+
+    return BHM_ERROR_NONE;
 }
 
 bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name) {
@@ -294,6 +296,10 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
     fwrite(&(population->mut_chance), sizeof(bhm_chance_t), 1, out_file);
     fwrite(&(population->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
 
+    // Write down fitnesses and selection pool.
+    fwrite(&(population->cortices_fitness), sizeof(bhm_cortex_fitness_t), population->size, out_file);
+    fwrite(&(population->selection_pool), sizeof(bhm_population_size_t), population->selection_pool_size, out_file);
+
     // Write down all cortices and fitnesses.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Prepare the cortex file name:
@@ -311,14 +317,6 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
 
         // Write the current cortex to file.
         c2d_to_file(&population->cortices[i], (char*) cortex_file_name);
-
-        // Write down the current fitness to the population file.
-        fwrite(&(population->cortices_fitness[i]), sizeof(bhm_cortex_fitness_t), 1, out_file);
-    }
-
-    // Write down the population's selection pool.
-    for (bhm_population_size_t i = 0; i < population->selection_pool_size; i++) {
-        fwrite(&(population->selection_pool[i]), sizeof(bhm_population_size_t), 1, out_file);
     }
 
     fclose(out_file);
@@ -326,8 +324,47 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
     return BHM_ERROR_NONE;
 }
 
-void p2d_from_file(bhm_population2d_t* population, const char* file_name) {
-    // TODO
+bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_name) {
+    // Open input file if possible.
+    FILE* in_file = fopen(file_name, "rb");
+
+    // Read population metadata from the input file.
+    fread(&(population->size), sizeof(bhm_population_size_t), 1, in_file);
+    fread(&(population->selection_pool_size), sizeof(bhm_population_size_t), 1, in_file);
+    fread(&(population->parents_count), sizeof(bhm_population_size_t), 1, in_file);
+
+    fread(&(population->mut_chance), sizeof(bhm_chance_t), 1, in_file);
+    fread(&(population->rand_state), sizeof(bhm_rand_state_t), 1, in_file);
+
+    // Allocate and read fitnesses and selection pool.
+    population->cortices_fitness = (bhm_cortex_fitness_t*) malloc(population->size * sizeof(bhm_cortex_fitness_t));
+    population->selection_pool = (bhm_population_size_t*) malloc(population->selection_pool_size * sizeof(bhm_population_size_t));
+    fread(&(population->cortices_fitness), sizeof(bhm_cortex_fitness_t), population->size, in_file);
+    fread(&(population->selection_pool), sizeof(bhm_population_size_t), population->selection_pool_size, in_file);
+
+    // Allocate and read all cortices.
+    population->cortices = (bhm_cortex2d_t*) malloc(population->size * sizeof(bhm_cortex2d_t));
+    for (bhm_cortex_size_t i = 0; i < population->size; i++) {
+        // Prepare the cortex file name:
+        // The cortex file name is longer than the provided population file name by a few digits depending on the size of the population.
+        char cortex_file_name[strlen(file_name) + 10];
+
+        // Copy the population file name as-is.
+        strcpy(cortex_file_name, file_name);
+
+        char cortex_name_tail[10];
+        sprintf(cortex_name_tail, "_%d.c2d", i);
+
+        // Replace the extension separator with the current cortex index and the right extension.
+        strrep(cortex_file_name, ".p2d", cortex_name_tail);
+
+        // Read the ith cortex from file.
+        c2d_from_file(&(population->cortices[i]), cortex_file_name);
+    }
+
+    fclose(in_file);
+
+    return BHM_ERROR_NONE;
 }
 
 bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {

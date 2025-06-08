@@ -6,7 +6,6 @@
 #define _POSIX_C_SOURCE 199309L
 
 #include <time.h>
-// #include <linux/time.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,23 +113,27 @@ uint64_t nanos();
 /// The file is created if not already present, overwritten otherwise.
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name);
 
 /// Reads the content from a file and initializes the provided cortex accordingly.
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
-void c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name);
 
 /// Dumps the population's content to a file.
 /// The file is created if not already present, overwritten otherwise.
 /// @param population The population to be written to file.
 /// @param file_name The destination file to write the population to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name);
 
 /// Reads the content from a file and initializes the provided population accordingly.
 /// @param cortex The population to init from file.
 /// @param file_name The file to read the population from.
-void p2d_from_file(bhm_population2d_t* population, const char* file_name);
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_name);
 
 /// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.
