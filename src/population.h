@@ -143,11 +143,17 @@ bhm_error_code_t p2d_destroy(bhm_population2d_t* population);
 // Setter functions
 // ##########################################
 
-/// @brief Sets the provided population the appropriate mutation rate
+/// @brief Sets the provided population the appropriate mutation rate.
 /// @param population The population to apply the new mutation rate to.
 /// @param mut_chance The mutation rate to apply to the population.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_set_mut_rate(bhm_population2d_t* population, bhm_chance_t mut_chance);
+
+/// @brief Assigns population the provided evaluation function.
+/// @param population The population to assign the new evaluation function to.
+/// @param eval_function The evalutation function to assign the population.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t p2d_set_eval_function(bhm_population2d_t* population, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness));
 
 // ##########################################
 // ##########################################

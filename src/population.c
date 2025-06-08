@@ -146,6 +146,12 @@ bhm_error_code_t p2d_set_mut_rate(bhm_population2d_t* population, bhm_chance_t m
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t p2d_set_eval_function(bhm_population2d_t* population, bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)) {
+    population->eval_function = eval_function;
+
+    return BHM_ERROR_NONE;
+}
+
 // ##########################################
 // ##########################################
 
