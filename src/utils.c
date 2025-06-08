@@ -194,6 +194,7 @@ uint64_t nanos() {
 bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
+
     if (out_file == NULL) {
         printf("File does not exist: %s\n", file_name);
         return BHM_ERROR_FILE_DOES_NOT_EXIST;
@@ -240,6 +241,11 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
 bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Open input file if possible.
     FILE* in_file = fopen(file_name, "rb");
+
+    if (in_file == NULL) {
+        printf("File does not exist: %s\n", file_name);
+        return BHM_ERROR_FILE_DOES_NOT_EXIST;
+    }
 
     // Read cortex metadata from the input file.
     fread(&(cortex->width), sizeof(bhm_cortex_size_t), 1, in_file);
@@ -327,6 +333,11 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
 bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_name) {
     // Open input file if possible.
     FILE* in_file = fopen(file_name, "rb");
+
+    if (in_file == NULL) {
+        printf("File does not exist: %s\n", file_name);
+        return BHM_ERROR_FILE_DOES_NOT_EXIST;
+    }
 
     // Read population metadata from the input file.
     fread(&(population->size), sizeof(bhm_population_size_t), 1, in_file);
