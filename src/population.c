@@ -165,6 +165,7 @@ bhm_error_code_t p2d_evaluate(bhm_population2d_t* population) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Evaluate the current cortex by using the population evaluation function.
         // The computed fitness is stored in the population itself.
+        printf("Evaluating cortex %d\n", i);
         bhm_error_code_t error = population->eval_function(&(population->cortices[i]), &(population->cortices_fitness[i]));
         if (error != BHM_ERROR_NONE) {
             return error;
