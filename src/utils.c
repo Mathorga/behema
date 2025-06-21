@@ -315,7 +315,7 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
         // Copy the population file name as-is.
         strcpy(cortex_file_name, file_name);
 
-        char cortex_name_tail[10];
+        char cortex_name_tail[15];
         sprintf(cortex_name_tail, "_%d.c2d", i);
 
         // Replace the extension separator with the current cortex index and the right extension.
@@ -366,7 +366,7 @@ bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_
         // Copy the population file name as-is.
         strcpy(cortex_file_name, file_name);
 
-        char cortex_name_tail[10];
+        char cortex_name_tail[15];
         sprintf(cortex_name_tail, "_%d.c2d", i);
         
         // Replace the extension separator with the current cortex index and the right extension.
