@@ -330,35 +330,30 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
 
     // Create a temp population to hold the new generation.
     bhm_cortex2d_t* offspring = (bhm_cortex2d_t*) malloc(population->size * sizeof(bhm_cortex2d_t));
-    if (offspring == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (offspring == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Breed the selection pool and create children for the new generation.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Create a new child by breeding parents from the population's selection pool.
         bhm_cortex2d_t* child;
         error = p2d_breed(population, &child);
-        if (error != BHM_ERROR_NONE) {
-            return error;
-        }
+        if (error != BHM_ERROR_NONE) return error;
 
         child->rand_state = population->rand_state + BHM_STARTING_RAND * i;
 
         // Mutate the newborn if so specified.
         if (mutate) {
             error = c2d_mutate(child, population->mut_chance);
-            if (error != BHM_ERROR_NONE) {
-                return error;
-            }
+            if (error != BHM_ERROR_NONE) return error;
         }
 
         // Store the produced child.
         offspring[i] = *child;
     }
 
-    // Replace the old generation with the new one.
+    // Replace the old generation with the new one by destroying the current one and pointing to the new one.
     error = p2d_destroy_cortices(population);
+    if (error != BHM_ERROR_NONE) return error;
     population->cortices = offspring;
 
     return BHM_ERROR_NONE;
@@ -368,9 +363,7 @@ bhm_error_code_t p2d_mutate(bhm_population2d_t* population) {
     // Mutate each cortex in the population.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         bhm_error_code_t error = c2d_mutate(&(population->cortices[i]), population->mut_chance);
-        if (error != BHM_ERROR_NONE) {
-            return error;
-        }
+        if (error != BHM_ERROR_NONE) return error;
     }
 
     return BHM_ERROR_NONE;
