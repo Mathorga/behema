@@ -863,7 +863,7 @@ bhm_error_code_t c2d_transpose(
     bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
     if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
-    // Transpose the neurons matrix by 
+    // Transpose the neurons matrix by swapping xs for ys.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             tmp_neurons[IDX2D(y, x, cortex->height)] = cortex->neurons[IDX2D(x, y, cortex->width)];
