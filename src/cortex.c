@@ -535,16 +535,16 @@ bhm_error_code_t c2d_mutate_shape(
     // Mutate the cortex width.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state < mut_chance) {
-        // Decide the index at which to insert/delete the row.
-        bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
+        // Decide the index at which to insert/delete the column.
+        bhm_cortex_size_t column_index = cortex->rand_state % cortex->width;
 
-        // Decide whether to increase or decrease the cortex height.
+        // Decide whether to increase or decrease the cortex width.
         bhm_cortex_size_t size_delta = cortex->rand_state % 2 == 0 ? 1 : -1;
 
         if (size_delta > 0) {
-            c2d_add_column(cortex, row_index);
+            c2d_add_column(cortex, column_index);
         } else if (size_delta < 0) {
-            c2d_remove_column(cortex, row_index);
+            c2d_remove_column(cortex, column_index);
         }
     }
 
