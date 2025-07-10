@@ -10,7 +10,7 @@ The learning pattern of a Behema neural network is continuos, with no distinctio
 All the following commands install behema as a dynamic library by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:<br/>
 `make install MODE=archive`<br/>
 
-You can also specify the C compiler by setting the dedicated variable `CCOMP=gcc-14`:<br/>
+You can also specify the C compiler by setting the dedicated variable `CCOMP` as in `CCOMP=gcc-14`:<br/>
 `make install CCOMP=gcc-14`
 
 ### Standard
