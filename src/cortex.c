@@ -523,11 +523,9 @@ bhm_error_code_t c2d_mutate_shape(
         bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
 
         // Decide whether to increase or decrease the cortex height.
-        bhm_cortex_size_t size_delta = cortex->rand_state % 2 == 0 ? 1 : -1;
-
-        if (size_delta > 0) {
+        if (cortex->rand_state % 2 == 0) {
             c2d_add_row(cortex, row_index);
-        } else if (size_delta < 0) {
+        } else {
             c2d_remove_row(cortex, row_index);
         }
     }
@@ -539,11 +537,9 @@ bhm_error_code_t c2d_mutate_shape(
         bhm_cortex_size_t column_index = cortex->rand_state % cortex->width;
 
         // Decide whether to increase or decrease the cortex width.
-        bhm_cortex_size_t size_delta = cortex->rand_state % 2 == 0 ? 1 : -1;
-
-        if (size_delta > 0) {
+        if (cortex->rand_state % 2 == 0) {
             c2d_add_column(cortex, column_index);
-        } else if (size_delta < 0) {
+        } else {
             c2d_remove_column(cortex, column_index);
         }
     }
@@ -719,7 +715,7 @@ bhm_error_code_t c2d_add_row(
         }
     }
 
-    // Initialize any new neurons with values from their neighbors.
+    // Initialize all new neurons with values from their neighbors.
     for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
         bhm_cortex_size_t y = index;
         bhm_neuron_t* neuron = &(cortex->neurons[IDX2D(x, y, cortex->width)]);
@@ -745,7 +741,8 @@ bhm_error_code_t c2d_add_row(
         // Fetch neighbors' values.
         for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
             for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
-                if (i == x && j == y) continue;
+                // Only include neurons from above and below the new row.
+                if (i == x) continue;
 
                 bhm_cortex_size_t neighbor_index = IDX2D(
                     WRAP(i, cortex->width),
@@ -762,7 +759,7 @@ bhm_error_code_t c2d_add_row(
             }
         }
 
-        int32_t neighbors_count = (nh_diameter * nh_diameter - 1);
+        int32_t neighbors_count = (nh_diameter * (nh_diameter - 1));
 
         neuron->pulse_mask = pulse_mask / neighbors_count;
         neuron->pulse = pulse / neighbors_count;
