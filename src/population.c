@@ -41,7 +41,7 @@ bhm_error_code_t p2d_init(
     (*population)->selection_pool_size = selection_pool_size;
     (*population)->parents_count = DEFAULT_PARENTS_COUNT;
     (*population)->mut_chance = mut_chance;
-    (*population)->rand_state = BHM_STARTING_RAND;
+    (*population)->rand_state = BHM_RAND_OFFSET;
     (*population)->eval_function = eval_function;
 
     // Allocate cortices.
@@ -83,7 +83,7 @@ bhm_error_code_t p2d_populate(
             return error;
         }
 
-        population->cortices[i].rand_state = population->rand_state + BHM_STARTING_RAND * i;
+        population->cortices[i].rand_state = population->rand_state + BHM_RAND_OFFSET * i;
     }
 
     return BHM_ERROR_NONE;
@@ -339,7 +339,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         error = p2d_breed(population, &child);
         if (error != BHM_ERROR_NONE) return error;
 
-        child->rand_state = population->rand_state + BHM_STARTING_RAND * i;
+        child->rand_state = population->rand_state + BHM_RAND_OFFSET * i;
 
         // Mutate the newborn if so specified.
         if (mutate) {

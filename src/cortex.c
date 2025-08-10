@@ -120,7 +120,7 @@ bhm_error_code_t c2d_init(
     cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
     cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
     cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
-    cortex->rand_state = BHM_STARTING_RAND;
+    cortex->rand_state = BHM_RAND_OFFSET;
     cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
     cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
     cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
@@ -149,7 +149,7 @@ bhm_error_code_t c2d_init(
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
             // Also the starting state should never be 0, so an arbitrary integer is added to every state.
-            neuron->rand_state = BHM_STARTING_RAND + x * y;
+            neuron->rand_state = BHM_RAND_OFFSET + x * y;
             neuron->pulse_mask = 0x00U;
             neuron->pulse = 0x00U;
             neuron->value = BHM_DEFAULT_STARTING_VALUE;
@@ -236,7 +236,7 @@ bhm_error_code_t c2d_rand_init(
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
             // Also the starting state should never be 0, so an arbitrary integer is added to every state.
-            neuron->rand_state = 31 + x * y;
+            neuron->rand_state = BHM_RAND_OFFSET + x * y;
             neuron->pulse_mask = 0x00U;
             neuron->pulse = 0x00U;
             neuron->value = BHM_DEFAULT_STARTING_VALUE;
@@ -726,15 +726,18 @@ bhm_error_code_t c2d_add_row(
         neuron->synstr_mask_b = 0x00U;
         neuron->synstr_mask_c = 0x00U;
 
-        neuron->rand_state = 31 + x * y;
+        neuron->rand_state = BHM_RAND_OFFSET + x * y;
+        neuron->pulse_mask = 0x00U;
+        neuron->pulse = 0x00U;
         neuron->syn_count = 0x00U;
         neuron->tot_syn_strength = 0x00U;
         neuron->value = BHM_DEFAULT_STARTING_VALUE;
 
-        int32_t pulse_mask = 0x00;
-        int32_t pulse = 0x00U;
-        int32_t max_syn_count = 0x00;
-        int32_t inhexc_ratio = 0x00;
+        // Max synapses count and inhibitory to excitatory ratio are the only neuron parameters that go through mutation,
+        // so they need to be copied from neighboring neurons when mutating.
+        // Using default values would not preserve evolutionary changes.
+        int16_t max_syn_count = 0x00;
+        int64_t inhexc_ratio = 0x00;
 
         bhm_cortex_size_t nh_diameter = NH_DIAM_2D(cortex->nh_radius);
 
@@ -752,8 +755,6 @@ bhm_error_code_t c2d_add_row(
 
                 bhm_neuron_t neighbor = cortex->neurons[neighbor_index];
 
-                pulse_mask += neighbor.pulse_mask;
-                pulse += neighbor.pulse;
                 max_syn_count += neighbor.max_syn_count;
                 inhexc_ratio += neighbor.inhexc_ratio;
             }
@@ -761,10 +762,8 @@ bhm_error_code_t c2d_add_row(
 
         int32_t neighbors_count = (nh_diameter * (nh_diameter - 1));
 
-        neuron->pulse_mask = pulse_mask / neighbors_count;
-        neuron->pulse = pulse / neighbors_count;
         neuron->max_syn_count = max_syn_count / neighbors_count;
-        neuron->inhexc_ratio = inhexc_ratio / neighbors_count;;
+        neuron->inhexc_ratio = inhexc_ratio / neighbors_count;
     }
 
     cortex->height = new_height;
