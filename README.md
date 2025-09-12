@@ -108,8 +108,6 @@ Therefore spike trains repeat every `pulse_window` timesteps and you can see the
 In the following plots, you can see numerical inputs on the y-coordinate (premapped to a [0.0,1.0] domain) and time on the x-coordinate.
 White means there's a spike, while black means no spike.
 
-Inputs are always normalized to a [0.0,1.0] range for input mapping to work intuitively.
-
 <table>
     <tr>
         <td>pulse_window</td>
