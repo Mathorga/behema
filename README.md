@@ -113,7 +113,7 @@ Inputs are always normalized to a [0.0,1.0] range for input mapping to work intu
 <table>
     <tr>
         <td></td>
-        <td>pulse_window</td>
+        pulse_window
     </tr>
     <tr>
         <td></td>
