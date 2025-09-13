@@ -2,7 +2,7 @@ CCOMP=gcc
 NVCOMP=nvcc
 ARC=ar
 
-STD_CCOMP_FLAGS=-std=c17 -Wall -pedantic -g -fPIC
+STD_CCOMP_FLAGS=-std=c11 -Wall -pedantic -g -fPIC
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
 CLINK_FLAGS=-Wall -fopenmp
 ARC_FLAGS=-rcs
