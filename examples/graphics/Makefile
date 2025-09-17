@@ -1,7 +1,8 @@
-CCOMP=g++
+CCOMP=gcc
+CPPCOMP=g++
 NVCOMP=nvcc
 
-STD_CCOMP_FLAGS=-std=c++17 -Wall -pedantic -g
+STD_CCOMP_FLAGS=-std=c++11 -Wall -pedantic -g
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -I/usr/local/include
 CLINK_FLAGS=-Wall
 
@@ -16,6 +17,7 @@ NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
 STD_LIBS=-lm
 SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
+RAYLIB_LIBS=-lraylib -lGL -lX11
 OPENCV_LIBS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs -lopencv_videoio
 SPIKES_COUNT_LIBS=-lncurses
 CUDA_STD_LIBS=-lcudart -lstdc++
@@ -50,8 +52,8 @@ all: clean camera inspect
 
 camera: create
 	@printf "\n"
-	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
+	$(CPPCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
+	$(CPPCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 cuda_camera: create
@@ -62,8 +64,14 @@ cuda_camera: create
 
 inspect: create
 	@printf "\n"
-	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
+	$(CPPCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.cpp -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
+	$(CPPCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
+	@printf "\nCreated $@!\n"
+
+raylib_inspect: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(RAYLIB_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 create:
