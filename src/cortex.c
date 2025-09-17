@@ -641,6 +641,36 @@ bhm_error_code_t c2d_to_string(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_get_spiking_state(
+    bhm_cortex2d_t* cortex,
+    bhm_bool_t* result
+) {
+    // Loop through the provided cortex' neurons.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            // Store true if the value of the neuron at location (x, y) is above the cortex' threshold value.
+            result[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)].value > cortex->fire_threshold;
+        }
+    }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_get_synout_state(
+    bhm_cortex2d_t* cortex,
+    bhm_syn_count_t* result
+) {
+    // Loop through the provided cortex' neurons.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            // Store the synapses count value for the neuron at location (x, y).
+            result[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)].syn_count;
+        }
+    }
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t i2d_mean(
     bhm_input2d_t* input,
     bhm_ticks_count_t* result

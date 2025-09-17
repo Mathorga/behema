@@ -538,13 +538,31 @@ bhm_error_code_t n2d_mutate(
 // Getter functions
 // ##########################################
 
-/// @brief Stores the string representation of the given cortex to the provided string [target].
+/// @brief Stores the string representation of the given cortex to the provided string [result].
 /// @param cortex The cortex to inspect.
 /// @param result The string to fill with cortex data.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_to_string(
     bhm_cortex2d_t* cortex,
     char* result
+);
+
+/// @brief Reads and returns the spiking state of the neurons in the cortex (whether each neuron is spiking or not).
+/// @param cortex The cortex to read from.
+/// @param result The array in which to store the spiking state to. The result is a flattened 2D array the size of [cortex].
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_get_spiking_state(
+    bhm_cortex2d_t* cortex,
+    bhm_bool_t* result
+);
+
+/// @brief Reads and returns the number of output synapses from each neurons in the provided cortex.
+/// @param cortex The cortex to read from.
+/// @param result The array in which to store the synapses count state to. The result is a flattened 2d array the size of [cortex].
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_get_synout_state(
+    bhm_cortex2d_t* cortex,
+    bhm_syn_count_t* result
 );
 
 /// @brief Computes the mean value of an input2d's values.
