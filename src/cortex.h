@@ -92,7 +92,7 @@ extern "C" {
 #define BHM_MAX_INHEXC_RANGE 0xFFU
 #define BHM_MAX_SAMPLE_WINDOW 0xFFU
 
-typedef uint8_t bhm_byte;
+typedef uint8_t bhm_byte_t;
 
 typedef int16_t bhm_neuron_value_t;
 

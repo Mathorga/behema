@@ -1,6 +1,7 @@
 <p align="center" width="100%">
     <img width="66%" src="./meta/behema.png"> 
 </p>
+
 BEHEMA (BEHavioral EMergent Automaton) is a spiking neural network library inspired by cellular automata.
 
 Behema borrows concepts such as grid layout and kernels from cellular automata to boost efficiency in highly parallel environments.
@@ -9,6 +10,7 @@ The implementation aims at mimicking a biological brain as closely as possible w
 The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
 ## Shared library installation (Linux)
+
 All the following commands install behema as a dynamic library by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:
 
 `make install MODE=archive`
@@ -18,9 +20,11 @@ You can also specify the C compiler by setting the dedicated variable `CCOMP` as
 `make install CCOMP=gcc-14`
 
 ### Standard
+
 Run `make install` or `make std-install` to install the default (CPU) package in a system-wide dynamic or static library.
 
 ### CUDA
+
 Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic or static library.
 
 Optionally you can specify the compute capability of your GPU with the dedicated variable `CUDA_ARCH`. This allows for some extra optimizations:
@@ -32,21 +36,27 @@ Warnings:
 * The CUDA SDK or APIs are not included in any install_deps.sh script
 
 ### OpenCL
+
 TODO
 
 ### Uninstall
+
 Run `make uninstall` to uninstall any previous installation.
 
 WARNING: Every time you `make` a new package the previous installation is overwritten.
 
 ## How to use
+
 ### Header files
+
 Once the installation is complete you can include the library by `#include <behema/behema.h>` and directly use every function in the packages you compiled.
 
 ### Linking
+
 During linking you can specify `-lbehema` in order to link the compiled functions.
 
 ### Usage example
+
 The first step is to create and initialize two cortices by:
 ```
 // Define starting parameters.
@@ -99,6 +109,7 @@ ticks_count_t sample_step = samplingBound;
 ```
 
 ### Input mapping
+
 Input mapping defines how input values are mapped to spike trains.
 
 Every cortex has a field for defining a `pulse_window`, which is the amount of timesteps over which inputs are mapped into spike trains.
@@ -139,8 +150,14 @@ White means there's a spike, while black means no spike.
     </tr>
 </table>
 
+## API Reference
+
+Refer to [API Reference](/API_REF.md) for some details on functions and structures.
+
 ## TODO
+
 Neurons competition for synapses
 
-### Examples
+## Examples
+
 The [examples](/samples/README.md) directory contains some useful use cases
