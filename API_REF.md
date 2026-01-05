@@ -2,7 +2,7 @@
 
 All functions return `bhm_error_t` telling the outcome of the function call.
 
-## Data Types
+## Data Type Aliases
 
   * `bhm_byte_t` [`uint8_t`]
 
