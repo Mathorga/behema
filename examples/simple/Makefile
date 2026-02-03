@@ -5,9 +5,6 @@ CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
 CLINK_FLAGS=-Wall
 
 STD_LIBS=-lm
-GRAPHICS_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
-SPIKES_COUNT_LIBS=-lncurses
-TIME_CUDA_LIBS=-lcuda -lcudart -lcublas -lcurand
 BEHEMA_LIBS=-lbehema
 
 SRC_DIR=./src
@@ -26,13 +23,15 @@ UNAME_S=$(shell uname -s)
 
 # The curren OS is Linux.
 ifeq ($(UNAME_S),Linux)
-	STD_LIBS+=-lrt
+    STD_LIBS+=-lrt
 endif
 
 # The current OS is MacOS.
 ifeq ($(UNAME_S),Darwin)
-	CCOMP_FLAGS+=-I/usr/local/include
-	CLINK_FLAGS+=-L/usr/local/lib
+    CCOMP_FLAGS+=-I/usr/local/include
+
+    # Make sure libraries are found during linking (-L) and embedded in the binary (-rpath).
+    CLINK_FLAGS+=-L/usr/local/lib -Wl,-rpath,/usr/local/lib
 endif
 
 all: clean bench sampled output

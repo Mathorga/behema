@@ -1,6 +1,24 @@
+# Default C compiler.
 CCOMP=gcc
+
+# Default CUDA compiler.
 NVCOMP=nvcc
+
+# Default archive utility.
 ARC=ar
+
+##################### OS Detection & Configuration #####################
+
+UNAME_S := $(shell uname -s)
+
+ifeq ($(UNAME_S),Darwin)
+    include darwin.mk
+else
+    # Default to Linux if not Mac
+    include linux.mk
+endif
+
+##################### Global Settings #####################
 
 STD_CCOMP_FLAGS=-std=c11 -Wall -pedantic -g -fPIC
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
@@ -8,9 +26,9 @@ CLINK_FLAGS=-Wall -fopenmp
 ARC_FLAGS=-rcs
 
 ifdef CUDA_ARCH
-	CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
+    CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
 else
-	CUDA_ARCH_FLAG=
+    CUDA_ARCH_FLAG=
 endif
 
 # Mode flag: if set to "archive", installs behema as a static library.
@@ -19,15 +37,12 @@ MODE=
 NVCOMP_FLAGS=--compiler-options '-fPIC' -G $(CUDA_ARCH_FLAG)
 NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
-STD_LIBS=-lm
+STD_LIBS=-lm $(STD_LIBS_EXTRA)
 CUDA_STD_LIBS=-lcudart
 
 SRC_DIR=./src
 BLD_DIR=./bld
 BIN_DIR=./bin
-
-SYSTEM_INCLUDE_DIR=
-SYSTEM_LIB_DIR=
 
 # Adds BLD_DIR to object parameter names.
 OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$^)
@@ -35,21 +50,7 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$^)
 MKDIR=mkdir -p
 RM=rm -rf
 
-# Check what the current operating system is.
-UNAME_S=$(shell uname -s)
-
-# The curren OS is Linux.
-ifeq ($(UNAME_S),Linux)
-	SYSTEM_INCLUDE_DIR=/usr/include
-	SYSTEM_LIB_DIR=/usr/lib
-	STD_LIBS+=-lrt
-endif
-
-# The current OS is MacOS.
-ifeq ($(UNAME_S),Darwin)
-	SYSTEM_INCLUDE_DIR=/usr/local/include
-	SYSTEM_LIB_DIR=/usr/local/lib
-endif
+##################### Targets #####################
 
 all: std
 
@@ -65,8 +66,8 @@ install-headers:
 # Installs the generated lib file to the default lib dir.
 install-lib:
 ifneq ($(MODE), archive)
-	@printf "\nInstalling dynamic library...\n\n"
-	sudo cp $(BLD_DIR)/libbehema.so $(SYSTEM_LIB_DIR)
+	@printf "\nInstalling dynamic library ($(LIB_EXT))...\n\n"
+	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(SYSTEM_LIB_DIR)
 endif
 ifeq ($(MODE), archive)
 	@printf "\nInstalling static library...\n\n"
@@ -85,7 +86,7 @@ cuda-install: cuda install-headers install-lib
 # Uninstalls any previous installation.
 uninstall: clean
 	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/behema
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema.so
+	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema$(LIB_EXT)
 	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema.a
 	@printf "\nSuccessfully uninstalled.\n\n"
 
@@ -93,13 +94,14 @@ std: create std-build
 cuda: create cuda-build
 
 # Builds all library files.
+# NOTE: We use $(LDFLAGS_LIB) instead of hardcoded -shared
 std-build: cortex.o utils.o population.o behema_std.o
-	$(CCOMP) $(CLINK_FLAGS) -shared $(OBJS) $(STD_LIBS) -o $(BLD_DIR)/libbehema.so
+	$(CCOMP) $(CLINK_FLAGS) $(LDFLAGS_LIB) $(OBJS) $(STD_LIBS) -o $(BLD_DIR)/libbehema$(LIB_EXT)
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
 
 cuda-build: cortex.o utils.o population.o behema_cuda.o
-	$(NVCOMP) $(NVLINK_FLAGS) -shared $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libbehema.so
+	$(NVCOMP) $(NVLINK_FLAGS) $(NV_LDFLAGS_LIB) $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libbehema$(LIB_EXT)
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
 
