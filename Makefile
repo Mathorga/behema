@@ -67,11 +67,11 @@ install-headers:
 install-lib:
 ifneq ($(MODE), archive)
 	@printf "\nInstalling dynamic library ($(LIB_EXT))...\n\n"
-	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(SYSTEM_LIB_DIR)
+	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(SYSTEM_LIB_DIR)/
 endif
 ifeq ($(MODE), archive)
 	@printf "\nInstalling static library...\n\n"
-	sudo cp $(BLD_DIR)/libbehema.a $(SYSTEM_LIB_DIR)
+	sudo cp $(BLD_DIR)/libbehema.a $(SYSTEM_LIB_DIR)/
 endif
 
 
