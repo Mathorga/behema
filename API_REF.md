@@ -32,7 +32,7 @@ All functions return `bhm_error_t` telling the outcome of the function call.
 
 ## Cortex2D
 
-The Cortex2D (`bhm_cortex_2d`) is simply a 2D grid of neurons. If you're familiar with cellular automata, the concept will be fairly easy to grasp, but, much like in a chess board, each neuron in the grid has neighbors.
+The Cortex2D (`bhm_cortex_2d`) is a 2D grid of neurons. If you're familiar with cellular automata, the concept will be fairly easy to grasp, but, much like in a chess board, each neuron in the grid has neighbors.
 
 ### Members
 
@@ -100,7 +100,7 @@ The Cortex2D (`bhm_cortex_2d`) is simply a 2D grid of neurons. If you're familia
 
     Array of neurons. Neurons are stored in a contiguous array in heap space.
 
-### Functions
+### Common Functions
 
   #### c2d_init
 
@@ -234,19 +234,50 @@ The Cortex2D (`bhm_cortex_2d`) is simply a 2D grid of neurons. If you're familia
     bhm_error_code_t error;
 
     // Allocate the cortex.
-    error = c2d_create(&even_cortex, 512, 256, 2);
+    error = c2d_create(&cortex, 512, 256, 2);
     if (error != BHM_ERROR_NONE) {
         printf("An error occurred!\n");
         return 1;
     }
     ```
 
-/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
-/// @param cortex The cortex to destroy
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_destroy(
-    bhm_cortex2d_t* cortex
-);
+  #### c2d_destroy
+
+  Destroys the given cortex2d and frees memory for it and its neurons.
+
+  * Returns `bhm_error_code_t`
+
+    The code for the occurred error, [BHM_ERROR_NONE] if none.
+
+  * Params
+
+    * cortex [`bhm_cortex2d_t*`]
+
+      The cortex to destroy. Should be a valid pointer, not NULL.
+
+  * Example
+    ```
+    // Define a new cortex pointer.
+    bhm_cortex2d_t* cortex;
+
+    bhm_error_code_t error;
+
+    // Allocate the cortex.
+    error = c2d_create(&even_cortex, 512, 256, 2);
+    if (error != BHM_ERROR_NONE) {
+        printf("An error occurred!\n");
+        return 1;
+    }
+
+    // [...] Work with the cortex. [...]
+
+    // Destroy the cortex when not needed anymore.
+    error = c2d_destroy(cortex);
+    if (error != BHM_ERROR_NONE) {
+        printf("An error occurred!\n");
+        return 1;
+    }
+    ```
 
 /// @brief Returns a cortex with the same properties as the given one.
 /// @param to The destination cortex.
@@ -451,6 +482,16 @@ bhm_error_code_t c2d_remove_column(
 bhm_error_code_t c2d_transpose(
     bhm_cortex2d_t* cortex
 );
+
+### Implementation-specific Functions
+
+  #### CPU
+
+  Refer to [STD API Reference](/STD_API_REF.md) for more details.
+
+  #### GPU (CUDA)
+
+  Refer to [CUDA API Reference](/CUDA_API_REF.md) for more details.
 
 ## Input2D
 
