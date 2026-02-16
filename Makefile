@@ -20,8 +20,7 @@ endif
 
 ##################### Global Settings #####################
 
-STD_CCOMP_FLAGS=-std=c11 -Wall -pedantic -g -fPIC
-CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -fopenmp
+CCOMP_FLAGS=-std=c11 -Wall -pedantic -fPIC -fopenmp
 CLINK_FLAGS=-Wall -fopenmp
 ARC_FLAGS=-rcs
 
@@ -31,8 +30,22 @@ else
     CUDA_ARCH_FLAG=
 endif
 
-# Mode flag: if set to "archive", installs behema as a static library.
-MODE=
+# Compilation mode:
+# 'release' -> heavy optimizations (-O3) and no debugging.
+# 'debug' -> no extra optimizations and debugging enabled.
+COMPILE_MODE=release
+
+ifeq ($(COMPILE_MODE), debug)
+    CCOMP_FLAGS+= -g
+endif
+ifeq ($(COMPILE_MODE), release)
+    CCOMP_FLAGS+= -O3
+endif
+
+# Installation mode:
+# "static" -> installs behema as a static library (archive).
+# "dynamic" -> installs behema as a dynamic library.
+INSTALL_MODE=dynamic
 
 NVCOMP_FLAGS=--compiler-options '-fPIC' -G $(CUDA_ARCH_FLAG)
 NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
@@ -65,11 +78,11 @@ install-headers:
 
 # Installs the generated lib file to the default lib dir.
 install-lib:
-ifneq ($(MODE), archive)
+ifneq ($(INSTALL_MODE), static)
 	@printf "\nInstalling dynamic library ($(LIB_EXT))...\n\n"
 	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(SYSTEM_LIB_DIR)/
 endif
-ifeq ($(MODE), archive)
+ifeq ($(INSTALL_MODE), static)
 	@printf "\nInstalling static library...\n\n"
 	sudo cp $(BLD_DIR)/libbehema.a $(SYSTEM_LIB_DIR)/
 endif

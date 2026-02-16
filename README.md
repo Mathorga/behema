@@ -9,41 +9,104 @@ The implementation aims at mimicking a biological brain as closely as possible w
 
 The learning pattern of a Behema neural network is continuos, with no distinction between training, validation and deploy. The network is continuously changed by its inputs and therefore can produce unexpected (emerging) results.
 
-## Shared library installation (Linux)
+## CPU version installation
 
-All the following commands install behema as a dynamic library by default, but you can tell the make command to install it as a static library by setting the dedicated variable `MODE=archive`:
+The CPU version automatically scales on all available CPU cores in order to parallalize the workflow.
 
-`make install MODE=archive`
+Run installation by calling the installation command `make install` or `make std-install` with the following options:
 
-You can also specify the C compiler by setting the dedicated variable `CCOMP` as in `CCOMP=gcc-14`:
+### `CCOMP`
 
-`make install CCOMP=gcc-14`
+ * Defines the C compiler to use.
 
-### Standard
+ * Default value: `gcc`
 
-Run `make install` or `make std-install` to install the default (CPU) package in a system-wide dynamic or static library.
+ * Example: `make install CCOMP=gcc-14`
 
-### CUDA
+### `COMPILE_MODE`
+
+  * Enables compiler optimizations or debug capabilities.
+
+  * Default value: `release`
+
+  * Possible values:
+
+    * `debug` enables debug functionalities and removes all optimizations.
+
+    * `release` disables all debug functionalities and enables all optimizations.
+
+  * Example: `make install COMPILE_MODE=debug`
+
+### `INSTALL_MODE`
+
+  * Defines whether to install the library as static or dynamic.
+
+  * Default value: `dynamic`
+
+  * Possible values:
+
+    * `static` installs as static library
+
+    * `dynamic` installs as dynamic library
+
+ * Example: `make install INSTALL_MODE=static`
+
+## CUDA version installation
 
 Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic or static library.
 
-Optionally you can specify the compute capability of your GPU with the dedicated variable `CUDA_ARCH`. This allows for some extra optimizations:
-`make cuda-install CUDA_ARCH=sm_61`
+The following options are available:
+
+### `CUDA_ARCH`
+
+  * Defines which specific CUDA architecture to target during compilation.
+
+  * Possible values: [official CUDA documentation](https://docs.nvidia.com/cuda/cuda-programming-guide/02-basics/nvcc.html#nvcc-ptx-and-cubin-generation)
+
+  * Example: `make cuda-install CUDA_ARCH=sm_61`
+
+### `COMPILE_MODE`
+
+  * Enables compiler optimizations or debug capabilities.
+
+  * Default value: `release`
+
+  * Possible values:
+
+    * `debug` enables debug functionalities and removes all optimizations.
+
+    * `release` disables all debug functionalities and enables all optimizations.
+
+  * Example: `make cuda-install COMPILE_MODE=debug`
+
+### `INSTALL_MODE`
+
+  * Defines whether to install the library as static or dynamic.
+
+  * Default value: `dynamic`
+
+  * Possible values:
+
+    * `static` installs as static library
+
+    * `dynamic` installs as dynamic library
+
+ * Example: `make cuda-install INSTALL_MODE=static`
 
 Warnings:
 * The CUDA version only works with NVIDIA GPUS
 * The CUDA version requires the CUDA SDK and APIs to work
 * The CUDA SDK or APIs are not included in any install_deps.sh script
 
-### OpenCL
+## OpenCL version installation
 
-TODO
+Coming soon...
 
-### Uninstall
+## Uninstall
 
 Run `make uninstall` to uninstall any previous installation.
 
-WARNING: Every time you `make` a new package the previous installation is overwritten.
+WARNING: Every time you install a new version the previously installed one is overwritten.
 
 ## How to use
 

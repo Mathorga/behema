@@ -1,11 +1,22 @@
 CCOMP=gcc
 
-STD_CCOMP_FLAGS=-std=c11 -Wall -pedantic -g
-CCOMP_FLAGS=$(STD_CCOMP_FLAGS)
+CCOMP_FLAGS=-std=c11 -Wall -pedantic
 CLINK_FLAGS=-Wall
 
 STD_LIBS=-lm
 BEHEMA_LIBS=-lbehema
+
+# Compilation mode:
+# 'release' -> heavy optimizations (-O3) and no debugging.
+# 'debug' -> no extra optimizations and debugging enabled.
+COMPILE_MODE=debug
+
+ifeq ($(COMPILE_MODE), debug)
+    CCOMP_FLAGS+= -g
+endif
+ifeq ($(COMPILE_MODE), release)
+    CCOMP_FLAGS+= -O3
+endif
 
 SRC_DIR=./src
 BLD_DIR=./bld
