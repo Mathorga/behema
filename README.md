@@ -213,13 +213,13 @@ White means there's a spike, while black means no spike.
     </tr>
 </table>
 
+### Neurons competition for synapses
+
+Coming soon...
+
 ## API Reference
 
 Refer to [API Reference](/API_REF.md) for some details on functions and structures.
-
-## TODO
-
-Neurons competition for synapses
 
 ## Examples
 
