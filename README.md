@@ -51,6 +51,26 @@ Run installation by calling the installation command `make install` or `make std
 
  * Example: `make install INSTALL_MODE=static`
 
+### `HDR_DST_DIR`
+
+  * Sets the headers' installation directory. Library headers will be installed here.
+
+  * Default value: `/usr/include` on Linux and `/usr/local/include` on MacOS
+
+  * Can be set to any directory the installing user has access to.
+
+  * Example: `make install HDR_DST_DIR=/home/user/headers`
+
+### `LIB_DST_DIR`
+
+  * Sets the library binary installation directory. Library binaries will be installed here.
+
+  * Default value: `/usr/lib` on Linux and `/usr/local/lib` on MacOS
+
+  * Can be set to any directory the installing user has access to.
+
+  * Example: `make install LIB_DST_DIR=/home/user/lib`
+
 ## CUDA version installation
 
 Run `make cuda-install` to install the CUDA parallel (GPU) package in a system-wide dynamic or static library.

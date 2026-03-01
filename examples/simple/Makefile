@@ -45,6 +45,14 @@ ifeq ($(UNAME_S),Darwin)
     CLINK_FLAGS+=-L/usr/local/lib -Wl,-rpath,/usr/local/lib
 endif
 
+ifdef BHM_HDR_DIR
+    CCOMP_FLAGS+=-I${BHM_HDR_DIR}
+endif
+
+ifdef BHM_LIB_DIR
+    CLINK_FLAGS+=-L${BHM_LIB_DIR}
+endif
+
 all: clean bench sampled output
 
 bench: create

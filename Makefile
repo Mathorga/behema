@@ -72,19 +72,19 @@ install: std-install
 # Installs all header files to the default include dir.
 install-headers:
 	@printf "\nInstalling headers...\n\n"
-	sudo $(MKDIR) $(SYSTEM_INCLUDE_DIR)/behema
-	sudo cp $(SRC_DIR)/*.h $(SYSTEM_INCLUDE_DIR)/behema
+	sudo $(MKDIR) $(HDR_DST_DIR)/behema
+	sudo cp $(SRC_DIR)/*.h $(HDR_DST_DIR)/behema
 
 
 # Installs the generated lib file to the default lib dir.
 install-lib:
 ifneq ($(INSTALL_MODE), static)
 	@printf "\nInstalling dynamic library ($(LIB_EXT))...\n\n"
-	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(SYSTEM_LIB_DIR)/
+	sudo cp $(BLD_DIR)/libbehema$(LIB_EXT) $(LIB_DST_DIR)/
 endif
 ifeq ($(INSTALL_MODE), static)
 	@printf "\nInstalling static library...\n\n"
-	sudo cp $(BLD_DIR)/libbehema.a $(SYSTEM_LIB_DIR)/
+	sudo cp $(BLD_DIR)/libbehema.a $(LIB_DST_DIR)/
 endif
 
 
@@ -98,9 +98,9 @@ cuda-install: cuda install-headers install-lib
 
 # Uninstalls any previous installation.
 uninstall: clean
-	sudo $(RM) $(SYSTEM_INCLUDE_DIR)/behema
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema$(LIB_EXT)
-	sudo $(RM) $(SYSTEM_LIB_DIR)/libbehema.a
+	sudo $(RM) $(HDR_DST_DIR)/behema
+	sudo $(RM) $(LIB_DST_DIR)/libbehema$(LIB_EXT)
+	sudo $(RM) $(LIB_DST_DIR)/libbehema.a
 	@printf "\nSuccessfully uninstalled.\n\n"
 
 std: create std-build

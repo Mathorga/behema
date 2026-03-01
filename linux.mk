@@ -1,7 +1,7 @@
 # --- Linux Configuration ---
 LIB_EXT=.so
-SYSTEM_INCLUDE_DIR=/usr/include
-SYSTEM_LIB_DIR=/usr/lib
+HDR_DST_DIR=/usr/include
+LIB_DST_DIR=/usr/lib
 STD_LIBS_EXTRA=-lrt
 
 # Linker flags for C (GCC)

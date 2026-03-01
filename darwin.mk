@@ -1,7 +1,7 @@
 # --- MacOS Configuration ---
 LIB_EXT=.dylib
-SYSTEM_INCLUDE_DIR=/usr/local/include
-SYSTEM_LIB_DIR=/usr/local/lib
+HDR_DST_DIR=/usr/local/include
+LIB_DST_DIR=/usr/local/lib
 STD_LIBS_EXTRA=
 
 # Linker flags for C (GCC)
