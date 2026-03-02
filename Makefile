@@ -89,10 +89,10 @@ endif
 
 
 # Installs the library files (headers and compiled) into the default system lookup folders.
-std-install: std install-headers install-lib
+std-install: uninstall std install-headers install-lib
 	@printf "\nInstallation complete!\n\n"
 
-cuda-install: cuda install-headers install-lib
+cuda-install: uninstall cuda install-headers install-lib
 	@printf "\nInstallation complete!\n\n"
 
 

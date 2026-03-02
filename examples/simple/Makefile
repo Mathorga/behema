@@ -1,7 +1,7 @@
 CCOMP=gcc
 
-CCOMP_FLAGS=-std=c11 -Wall -pedantic
-CLINK_FLAGS=-Wall
+CCOMP_FLAGS=-std=c11 -Wall -pedantic -fopenmp
+CLINK_FLAGS=-Wall -fopenmp
 
 STD_LIBS=-lm
 BEHEMA_LIBS=-lbehema
