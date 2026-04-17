@@ -96,6 +96,69 @@ bhm_error_code_t c2d_alloc(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_soa_init(
+    bhm_soa_cortex_t* cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
+    // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
+    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) return BHM_ERROR_NH_RADIUS_TOO_BIG;
+
+    // Setup cortex data.
+    cortex->width = width;
+    cortex->height = height;
+    cortex->ticks_count = 0x00U;
+    cortex->evols_count = 0x00U;
+    cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
+    cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
+
+    cortex->nh_radius = nh_radius;
+    cortex->fire_threshold = BHM_DEFAULT_THRESHOLD;
+    cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
+    cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
+    cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
+    cortex->g_rand_state = BHM_RAND_OFFSET;
+    cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
+    cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
+    cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
+    cortex->max_syn_count = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    cortex->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
+
+    cortex->sample_window = BHM_DEFAULT_SAMPLE_WINDOW;
+    cortex->pulse_mapping = BHM_PULSE_MAPPING_LINEAR;
+
+    // Allocate neurons data.
+    cortex->n_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * cortex->height * sizeof(bhm_rand_state_t));
+    if (cortex->n_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_pulse_mask_t));
+    if (cortex->n_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulses = (bhm_ticks_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_ticks_count_t));
+    if (cortex->n_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_values = (bhm_neuron_value_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_value_t));
+    if (cortex->n_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_strength_t));
+    if (cortex->n_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
+    if (cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_init(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
@@ -132,9 +195,7 @@ bhm_error_code_t c2d_init(
 
     // Allocate neurons.
     cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
@@ -169,16 +230,8 @@ bhm_error_code_t c2d_rand_init(
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
 ) {
-    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) {
-        // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
-        return BHM_ERROR_NH_RADIUS_TOO_BIG;
-    }
-
-    // Allocate the cortex.
-    cortex = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
-    if (cortex == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
+    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) return BHM_ERROR_NH_RADIUS_TOO_BIG;
 
     // Setup cortex properties.
     cortex->width = width;
@@ -219,9 +272,7 @@ bhm_error_code_t c2d_rand_init(
 
     // Allocate neurons.
     cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {

@@ -152,6 +152,111 @@ typedef struct {
     bhm_ticks_count_t* values;
 } bhm_output2d_t;
 
+typedef struct {
+    // ##########################################
+    // Cortex data.
+    // ##########################################
+
+    // Width of the cortex.
+    //* Mutable.
+    bhm_cortex_size_t width;
+    // Height of the cortex.
+    //* Mutable.
+    bhm_cortex_size_t height;
+    // Ticks performed since cortex creation.
+    bhm_ticks_count_t ticks_count;
+    // Evolutions performed since cortex creation.
+    bhm_ticks_count_t evols_count;
+    // Amount of ticks between each evolution.
+    bhm_ticks_count_t evol_step;
+    // Length of the window used to count pulses in the cortex' neurons.
+    //* Mutable.
+    bhm_ticks_count_t pulse_window;
+
+
+    // Radius of each neuron's neighborhood.
+    bhm_nh_radius_t nh_radius;
+
+    // TODO Move to single neurons!
+    bhm_neuron_value_t fire_threshold;
+    bhm_neuron_value_t recovery_value;
+    bhm_neuron_value_t exc_value;
+    bhm_neuron_value_t decay_value;
+
+
+    // Random state.
+    // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
+    // Embedding the rand state allows for completely deterministic and reproducible results.
+    bhm_rand_state_t g_rand_state;
+
+
+    // Chance (out of 0xFFFFU) of synapse generation or deletion (structural plasticity).
+    //* Mutable.
+    bhm_chance_t syngen_chance;
+    // Chance (out of 0xFFFFU) of synapse strengthening or weakening (functional plasticity).
+    //* Mutable.
+    bhm_chance_t synstr_chance;
+
+
+    // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.
+    bhm_syn_strength_t max_tot_strength;
+    // Maximum number of synapses between a neuron and its neighbors.
+    bhm_syn_count_t max_syn_count;
+    // Maximum range for inhexc chance: single neurons' inhexc ratio will vary between 0 and inhexc_range. 0 means all excitatory, inhexc_range means all inhibitory.
+    bhm_chance_t inhexc_range;
+
+
+    // Length of the window used to sample inputs.
+    bhm_ticks_count_t sample_window;
+    bhm_pulse_mapping_t pulse_mapping;
+
+    // ##########################################
+    // Neurons data.
+    // ##########################################
+
+    // Neighborhood connections pattern (SYNapses ACtivation state):
+    // 1|1|0
+    // 0|x|1 => 1100x1100
+    // 1|0|0
+    bhm_nh_mask_t* n_synac_masks;
+    // Neighborhood excitatory states pattern (SYNapses EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
+    // Only values corresponding to active synapses are used.
+    bhm_nh_mask_t* n_synex_masks;
+    // Neighborhood synapses strength pattern (SYNapses STRength). Defines a 3 bit value defined as [cba].
+    bhm_nh_mask_t* n_synstr_masks_a;
+    bhm_nh_mask_t* n_synstr_masks_b;
+    bhm_nh_mask_t* n_synstr_masks_c;
+
+    // Local random states, one for each neuron.
+    bhm_rand_state_t* n_l_rand_states;
+
+
+    // Activation history pattern:
+    //           |<--pulse_window-->|
+    // xxxxxxxxxx01001010001010001001--------> t
+    //                              ^
+    // Used to know the pulse frequency at a given moment (e.g. for syngen).
+    bhm_pulse_mask_t* n_pulse_masks;
+    // Amount of activations in the cortex' pulse window.
+    bhm_ticks_count_t* n_pulses;
+
+
+    // Current internal value.
+    bhm_neuron_value_t* n_values;
+    // Maximum number of synapses to the neuron. Cannot be greater than the cortex' max_syn_count.
+    //* Mutable.
+    bhm_syn_count_t* n_max_syn_counts;
+    // Amount of connected neighbors.
+    bhm_syn_count_t* n_syn_counts;
+    // Total amount of syn strength from input neurons.
+    bhm_syn_strength_t* n_tot_syn_strengths;
+    // Proportion between excitatory and inhibitory generated synapses. Can vary between 0 and cortex.inhexc_range.
+    // inhexc_ratio = 0 -> all synapses are excitatory.
+    // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
+    //* Mutable.
+    bhm_chance_t* n_inhexc_ratios;
+} bhm_soa_cortex_t;
+
 /// @brief Neuron definition data structure.
 typedef struct {
     // Neighborhood connections pattern (SYNapses ACtivation state):
