@@ -213,9 +213,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
     // Avoid accessing unallocated memory.
-    if (x >= prev_cortex->width || y >= prev_cortex->height) {
-        return;
-    }
+    if (x >= prev_cortex->width || y >= prev_cortex->height) return;
 
     // Retrieve the involved neurons.
     bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
@@ -398,7 +396,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         // Store pulse.
         next_neuron->pulse_mask |= 0x01U;
         next_neuron->pulse++;
-    }0
+    }
 
     // TODO WARNING: This should not be updated by ALL threads!!!!
     next_cortex->ticks_count++;
