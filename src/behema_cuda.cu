@@ -252,6 +252,9 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
     bool evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
+    // Copy the current neuron's rand state from global memory to thread-local.
+    bhm_rand_state_t rand_state = prev_neuron.rand_state;
+
     // Increment the current neuron value by reading its connected neighbors.
     for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
         for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
@@ -276,8 +279,8 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 
                 // Pick a random number for each neighbor, capped to the max uint16 value.
-                next_neuron->rand_state = cuda_xorshf32(next_neuron->rand_state);
-                bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
+                rand_state = cuda_xorshf32(rand_state);
+                bhm_chance_t random = rand_state % 0xFFFFU;
 
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                 bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
@@ -356,6 +359,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
                     }
 
                     // Increment evolutions count.
+                    // TODO WARNING: This should not be updated by ALL threads!!!!
                     next_cortex->evols_count++;
                 }
             }
@@ -368,6 +372,9 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
             prev_str_mask_c >>= 0x01U;
         }
     }
+
+    // Copy the current neuron's rand state from thread-local memory to global.
+    next_neuron->rand_state = rand_state;
 
     // Push to equilibrium by decaying to zero, both from above and below.
     if (prev_neuron.value > 0x00) {
@@ -391,8 +398,9 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         // Store pulse.
         next_neuron->pulse_mask |= 0x01U;
         next_neuron->pulse++;
-    }
+    }0
 
+    // TODO WARNING: This should not be updated by ALL threads!!!!
     next_cortex->ticks_count++;
 }
 
