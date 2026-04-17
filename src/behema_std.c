@@ -81,7 +81,7 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < prev_cortex->width; x++) {
-            // Retrieve the involved neurons.
+            // Retrieve the involved neuron index.
             bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
 
             /* Compute the neighborhood diameter:
@@ -98,6 +98,12 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
               +-|-|-|-|-|-|-+
             */
             bhm_cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
+
+            bhm_nh_mask_t synac_mask = prev_cortex->n_synac_masks[neuron_index];
+            bhm_nh_mask_t synex_mask = prev_cortex->n_synex_masks[neuron_index];
+            bhm_nh_mask_t synstr_mask_a = prev_cortex->n_synstr_masks_a[neuron_index];
+            bhm_nh_mask_t synstr_mask_b = prev_cortex->n_synstr_masks_b[neuron_index];
+            bhm_nh_mask_t synstr_mask_c = prev_cortex->n_synstr_masks_c[neuron_index];
 
             // Defines whether to evolve or not.
             // evol_step is incremented by 1 to account for edge cases and human readable behavior:
@@ -124,9 +130,9 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
 
                         // Compute the current synapse strength.
                         bhm_syn_strength_t syn_strength = (
-                            (prev_cortex->n_synstr_masks_a[neuron_index] & 0x01U) |
-                            ((prev_cortex->n_synstr_masks_b[neuron_index] & 0x01U) << 0x01U) |
-                            ((prev_cortex->n_synstr_masks_c[neuron_index] & 0x01U) << 0x02U)
+                            (synstr_mask_a & 0x01U) |
+                            ((synstr_mask_b & 0x01U) << 0x01U) |
+                            ((synstr_mask_c & 0x01U) << 0x02U)
                         );
 
                         // Pick a random number for each neighbor, capped to the max uint16 value.
@@ -137,8 +143,8 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                         bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
                         // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
-                        if (prev_cortex->n_synac_masks[neuron_index] & 0x01U) {
-                            bhm_neuron_value_t neighbor_influence = (prev_cortex->n_synex_masks[neuron_index] & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
+                        if (synac_mask & 0x01U) {
+                            bhm_neuron_value_t neighbor_influence = (synex_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
                             if (prev_cortex->n_values[neighbor_index] > prev_cortex->fire_threshold) {
                                 if (next_cortex->n_values[neuron_index] + neighbor_influence < prev_cortex->recovery_value) {
                                     next_cortex->n_values[neuron_index] = prev_cortex->recovery_value;
@@ -152,7 +158,7 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                         if (evolve) {
                             // Structural plasticity: create or destroy a synapse.
                             if (
-                                !(prev_cortex->n_synac_masks[neuron_index] & 0x01U) &&
+                                !(synac_mask & 0x01U) &&
                                 prev_cortex->n_syn_counts[neuron_index] < next_cortex->n_max_syn_counts[neuron_index] &&
                                 // Frequency component.
                                 random < prev_cortex->syngen_chance * (bhm_chance_t) prev_cortex->n_pulses[neighbor_index]
@@ -176,7 +182,7 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
 
                                 next_cortex->n_syn_counts[neuron_index]++;
                             } else if (
-                                prev_cortex->n_synac_masks[neuron_index] & 0x01U &&
+                                synac_mask & 0x01U &&
                                 // Only 0-strength synapses can be deleted.
                                 syn_strength <= 0x00U &&
                                 // Frequency component.
@@ -189,16 +195,16 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                             }
 
                             // Functional plasticity: strengthen or weaken a synapse.
-                            if (prev_cortex->n_synac_masks[neuron_index] & 0x01U) {
+                            if (synac_mask & 0x01U) {
                                 if (
                                     syn_strength < BHM_MAX_SYN_STRENGTH &&
                                     prev_cortex->n_tot_syn_strengths[neuron_index] < prev_cortex->max_tot_strength &&
                                     random < prev_cortex->synstr_chance * (bhm_chance_t) prev_cortex->n_pulses[neighbor_index] * (bhm_chance_t) strength_diff
                                 ) {
                                     syn_strength++;
-                                    next_cortex->n_synstr_masks_a[neuron_index] = (prev_cortex->n_synstr_masks_a[neuron_index] & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                                    next_cortex->n_synstr_masks_b[neuron_index] = (prev_cortex->n_synstr_masks_b[neuron_index] & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                                    next_cortex->n_synstr_masks_c[neuron_index] = (prev_cortex->n_synstr_masks_c[neuron_index] & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_a[neuron_index] = (synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_b[neuron_index] = (synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_c[neuron_index] = (synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
 
                                     next_cortex->n_tot_syn_strengths[neuron_index]++;
                                 } else if (
@@ -206,9 +212,9 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                                     random < prev_cortex->synstr_chance / (prev_cortex->n_pulses[neighbor_index] + syn_strength + 1)
                                 ) {
                                     syn_strength--;
-                                    next_cortex->n_synstr_masks_a[neuron_index] = (prev_cortex->n_synstr_masks_a[neuron_index] & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                                    next_cortex->n_synstr_masks_b[neuron_index] = (prev_cortex->n_synstr_masks_b[neuron_index] & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                                    next_cortex->n_synstr_masks_c[neuron_index] = (prev_cortex->n_synstr_masks_c[neuron_index] & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_a[neuron_index] = (synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_b[neuron_index] = (synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                    next_cortex->n_synstr_masks_c[neuron_index] = (synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
 
                                     next_cortex->n_tot_syn_strengths[neuron_index]--;
                                 }
@@ -220,11 +226,11 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                     }
 
                     // Shift the masks to check for the next neighbor.
-                    prev_cortex->n_synac_masks[neuron_index] >>= 0x01U;
-                    prev_cortex->n_synex_masks[neuron_index] >>= 0x01U;
-                    prev_cortex->n_synstr_masks_a[neuron_index] >>= 0x01U;
-                    prev_cortex->n_synstr_masks_b[neuron_index] >>= 0x01U;
-                    prev_cortex->n_synstr_masks_c[neuron_index] >>= 0x01U;
+                    synac_mask >>= 0x01U;
+                    synex_mask >>= 0x01U;
+                    synstr_mask_a >>= 0x01U;
+                    synstr_mask_b >>= 0x01U;
+                    synstr_mask_c >>= 0x01U;
                 }
             }
 

@@ -69,18 +69,45 @@ bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex);
 /// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
-__global__ void c2d_feed2d(bhm_cortex2d_t* cortex, bhm_input2d_t* input);
+__global__ void c2d_feed2d(
+    bhm_cortex2d_t* cortex,
+    bhm_input2d_t* input
+);
 
 /// @brief Reads data from a cortex through the provided output2d. When the mapping is done, output data is stored in the provided output2d.
 /// @param cortex The cortex to read values from.
 /// @param output The output used to read data from the cortex.
-__global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output);
+__global__ void c2d_read2d(
+    bhm_cortex2d_t* cortex,
+    bhm_output2d_t* output
+);
 
 /// @brief Performs a full run cycle over the provided cortex.
 /// @param prev_cortex The cortex at its current state.
 /// @param next_cortex The cortex that will be updated by the tick cycle.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
-__global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex);
+__device__ void _c2d_tick(
+    bhm_soa_cortex_t* prev_cortex,
+    bhm_soa_cortex_t* next_cortex
+);
+
+/// @brief Performs a full run cycle over the provided cortex.
+/// @param prev_cortex The cortex at its current state.
+/// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
+__global__ void c2d_tick(
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex
+);
+
+/// @brief Performs a full run cycle over the provided cortex.
+/// @param prev_cortex The cortex at its current state.
+/// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
+__global__ void c2d_tick_soa(
+    bhm_soa_cortex_t* prev_cortex,
+    bhm_soa_cortex_t* next_cortex
+);
 
 
 // ########################################## Input mapping functions ##########################################
