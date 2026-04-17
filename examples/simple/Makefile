@@ -53,9 +53,15 @@ ifdef BHM_LIB_DIR
     CLINK_FLAGS+=-L${BHM_LIB_DIR}
 endif
 
-all: clean bench sampled output
+all: clean bench bench_soa sampled output
 
 bench: create
+	@printf "\n"
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
+	@printf "\nCreated $@!\n"
+
+bench_soa: create
 	@printf "\n"
 	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
 	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)

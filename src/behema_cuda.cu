@@ -37,9 +37,7 @@ bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_
     // Allocate values on the device.
     cuda_error = cudaMalloc((void**) &(tmp_input->values), (host_input->x1 - host_input->x0) * (host_input->y1 - host_input->y0) * sizeof(bhm_ticks_count_t));
     cudaCheckError();
-    if (cuda_error != cudaSuccess) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
 
     // Copy values to device.
     cudaMemcpy(

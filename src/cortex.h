@@ -422,8 +422,28 @@ bhm_error_code_t o2d_init(
 /// @brief Allocates a new cortex.
 /// @param cortex The cortex to be allocated.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_alloc_soa(
+    bhm_soa_cortex_t** cortex
+);
+
+/// @brief Allocates a new cortex.
+/// @param cortex The cortex to be allocated.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_alloc(
     bhm_cortex2d_t** cortex
+);
+
+/// @brief Initializes the given cortex with default values.
+/// @param cortex The cortex to initialize.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_init_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
 );
 
 /// @brief Initializes the given cortex with default values.
@@ -458,6 +478,19 @@ bhm_error_code_t c2d_rand_init(
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_create_soa(
+    bhm_soa_cortex_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
+
+/// @brief Allocates and initializes a new cortex.
+/// @param cortex The cortex to be created.
+/// @param width The width of the cortex.
+/// @param height The height of the cortex.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_create(
     bhm_cortex2d_t** cortex,
     bhm_cortex_size_t width,
@@ -480,8 +513,24 @@ bhm_error_code_t o2d_destroy(
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_destroy_soa(
+    bhm_soa_cortex_t* cortex
+);
+
+/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
+/// @param cortex The cortex to destroy
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_destroy(
     bhm_cortex2d_t* cortex
+);
+
+/// @brief Returns a cortex with the same properties as the given one.
+/// @param to The destination cortex.
+/// @param from The source cortex.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_copy_soa(
+    bhm_soa_cortex_t* to,
+    bhm_soa_cortex_t* from
 );
 
 /// @brief Returns a cortex with the same properties as the given one.
@@ -513,6 +562,13 @@ bhm_error_code_t c2d_set_nhradius(
 bhm_error_code_t c2d_set_nhmask(
     bhm_cortex2d_t* cortex,
     bhm_nh_mask_t mask
+);
+
+/// @brief Sets the evolution step for the cortex.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_set_evol_step_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_evol_step_t evol_step
 );
 
 /// @brief Sets the evolution step for the cortex.
@@ -563,6 +619,15 @@ bhm_error_code_t c2d_set_synstr_chance(
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_set_max_syn_count_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_syn_count_t syn_count
+);
+
+/// @brief Sets the maximum number of (input) synapses for the neurons of the cortex.
+/// @param cortex The cortex to edit.
+/// @param syn_count The max number of allowable synapses.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t syn_count
@@ -575,6 +640,13 @@ bhm_error_code_t c2d_set_max_syn_count(
 bhm_error_code_t c2d_set_max_touch(
     bhm_cortex2d_t* cortex,
     float touch
+);
+
+/// @brief Sets the preferred input mapping for the given cortex.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_set_pulse_mapping_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_pulse_mapping_t pulse_mapping
 );
 
 /// @brief Sets the preferred input mapping for the given cortex.
@@ -642,6 +714,15 @@ bhm_error_code_t n2d_mutate(
 // ##########################################
 // Getter functions
 // ##########################################
+
+/// @brief Stores the string representation of the given cortex to the provided string [result].
+/// @param cortex The cortex to inspect.
+/// @param result The string to fill with cortex data.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_to_string_soa(
+    bhm_soa_cortex_t* cortex,
+    char* result
+);
 
 /// @brief Stores the string representation of the given cortex to the provided string [result].
 /// @param cortex The cortex to inspect.
