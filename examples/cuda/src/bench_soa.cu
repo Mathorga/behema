@@ -76,15 +76,16 @@ int main(int argc, char **argv) {
         nh_radius
     );
     dim3 cortex_grid_size = c2d_get_grid_size_soa(even_cortex);
-    dim3 cortex_block_size = dim3(16, 16);//c2d_get_block_size_soa(even_cortex);
+    dim3 cortex_block_size = c2d_get_block_size_soa(even_cortex);
 
     // Calculate required shared memory bytes
-    int smem_width = cortex_block_size.x + (2 * nh_radius);
+    int smem_width = cortex_block_size.x + (2 * nh_radius) + 1;
     int smem_height = cortex_block_size.y + (2 * nh_radius);
     int smem_elements = smem_width * smem_height;
 
     // We need space for an array of values AND an array of pulses
-    size_t shared_mem_size = smem_elements * sizeof(bhm_neuron_value_t) + sizeof(bhm_ticks_count_t);
+    printf("smem_elements: %d\n", smem_elements);
+    size_t shared_mem_size = smem_elements * (sizeof(bhm_neuron_value_t) + sizeof(bhm_ticks_count_t));
 
     // Print the cortex out.
     char cortex_string[100];
@@ -134,28 +135,27 @@ int main(int argc, char **argv) {
         // TODO Fetch input.
 
         // Copy input to device.
-        i2d_to_device(d_input, input);
+        // i2d_to_device(d_input, input);
 
         // Feed.
-        c2d_feed2d_soa<<<input_grid_size, input_block_size>>>(prev_cortex, d_input);
-        cudaCheckError();
-        cudaDeviceSynchronize();
+        // c2d_feed2d_soa<<<input_grid_size, input_block_size>>>(prev_cortex, d_input);
+        // cudaCheckError();
+        // cudaDeviceSynchronize();
 
-        // printf("\ncortex\t%d - %d\ngrid\t%d - %d\nblock\t%d - %d", even_cortex->width, even_cortex->height, cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
         c2d_tick_soa<<<cortex_grid_size, cortex_block_size, shared_mem_size>>>(
             prev_cortex,
             next_cortex,
-            prev_cortex->width,
-            prev_cortex->height,
-            prev_cortex->nh_radius,
-            prev_cortex->fire_threshold,
-            prev_cortex->recovery_value,
-            prev_cortex->exc_value,
-            prev_cortex->decay_value,
-            prev_cortex->syngen_chance,
-            prev_cortex->synstr_chance,
-            prev_cortex->max_tot_strength,
-            prev_cortex->inhexc_range
+            512,
+            256,
+            2,
+            BHM_DEFAULT_THRESHOLD,
+            BHM_DEFAULT_RECOVERY_VALUE,
+            BHM_DEFAULT_EXC_VALUE,
+            BHM_DEFAULT_DECAY_RATE,
+            BHM_DEFAULT_SYNGEN_CHANCE,
+            BHM_DEFAULT_SYNSTR_CHANCE,
+            BHM_DEFAULT_MAX_TOT_STRENGTH,
+            BHM_DEFAULT_INHEXC_RANGE
         );
         cudaCheckError();
         cudaDeviceSynchronize();

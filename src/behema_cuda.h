@@ -29,7 +29,7 @@ Copyright (C) 2022 Luka Micheletti
 // dim3 block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
 // dim3 block_size(BLOCK_SIZE_3D, BLOCK_SIZE_3D, BLOCK_SIZE_3D);
 #define BLOCK_SIZE_1D 256
-#define BLOCK_SIZE_2D 32
+#define BLOCK_SIZE_2D 16
 #define BLOCK_SIZE_3D 8
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.

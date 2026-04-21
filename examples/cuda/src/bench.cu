@@ -70,7 +70,7 @@ int main(int argc, char **argv) {
         nh_radius
     );
     dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
-    dim3 cortex_block_size = dim3(16, 16);//c2d_get_block_size(even_cortex);
+    dim3 cortex_block_size = c2d_get_block_size(even_cortex);
 
     // Print the cortex out.
     char cortex_string[100];
