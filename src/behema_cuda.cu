@@ -1,5 +1,8 @@
 #include "behema_cuda.h"
 
+/// @brief Shared memory on the device.
+extern __shared__ unsigned char sh_mem[];
+
 // The state must be initialized to non-zero.
 __host__ __device__ uint32_t cuda_xorshf32(uint32_t state) {
     // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
@@ -459,7 +462,7 @@ __global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     // TODO.
 }
 
-__device__ void _c2d_tick(
+__global__ void c2d_tick_soa(
     bhm_soa_cortex_t* prev_cortex,
     bhm_soa_cortex_t* next_cortex,
     bhm_cortex_size_t width,
@@ -474,6 +477,46 @@ __device__ void _c2d_tick(
     bhm_syn_strength_t max_tot_strength,
     bhm_chance_t inhexc_range
 ) {
+    // Shared memory tile dimensions
+    bhm_cortex_size_t smem_width = blockDim.x + (2 * nh_radius);
+    bhm_cortex_size_t smem_height = blockDim.y + (2 * nh_radius);
+    bhm_cortex_size_t smem_elements = smem_width * smem_height;
+
+    // Ensure the byte offset is a multiple of 8
+    size_t val_bytes = smem_elements * sizeof(bhm_neuron_value_t);
+    size_t aligned_offset = (val_bytes + 7) & ~7;
+
+    // Partition the shared memory for values and pulses
+    bhm_neuron_value_t* s_values = (bhm_neuron_value_t*)sh_mem;
+    bhm_ticks_count_t* s_pulses = (bhm_ticks_count_t*)((char*)sh_mem + aligned_offset);
+
+    // --- COOPERATIVE LOADING PHASE ---
+    // Flatten thread index to 1D
+    int tid = threadIdx.x + threadIdx.y * blockDim.x;
+    int num_threads = blockDim.x * blockDim.y;
+
+    // Because the shared memory tile (block + halo) is larger than the number of threads,
+    // threads will stride through the array to load all elements.
+    for (int i = tid; i < smem_elements; i += num_threads) {
+        int s_y = i / smem_width;
+        int s_x = i % smem_width;
+        
+        // Calculate the global coordinates for this shared memory cell
+        int g_x = WRAP((int)(blockIdx.x * blockDim.x) + s_x - nh_radius, width);
+        int g_y = WRAP((int)(blockIdx.y * blockDim.y) + s_y - nh_radius, height);
+        
+        bhm_cortex_size_t g_idx = IDX2D(g_x, g_y, width);
+        
+        // Fetch exactly once from global memory into shared memory
+        s_values[i] = prev_cortex->n_values[g_idx];
+        s_pulses[i] = prev_cortex->n_pulses[g_idx];
+    }
+
+    // Barrier: Wait for all threads in the block to finish loading the halo
+    __syncthreads();
+    // ---------------------------------
+
+
     bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -537,16 +580,24 @@ __device__ void _c2d_tick(
             // Exclude the central neuron from the list of neighbors.
             if ((j != nh_radius || i != nh_radius) &&
                 (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < width && neighbor_y < height)) {
+
+                // NEW: Calculate index for our fast __shared__ memory arrays!
+                // Thread local coordinates map perfectly to the loop iterators
+                int s_x = threadIdx.x + i;
+                int s_y = threadIdx.y + j;
+                int s_index = s_y * smem_width + s_x;
+
+                // Fetch neighbors from the ultra-fast cache!
+                bhm_neuron_value_t neighbor_value = s_values[s_index];
+                bhm_ticks_count_t neighbor_pulse = s_pulses[s_index];
+
                 // The index of the current neighbor in the current neuron's neighborhood.
                 bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                bhm_cortex_size_t neighbor_index = IDX2D(
-                    WRAP(neighbor_x, width),
-                    WRAP(neighbor_y, height),
-                    width
-                );
-
-                // Read neighbor pulse once from global memory.
-                bhm_ticks_count_t neighbor_pulse = prev_cortex->n_pulses[neighbor_index];
+                // bhm_cortex_size_t neighbor_index = IDX2D(
+                //     WRAP(neighbor_x, width),
+                //     WRAP(neighbor_y, height),
+                //     width
+                // );
 
                 // Compute the current synapse strength.
                 bhm_syn_strength_t syn_strength = (
@@ -555,17 +606,13 @@ __device__ void _c2d_tick(
                     ((prev_str_mask_c & 0x01U) << 0x02U)
                 );
 
-                // Pick a random number for each neighbor, capped to the max uint16 value.
-                rand_state = cuda_xorshf32(rand_state);
-                bhm_chance_t random = rand_state % 0xFFFFU;
-
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                 bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
                 // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
                 if (prev_ac_mask & 0x01U) {
                     bhm_neuron_value_t neighbor_influence = (prev_ex_mask & 0x01U ? exc_value : -exc_value) * ((syn_strength / 4) + 1);
-                    if (prev_cortex->n_values[neighbor_index] > fire_threshold) {
+                    if (neighbor_value > fire_threshold) {
                         if (next_neuron_value + neighbor_influence < recovery_value) {
                             next_neuron_value = recovery_value;
                         } else {
@@ -576,6 +623,10 @@ __device__ void _c2d_tick(
 
                 // Perform the evolution phase if allowed.
                 if (evolve) {
+                    // Pick a random number for each neighbor, capped to the max uint16 value.
+                    rand_state = cuda_xorshf32(rand_state);
+                    bhm_chance_t random = rand_state % 0xFFFFU;
+
                     // Structural plasticity: create or destroy a synapse.
                     if (
                         !(prev_ac_mask & 0x01U) &&
@@ -764,10 +815,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
                                                 ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                 ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                // Pick a random number for each neighbor, capped to the max uint16 value.
-                rand_state = cuda_xorshf32(rand_state);
-                bhm_chance_t random = rand_state % 0xFFFFU;
-
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                 bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
@@ -785,6 +832,10 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
                 // Perform the evolution phase if allowed.
                 if (evolve) {
+                    // Pick a random number for each neighbor, capped to the max uint16 value.
+                    rand_state = cuda_xorshf32(rand_state);
+                    bhm_chance_t random = rand_state % 0xFFFFU;
+
                     // Structural plasticity: create or destroy a synapse.
                     if (!(prev_ac_mask & 0x01U) &&
                         prev_neuron.syn_count < next_neuron->max_syn_count &&
@@ -888,27 +939,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
     // TODO WARNING: This should not be updated by ALL threads!!!!
     next_cortex->ticks_count++;
-}
-
-__global__ void c2d_tick_soa(
-    bhm_soa_cortex_t* prev_cortex,
-    bhm_soa_cortex_t* next_cortex
-) {
-    _c2d_tick(
-        prev_cortex,
-        next_cortex,
-        prev_cortex->width,
-        prev_cortex->height,
-        prev_cortex->nh_radius,
-        prev_cortex->fire_threshold,
-        prev_cortex->recovery_value,
-        prev_cortex->exc_value,
-        prev_cortex->decay_value,
-        prev_cortex->syngen_chance,
-        prev_cortex->synstr_chance,
-        prev_cortex->max_tot_strength,
-        prev_cortex->inhexc_range
-    );
 }
 
 __host__ __device__ bhm_bool_t value_to_pulse(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input, bhm_pulse_mapping_t pulse_mapping) {

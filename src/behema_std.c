@@ -135,10 +135,6 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
                             ((synstr_mask_c & 0x01U) << 0x02U)
                         );
 
-                        // Pick a random number for each neighbor, capped to the max uint16 value.
-                        next_cortex->n_l_rand_states[neuron_index] = xorshf32(prev_cortex->n_l_rand_states[neuron_index]);
-                        bhm_chance_t random = next_cortex->n_l_rand_states[neuron_index] % 0xFFFFU;
-
                         // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                         bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
@@ -156,6 +152,10 @@ void c2d_tick_soa(bhm_soa_cortex_t* prev_cortex, bhm_soa_cortex_t* next_cortex) 
 
                         // Perform the evolution phase if allowed.
                         if (evolve) {
+                            // Pick a random number for each neighbor, capped to the max uint16 value.
+                            next_cortex->n_l_rand_states[neuron_index] = xorshf32(prev_cortex->n_l_rand_states[neuron_index]);
+                            bhm_chance_t random = next_cortex->n_l_rand_states[neuron_index] % 0xFFFFU;
+
                             // Structural plasticity: create or destroy a synapse.
                             if (
                                 !(synac_mask & 0x01U) &&
@@ -325,10 +325,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
                                                       ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                        // Pick a random number for each neighbor, capped to the max uint16 value.
-                        next_neuron->rand_state = xorshf32(next_neuron->rand_state);
-                        bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
-
                         // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                         bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
@@ -346,6 +342,10 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
 
                         // Perform the evolution phase if allowed.
                         if (evolve) {
+                            // Pick a random number for each neighbor, capped to the max uint16 value.
+                            next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                            bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
+
                             // Structural plasticity: create or destroy a synapse.
                             if (
                                 !(prev_ac_mask & 0x01U) &&
