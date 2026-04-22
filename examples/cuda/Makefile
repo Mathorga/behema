@@ -37,12 +37,6 @@ bench: create
 	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(behema_LIBS)
 	@printf "\nCreated $@!\n"
 
-bench_soa: create
-	@printf "\n"
-	$(NVCOMP) $(NVCOMP_FLAGS) -c $(SRC_DIR)/$@.cu -o $(BLD_DIR)/$@.o
-	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(behema_LIBS)
-	@printf "\nCreated $@!\n"
-
 create:
 	$(MKDIR) $(BLD_DIR)
 	$(MKDIR) $(BIN_DIR)

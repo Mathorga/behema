@@ -69,8 +69,12 @@ int main(int argc, char **argv) {
         cortex_height,
         nh_radius
     );
-    dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
+    dim3 cortex_grid_size = c2d_get_grid_size(even_cortex, cortex_block_size);
+
+    // Shared memory size is computed with extra space around it to act as ghost cells.
+    // This ensures the neighborhood for every thread in the block is stored in shared memory.
+    size_t shared_mem_size = (cortex_block_size.x + nh_radius) * (cortex_block_size.y + nh_radius);
 
     // Print the cortex out.
     char cortex_string[100];

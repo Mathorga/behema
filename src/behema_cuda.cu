@@ -15,24 +15,14 @@ __host__ __device__ uint32_t cuda_xorshf32(uint32_t state) {
 
 // ########################################## Initialization functions ##########################################
 
-dim3 c2d_get_grid_size_soa(bhm_soa_cortex_t* cortex) {
+dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex, dim3 block_size) {
     // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra block is allocated when needed.
-    dim3 result(cortex->width / BLOCK_SIZE_2D + (cortex->width % BLOCK_SIZE_2D != 0 ? 1 : 0), cortex->height / BLOCK_SIZE_2D + (cortex->height % BLOCK_SIZE_2D ? 1 : 0));
-    return result;
-}
-
-dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex) {
-    // Cortex size may not be exactly divisible by BLOCK_SIZE, so an extra block is allocated when needed.
-    dim3 result(cortex->width / BLOCK_SIZE_2D + (cortex->width % BLOCK_SIZE_2D != 0 ? 1 : 0), cortex->height / BLOCK_SIZE_2D + (cortex->height % BLOCK_SIZE_2D ? 1 : 0));
-    return result;
-}
-
-dim3 c2d_get_block_size_soa(bhm_soa_cortex_t* cortex) {
-    return dim3(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+    return dim3(cortex->width / block_size.x + (cortex->width % block_size.x != 0 ? 1 : 0), cortex->height / block_size.y + (cortex->height % block_size.y ? 1 : 0));
 }
 
 dim3 c2d_get_block_size(bhm_cortex2d_t* cortex) {
-    return dim3(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+    // Block size is computed from neighborhood diameter in order to have blocks as big as a neighborhood.
+    return dim3(NH_DIAM_2D(cortex->nh_radius), NH_DIAM_2D(cortex->nh_radius));
 }
 
 bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_input) {
@@ -81,85 +71,6 @@ bhm_error_code_t i2d_to_host(bhm_input2d_t* host_input, bhm_input2d_t* device_in
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_to_device_soa(
-    bhm_soa_cortex_t* device_cortex,
-    bhm_soa_cortex_t* host_cortex
-) {
-    cudaError_t cuda_error;
-
-    // Allocate tmp cortex on the host.
-    bhm_soa_cortex_t* tmp_cortex = (bhm_soa_cortex_t*) malloc(sizeof(bhm_soa_cortex_t));
-    if (tmp_cortex == NULL) return BHM_ERROR_FAILED_ALLOC;
-
-    // Copy host cortex to tmp cortex.
-    (*tmp_cortex) = (*host_cortex);
-
-    // Allocate neurons data on the device.
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_synac_masks), host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_synex_masks), host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_synstr_masks_a), host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_synstr_masks_b), host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_synstr_masks_c), host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_l_rand_states), host_cortex->width * host_cortex->height * sizeof(bhm_rand_state_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_pulse_masks), host_cortex->width * host_cortex->height * sizeof(bhm_pulse_mask_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_pulses), host_cortex->width * host_cortex->height * sizeof(bhm_ticks_count_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_values), host_cortex->width * host_cortex->height * sizeof(bhm_neuron_value_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_max_syn_counts), host_cortex->width * host_cortex->height * sizeof(bhm_syn_count_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_syn_counts), host_cortex->width * host_cortex->height * sizeof(bhm_syn_count_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_tot_syn_strengths), host_cortex->width * host_cortex->height * sizeof(bhm_syn_strength_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-    cuda_error = cudaMalloc((void**) &(tmp_cortex->n_inhexc_ratios), host_cortex->width * host_cortex->height * sizeof(bhm_chance_t));
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_ALLOC;
-
-    // Copy neurons data to device.
-    cuda_error = cudaMemcpy(tmp_cortex->n_synac_masks, host_cortex->n_synac_masks, host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_synex_masks, host_cortex->n_synex_masks, host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_synstr_masks_a, host_cortex->n_synstr_masks_a, host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_synstr_masks_b, host_cortex->n_synstr_masks_b, host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_synstr_masks_c, host_cortex->n_synstr_masks_c, host_cortex->width * host_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_l_rand_states, host_cortex->n_l_rand_states, host_cortex->width * host_cortex->height * sizeof(bhm_rand_state_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_pulse_masks, host_cortex->n_pulse_masks, host_cortex->width * host_cortex->height * sizeof(bhm_pulse_mask_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_pulses, host_cortex->n_pulses, host_cortex->width * host_cortex->height * sizeof(bhm_ticks_count_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_values, host_cortex->n_values, host_cortex->width * host_cortex->height * sizeof(bhm_neuron_value_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_max_syn_counts, host_cortex->n_max_syn_counts, host_cortex->width * host_cortex->height * sizeof(bhm_syn_count_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_syn_counts, host_cortex->n_syn_counts, host_cortex->width * host_cortex->height * sizeof(bhm_syn_count_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_tot_syn_strengths, host_cortex->n_tot_syn_strengths, host_cortex->width * host_cortex->height * sizeof(bhm_syn_strength_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(tmp_cortex->n_inhexc_ratios, host_cortex->n_inhexc_ratios, host_cortex->width * host_cortex->height * sizeof(bhm_chance_t), cudaMemcpyHostToDevice);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-
-    // Copy tmp cortex to device.
-    cudaMemcpy(device_cortex, tmp_cortex, sizeof(bhm_soa_cortex_t), cudaMemcpyHostToDevice);
-    cudaCheckError();
-
-    // Cleanup.
-    free(tmp_cortex);
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_to_device(
     bhm_cortex2d_t* device_cortex,
     bhm_cortex2d_t* host_cortex
@@ -201,85 +112,6 @@ bhm_error_code_t c2d_to_device(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_to_host_soa(
-    bhm_soa_cortex_t* host_cortex,
-    bhm_soa_cortex_t* device_cortex
-) {
-    cudaError_t cuda_error;
-
-    // Allocate tmp cortex on the host.
-    bhm_soa_cortex_t* tmp_cortex = (bhm_soa_cortex_t*) malloc(sizeof(bhm_soa_cortex_t));
-    if (tmp_cortex == NULL) return BHM_ERROR_FAILED_ALLOC;
-
-    // Copy tmp cortex to host.
-    cuda_error = cudaMemcpy(tmp_cortex, device_cortex, sizeof(bhm_cortex2d_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-
-    // Copy tmp cortex to host cortex.
-    (*host_cortex) = (*tmp_cortex);
-
-    // Allocate neurons on the host.
-    host_cortex->n_synac_masks = (bhm_nh_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t));
-    if (host_cortex->n_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_synex_masks = (bhm_nh_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t));
-    if (host_cortex->n_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_synstr_masks_a = (bhm_nh_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t));
-    if (host_cortex->n_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_synstr_masks_b = (bhm_nh_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t));
-    if (host_cortex->n_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_synstr_masks_c = (bhm_nh_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t));
-    if (host_cortex->n_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_l_rand_states = (bhm_rand_state_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_rand_state_t));
-    if (host_cortex->n_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_pulse_masks = (bhm_pulse_mask_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_pulse_mask_t));
-    if (host_cortex->n_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_pulses = (bhm_ticks_count_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_ticks_count_t));
-    if (host_cortex->n_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_values = (bhm_neuron_value_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_neuron_value_t));
-    if (host_cortex->n_values == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_max_syn_counts = (bhm_syn_count_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_count_t));
-    if (host_cortex->n_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_syn_counts = (bhm_syn_count_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_count_t));
-    if (host_cortex->n_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_tot_syn_strengths = (bhm_syn_strength_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_strength_t));
-    if (host_cortex->n_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
-    host_cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(tmp_cortex->width * tmp_cortex->height * sizeof(bhm_chance_t));
-    if (host_cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
-
-    // Copy tmp cortex neurons data (still on device) to host cortex.
-    cuda_error = cudaMemcpy(host_cortex->n_synac_masks, tmp_cortex->n_synac_masks, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_synex_masks, tmp_cortex->n_synex_masks, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_synstr_masks_a, tmp_cortex->n_synstr_masks_a, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_synstr_masks_b, tmp_cortex->n_synstr_masks_b, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_synstr_masks_c, tmp_cortex->n_synstr_masks_c, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_nh_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_l_rand_states, tmp_cortex->n_l_rand_states, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_rand_state_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_pulse_masks, tmp_cortex->n_pulse_masks, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_pulse_mask_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_pulses, tmp_cortex->n_pulses, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_ticks_count_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_values, tmp_cortex->n_values, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_neuron_value_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_max_syn_counts, tmp_cortex->n_max_syn_counts, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_count_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_syn_counts, tmp_cortex->n_syn_counts, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_count_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_tot_syn_strengths, tmp_cortex->n_tot_syn_strengths, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_syn_strength_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-    cuda_error = cudaMemcpy(host_cortex->n_inhexc_ratios, tmp_cortex->n_inhexc_ratios, tmp_cortex->width * tmp_cortex->height * sizeof(bhm_chance_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-
-    // Cleanup.
-    free(tmp_cortex);
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_to_host(
     bhm_cortex2d_t* host_cortex,
     bhm_cortex2d_t* device_cortex
@@ -313,55 +145,6 @@ bhm_error_code_t i2d_device_destroy(bhm_input2d_t* input) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_device_destroy_soa(bhm_soa_cortex_t* cortex) {
-    cudaError_t cuda_error;
-
-    // Allocate tmp cortex on the host.
-    bhm_soa_cortex_t* tmp_cortex = (bhm_soa_cortex_t*) malloc(sizeof(bhm_soa_cortex_t));
-    if (tmp_cortex == NULL) return BHM_ERROR_FAILED_ALLOC;
-    
-    // Copy device cortex to host in order to free its neurons.
-    cuda_error = cudaMemcpy(tmp_cortex, cortex, sizeof(bhm_cortex2d_t), cudaMemcpyDeviceToHost);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_COPY;
-
-    // Free device neurons.
-    cuda_error = cudaFree(tmp_cortex->n_synac_masks);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_synex_masks);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_synstr_masks_a);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_synstr_masks_b);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_synstr_masks_c);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_l_rand_states);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_pulse_masks);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_pulses);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_values);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_max_syn_counts);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_syn_counts);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_tot_syn_strengths);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-    cuda_error = cudaFree(tmp_cortex->n_inhexc_ratios);
-    if (cuda_error != cudaSuccess) return BHM_ERROR_FAILED_FREE;
-
-    // Free tmp cortex.
-    free(tmp_cortex);
-
-    // Finally free device cortex.
-    cudaFree(cortex);
-    cudaCheckError();
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex) {
     // Allocate tmp cortex on the host.
     bhm_cortex2d_t* tmp_cortex = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
@@ -387,37 +170,6 @@ bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex) {
 
 
 // ########################################## Execution functions ##########################################
-
-__global__ void c2d_feed2d_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_input2d_t* input
-) {
-    bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
-    bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
-
-    // Avoid accessing unallocated memory.
-    if (x >= input->x1 - input->x0 || y >= input->y1 - input->y0) {
-        return;
-    }
-
-    // Check whether the current input neuron should be excited or not.
-    bhm_bool_t excite = value_to_pulse(
-        cortex->sample_window,
-        cortex->ticks_count % cortex->sample_window,
-        input->values[
-            IDX2D(
-                x,
-                y,
-                input->x1 - input->x0
-            )
-        ],
-        cortex->pulse_mapping
-    );
-
-    if (excite) {
-        cortex->n_values[IDX2D(x + input->x0, y + input->y0, cortex->width)] += input->exc_value;
-    }
-}
 
 __global__ void c2d_feed2d(
     bhm_cortex2d_t* cortex,
@@ -460,291 +212,6 @@ __global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     }
 
     // TODO.
-}
-
-__global__ void c2d_tick_soa(
-    bhm_soa_cortex_t* prev_cortex,
-    bhm_soa_cortex_t* next_cortex,
-    bhm_cortex_size_t width,
-    bhm_cortex_size_t height,
-    bhm_nh_radius_t nh_radius,
-    bhm_neuron_value_t fire_threshold,
-    bhm_neuron_value_t recovery_value,
-    bhm_neuron_value_t exc_value,
-    bhm_neuron_value_t decay_value,
-    bhm_chance_t syngen_chance,
-    bhm_chance_t synstr_chance,
-    bhm_syn_strength_t max_tot_strength,
-    bhm_chance_t inhexc_range
-) {
-    // Shared memory tile dimensions
-    bhm_cortex_size_t smem_width = blockDim.x + (2 * nh_radius);
-    bhm_cortex_size_t smem_height = blockDim.y + (2 * nh_radius);
-    bhm_cortex_size_t smem_elements = smem_width * smem_height;
-
-    // Ensure the byte offset is a multiple of 8
-    size_t val_bytes = smem_elements * sizeof(bhm_neuron_value_t);
-    size_t aligned_offset = (val_bytes + 7) & ~7;
-
-    // Partition the shared memory for values and pulses
-    bhm_neuron_value_t* s_values = (bhm_neuron_value_t*)sh_mem;
-    bhm_ticks_count_t* s_pulses = (bhm_ticks_count_t*)((char*)sh_mem + aligned_offset);
-
-    // --- COOPERATIVE LOADING PHASE ---
-    // Flatten thread index to 1D
-    int tid = threadIdx.x + threadIdx.y * blockDim.x;
-    int num_threads = blockDim.x * blockDim.y;
-
-    // Because the shared memory tile (block + halo) is larger than the number of threads,
-    // threads will stride through the array to load all elements.
-    for (int i = tid; i < smem_elements; i += num_threads) {
-        int s_y = i / smem_width;
-        int s_x = i % smem_width;
-        
-        // Calculate the global coordinates for this shared memory cell
-        int g_x = WRAP((int)(blockIdx.x * blockDim.x) + s_x - nh_radius, width);
-        int g_y = WRAP((int)(blockIdx.y * blockDim.y) + s_y - nh_radius, height);
-        
-        bhm_cortex_size_t g_idx = IDX2D(g_x, g_y, width);
-        
-        // Fetch exactly once from global memory into shared memory
-        s_values[i] = prev_cortex->n_values[g_idx];
-        s_pulses[i] = prev_cortex->n_pulses[g_idx];
-    }
-
-    // Barrier: Wait for all threads in the block to finish loading the halo
-    __syncthreads();
-    // ---------------------------------
-
-
-    bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
-    bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
-
-    // Avoid accessing unallocated memory.
-    if (x >= width || y >= height) return;
-
-    // Retrieve the involved neuron index.
-    bhm_cortex_size_t neuron_index = IDX2D(x, y, width);
-
-    /* Compute the neighborhood diameter:
-            d = 7
-        <------------->
-        r = 3
-        <----->
-        +-|-|-|-|-|-|-+
-        |             |
-        |             |
-        |      X      |
-        |             |
-        |             |
-        +-|-|-|-|-|-|-+
-    */
-    bhm_cortex_size_t nh_diameter = NH_DIAM_2D(nh_radius);
-
-    // Copy the current neuron's state from global memory to thread-local.
-    // From the prev cortex.
-    bhm_neuron_value_t prev_neuron_value = prev_cortex->n_values[neuron_index];
-    bhm_nh_mask_t prev_ac_mask = prev_cortex->n_synac_masks[neuron_index];
-    bhm_nh_mask_t prev_ex_mask = prev_cortex->n_synex_masks[neuron_index];
-    bhm_nh_mask_t prev_str_mask_a = prev_cortex->n_synstr_masks_a[neuron_index];
-    bhm_nh_mask_t prev_str_mask_b = prev_cortex->n_synstr_masks_b[neuron_index];
-    bhm_nh_mask_t prev_str_mask_c = prev_cortex->n_synstr_masks_c[neuron_index];
-    bhm_syn_strength_t prev_tot_syn_strength = prev_cortex->n_tot_syn_strengths[neuron_index];
-    bhm_ticks_count_t prev_pulse = prev_cortex->n_pulses[neuron_index];
-
-    // And from the next cortex.
-    bhm_rand_state_t rand_state = next_cortex->n_l_rand_states[neuron_index];
-    bhm_neuron_value_t next_neuron_value = next_cortex->n_values[neuron_index];
-    bhm_nh_mask_t next_ac_mask = next_cortex->n_synac_masks[neuron_index];
-    bhm_nh_mask_t next_ex_mask = next_cortex->n_synex_masks[neuron_index];
-    bhm_nh_mask_t next_str_mask_a = next_cortex->n_synstr_masks_a[neuron_index];
-    bhm_nh_mask_t next_str_mask_b = next_cortex->n_synstr_masks_b[neuron_index];
-    bhm_nh_mask_t next_str_mask_c = next_cortex->n_synstr_masks_c[neuron_index];
-    bhm_syn_strength_t next_tot_syn_strength = next_cortex->n_tot_syn_strengths[neuron_index];
-    bhm_ticks_count_t next_pulse = next_cortex->n_pulses[neuron_index];
-    bhm_syn_count_t next_syn_count = next_cortex->n_syn_counts[neuron_index];
-    bhm_pulse_mask_t next_pulse_mask = next_cortex->n_pulse_masks[neuron_index];
-
-    // Defines whether to evolve or not.
-    // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-    // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
-    // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-    bool evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
-
-    // Increment the current neuron value by reading its connected neighbors.
-    for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
-        for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
-            bhm_cortex_size_t neighbor_x = x + (i - nh_radius);
-            bhm_cortex_size_t neighbor_y = y + (j - nh_radius);
-
-            // Exclude the central neuron from the list of neighbors.
-            if ((j != nh_radius || i != nh_radius) &&
-                (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < width && neighbor_y < height)) {
-
-                // NEW: Calculate index for our fast __shared__ memory arrays!
-                // Thread local coordinates map perfectly to the loop iterators
-                int s_x = threadIdx.x + i;
-                int s_y = threadIdx.y + j;
-                int s_index = s_y * smem_width + s_x;
-
-                // Fetch neighbors from the ultra-fast cache!
-                bhm_neuron_value_t neighbor_value = s_values[s_index];
-                bhm_ticks_count_t neighbor_pulse = s_pulses[s_index];
-
-                // The index of the current neighbor in the current neuron's neighborhood.
-                bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                // bhm_cortex_size_t neighbor_index = IDX2D(
-                //     WRAP(neighbor_x, width),
-                //     WRAP(neighbor_y, height),
-                //     width
-                // );
-
-                // Compute the current synapse strength.
-                bhm_syn_strength_t syn_strength = (
-                    (prev_str_mask_a & 0x01U) |
-                    ((prev_str_mask_b & 0x01U) << 0x01U) |
-                    ((prev_str_mask_c & 0x01U) << 0x02U)
-                );
-
-                // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
-                bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
-
-                // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
-                if (prev_ac_mask & 0x01U) {
-                    bhm_neuron_value_t neighbor_influence = (prev_ex_mask & 0x01U ? exc_value : -exc_value) * ((syn_strength / 4) + 1);
-                    if (neighbor_value > fire_threshold) {
-                        if (next_neuron_value + neighbor_influence < recovery_value) {
-                            next_neuron_value = recovery_value;
-                        } else {
-                            next_neuron_value += neighbor_influence;
-                        }
-                    }
-                }
-
-                // Perform the evolution phase if allowed.
-                if (evolve) {
-                    // Pick a random number for each neighbor, capped to the max uint16 value.
-                    rand_state = cuda_xorshf32(rand_state);
-                    bhm_chance_t random = rand_state % 0xFFFFU;
-
-                    // Structural plasticity: create or destroy a synapse.
-                    if (
-                        !(prev_ac_mask & 0x01U) &&
-                        prev_cortex->n_syn_counts[neuron_index] < next_cortex->n_max_syn_counts[neuron_index] &&
-                        // Frequency component.
-                        random < syngen_chance * (bhm_chance_t) neighbor_pulse
-                    ) {
-                        // Add synapse.
-                        next_ac_mask |= (0x01UL << neighbor_nh_index);
-
-                        // Set the new synapse's strength to 0.
-                        next_str_mask_a &= ~(0x01UL << neighbor_nh_index);
-                        next_str_mask_b &= ~(0x01UL << neighbor_nh_index);
-                        next_str_mask_c &= ~(0x01UL << neighbor_nh_index);
-
-                        // Define whether the new synapse is excitatory or inhibitory.
-                        if (random % inhexc_range < next_cortex->n_inhexc_ratios[neuron_index]) {
-                            // Inhibitory.
-                            next_ex_mask &= ~(0x01UL << neighbor_nh_index);
-                        } else {
-                            // Excitatory.
-                            next_ex_mask |= (0x01UL << neighbor_nh_index);
-                        }
-
-                        next_syn_count++;
-                    } else if (
-                        prev_ac_mask & 0x01U &&
-                        // Only 0-strength synapses can be deleted.
-                        syn_strength <= 0x00U &&
-                        // Frequency component.
-                        random < syngen_chance / (neighbor_pulse + 1)
-                    ) {
-                        // Delete synapse.
-                        next_ac_mask &= ~(0x01UL << neighbor_nh_index);
-
-                        next_syn_count--;
-                    }
-
-                    // Functional plasticity: strengthen or weaken a synapse.
-                    if (prev_ac_mask & 0x01U) {
-                        if (
-                            syn_strength < BHM_MAX_SYN_STRENGTH &&
-                            prev_tot_syn_strength < max_tot_strength &&
-                            random < synstr_chance * (bhm_chance_t) neighbor_pulse * (bhm_chance_t) strength_diff
-                        ) {
-                            syn_strength++;
-                            next_str_mask_a = (prev_str_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                            next_str_mask_b = (prev_str_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                            next_str_mask_c = (prev_str_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
-
-                            next_tot_syn_strength++;
-                        } else if (
-                            syn_strength > 0x00U &&
-                            random < synstr_chance / (neighbor_pulse + syn_strength + 1)
-                        ) {
-                            syn_strength--;
-                            next_str_mask_a = (prev_str_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                            next_str_mask_b = (prev_str_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                            next_str_mask_c = (prev_str_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
-
-                            next_tot_syn_strength--;
-                        }
-                    }
-
-                    // Increment evolutions count.
-                    // TODO WARNING: This should not be updated by ALL threads!!!!
-                    next_cortex->evols_count++;
-                }
-            }
-
-            // Shift the masks to check for the next neighbor.
-            prev_ac_mask >>= 0x01U;
-            prev_ex_mask >>= 0x01U;
-            prev_str_mask_a >>= 0x01U;
-            prev_str_mask_b >>= 0x01U;
-            prev_str_mask_c >>= 0x01U;
-        }
-    }
-
-    // Push to equilibrium by decaying to zero, both from above and below.
-    if (prev_neuron_value > 0x00) {
-        next_neuron_value -= decay_value;
-    } else if (prev_neuron_value < 0x00) {
-        next_neuron_value += decay_value;
-    }
-
-    if ((prev_cortex->n_pulse_masks[neuron_index] >> prev_cortex->pulse_window) & 0x01U) {
-        // Decrease pulse if the oldest recorded pulse is active.
-        next_pulse--;
-    }
-
-    next_pulse_mask <<= 0x01U;
-
-    // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
-    if (prev_neuron_value > fire_threshold + prev_pulse) {
-        // Fired at the previous step.
-        next_neuron_value = recovery_value;
-
-        // Store pulse.
-        next_pulse_mask |= 0x01U;
-        next_pulse++;
-    }
-
-    // Copy the current neuron's state back from thread-local memory to global.
-    next_cortex->n_l_rand_states[neuron_index] = rand_state;
-    next_cortex->n_values[neuron_index] = next_neuron_value;
-    next_cortex->n_synac_masks[neuron_index] = next_ac_mask;
-    next_cortex->n_synex_masks[neuron_index] = next_ex_mask;
-    next_cortex->n_synstr_masks_a[neuron_index] = next_str_mask_a;
-    next_cortex->n_synstr_masks_b[neuron_index] = next_str_mask_b;
-    next_cortex->n_synstr_masks_c[neuron_index] = next_str_mask_c;
-    next_cortex->n_tot_syn_strengths[neuron_index] = next_tot_syn_strength;
-    next_cortex->n_pulses[neuron_index] = next_pulse;
-    next_cortex->n_syn_counts[neuron_index] = next_syn_count;
-    next_cortex->n_pulse_masks[neuron_index] = next_pulse_mask;
-
-    // TODO WARNING: This should not be updated by ALL threads!!!!
-    next_cortex->ticks_count++;
 }
 
 __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
@@ -792,6 +259,9 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // Copy the current neuron's rand state from global memory to thread-local.
     bhm_rand_state_t rand_state = prev_neuron.rand_state;
 
+    // TODO Copy neighborhood to shared memory: blocks are as big as the cortex neighborhood, this should allow for faster read speeds.
+    extern __shared__ bhm_neuron_t neighborhood[];
+
     // Increment the current neuron value by reading its connected neighbors.
     for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
         for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
@@ -803,17 +273,21 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
                 (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                 // The index of the current neighbor in the current neuron's neighborhood.
                 bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                bhm_cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
-                                                        WRAP(neighbor_y, prev_cortex->height),
-                                                        prev_cortex->width);
+                bhm_cortex_size_t neighbor_index = IDX2D(
+                    WRAP(neighbor_x, prev_cortex->width),
+                    WRAP(neighbor_y, prev_cortex->height),
+                    prev_cortex->width
+                );
 
                 // Fetch the current neighbor.
                 bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
 
                 // Compute the current synapse strength.
-                bhm_syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
-                                                ((prev_str_mask_b & 0x01U) << 0x01U) |
-                                                ((prev_str_mask_c & 0x01U) << 0x02U);
+                bhm_syn_strength_t syn_strength = (
+                    (prev_str_mask_a & 0x01U) |
+                    ((prev_str_mask_b & 0x01U) << 0x01U) |
+                    ((prev_str_mask_c & 0x01U) << 0x02U)
+                );
 
                 // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                 bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;

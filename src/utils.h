@@ -115,16 +115,6 @@ uint64_t nanos();
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_file_soa(
-    bhm_soa_cortex_t* cortex,
-    const char* file_name
-);
-
-/// Dumps the cortex' content to a file.
-/// The file is created if not already present, overwritten otherwise.
-/// @param cortex The cortex to be written to file.
-/// @param file_name The destination file to write the cortex to.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_to_file(
     bhm_cortex2d_t* cortex,
     const char* file_name
@@ -158,29 +148,11 @@ bhm_error_code_t p2d_from_file(
     const char* file_name
 );
 
-/// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
-/// @param cortex The cortex to apply changes to.
-/// @param map_file_name The path to the pgm map file to read.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_touch_from_map_soa(
-    bhm_soa_cortex_t* cortex,
-    const char* map_file_name
-);
-
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_touch_from_map(
     bhm_cortex2d_t* cortex,
-    const char* map_file_name
-);
-
-/// @brief Sets inhexc ratio for each neuron in the provided cortex by reading it from a pgm map file.
-/// @param cortex The cortex to apply changes to.
-/// @param map_file_name The path to the pgm map file to read.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_inhexc_from_map_soa(
-    bhm_soa_cortex_t* cortex,
     const char* map_file_name
 );
 

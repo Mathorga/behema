@@ -191,68 +191,6 @@ uint64_t nanos() {
 }
 
 
-bhm_error_code_t c2d_to_file_soa(
-    bhm_soa_cortex_t* cortex,
-    const char* file_name
-) {
-    // Open output file if possible.
-    FILE* out_file = fopen(file_name, "wb");
-
-    if (out_file == NULL) {
-        printf("File does not exist: %s\n", file_name);
-        return BHM_ERROR_FILE_DOES_NOT_EXIST;
-    }
-
-    // Write cortex metadata to the output file.
-    fwrite(&(cortex->width), sizeof(bhm_cortex_size_t), 1, out_file);
-    fwrite(&(cortex->height), sizeof(bhm_cortex_size_t), 1, out_file);
-    fwrite(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, out_file);
-
-    fwrite(&(cortex->nh_radius), sizeof(bhm_nh_radius_t), 1, out_file);
-    fwrite(&(cortex->fire_threshold), sizeof(bhm_neuron_value_t), 1, out_file);
-    fwrite(&(cortex->recovery_value), sizeof(bhm_neuron_value_t), 1, out_file);
-    fwrite(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, out_file);
-    fwrite(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, out_file);
-
-    fwrite(&(cortex->g_rand_state), sizeof(bhm_rand_state_t), 1, out_file);
-
-    fwrite(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, out_file);
-    fwrite(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, out_file);
-
-    fwrite(&(cortex->max_tot_strength), sizeof(bhm_syn_strength_t), 1, out_file);
-    fwrite(&(cortex->max_syn_count), sizeof(bhm_syn_count_t), 1, out_file);
-    fwrite(&(cortex->inhexc_range), sizeof(bhm_chance_t), 1, out_file);
-
-    fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
-
-    // Write all neurons.
-    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            fwrite(&(cortex->n_synac_masks[IDX2D(x, y, cortex->width)]), sizeof(bhm_nh_mask_t), 1, out_file);
-            fwrite(&(cortex->n_synex_masks[IDX2D(x, y, cortex->width)]), sizeof(bhm_nh_mask_t), 1, out_file);
-            fwrite(&(cortex->n_synstr_masks_a[IDX2D(x, y, cortex->width)]), sizeof(bhm_nh_mask_t), 1, out_file);
-            fwrite(&(cortex->n_synstr_masks_b[IDX2D(x, y, cortex->width)]), sizeof(bhm_nh_mask_t), 1, out_file);
-            fwrite(&(cortex->n_synstr_masks_c[IDX2D(x, y, cortex->width)]), sizeof(bhm_nh_mask_t), 1, out_file);
-            fwrite(&(cortex->n_l_rand_states[IDX2D(x, y, cortex->width)]), sizeof(bhm_rand_state_t), 1, out_file);
-            fwrite(&(cortex->n_pulse_masks[IDX2D(x, y, cortex->width)]), sizeof(bhm_pulse_mask_t), 1, out_file);
-            fwrite(&(cortex->n_pulses[IDX2D(x, y, cortex->width)]), sizeof(bhm_ticks_count_t), 1, out_file);
-            fwrite(&(cortex->n_values[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_value_t), 1, out_file);
-            fwrite(&(cortex->n_max_syn_counts[IDX2D(x, y, cortex->width)]), sizeof(bhm_syn_count_t), 1, out_file);
-            fwrite(&(cortex->n_syn_counts[IDX2D(x, y, cortex->width)]), sizeof(bhm_syn_count_t), 1, out_file);
-            fwrite(&(cortex->n_tot_syn_strengths[IDX2D(x, y, cortex->width)]), sizeof(bhm_syn_strength_t), 1, out_file);
-            fwrite(&(cortex->n_inhexc_ratios[IDX2D(x, y, cortex->width)]), sizeof(bhm_chance_t), 1, out_file);
-        }
-    }
-
-    fclose(out_file);
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_to_file(
     bhm_cortex2d_t* cortex,
     const char* file_name
@@ -465,29 +403,6 @@ bhm_error_code_t p2d_from_file(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_touch_from_map_soa(
-    bhm_soa_cortex_t* cortex,
-    const char* map_file_name
-) {
-    pgm_content_t pgm_content;
-
-    // Read file.
-    bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
-    if (error) return error;
-
-    // Make sure sizes are correct.
-    if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
-        for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->n_max_syn_counts[i] = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
-        }
-    } else {
-        printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
-        return BHM_ERROR_FILE_SIZE_WRONG;
-    }
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_touch_from_map(
     bhm_cortex2d_t* cortex,
     const char* map_file_name
@@ -505,29 +420,6 @@ bhm_error_code_t c2d_touch_from_map(
         }
     } else {
         printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
-        return BHM_ERROR_FILE_SIZE_WRONG;
-    }
-
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_inhexc_from_map_soa(
-    bhm_soa_cortex_t* cortex,
-    const char* map_file_name
-) {
-    pgm_content_t pgm_content;
-
-    // Read file.
-    bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
-    if (error) return error;
-
-    // Make sure sizes are correct.
-    if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
-        for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->n_inhexc_ratios[i] = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
-        }
-    } else {
-        printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");
         return BHM_ERROR_FILE_SIZE_WRONG;
     }
 
