@@ -28,10 +28,8 @@ bhm_error_code_t setup_cortices(
     char inhexcFileName[40];
     sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
     sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
-    error = c2d_touch_from_map(*even_cortex, touchFileName);
-    if (error) return error;
-    error = c2d_inhexc_from_map(*even_cortex, inhexcFileName);
-    if (error) return error;
+    c2d_touch_from_map(*even_cortex, touchFileName);
+    c2d_inhexc_from_map(*even_cortex, inhexcFileName);
 
     // Copy the first cortex properties to the second one.
     error = c2d_copy(*odd_cortex, *even_cortex);
