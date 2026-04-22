@@ -4,22 +4,38 @@
 #include <unistd.h>
 #include <behema/behema.h>
 
-void setup_cortices(bhm_cortex2d_t** even_cortex, bhm_cortex2d_t** odd_cortex, bhm_cortex_size_t cortex_width, bhm_cortex_size_t cortex_height, bhm_nh_radius_t nh_radius) {
+bhm_error_code_t setup_cortices(
+    bhm_cortex2d_t** even_cortex,
+    bhm_cortex2d_t** odd_cortex,
+    bhm_cortex_size_t cortex_width,
+    bhm_cortex_size_t cortex_height,
+    bhm_nh_radius_t nh_radius
+) {
+    bhm_error_code_t error;
+
     // Initialize the first cortex.
-    c2d_create(even_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_create(odd_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_set_evol_step(*even_cortex, 0x01U);
-    c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
-    c2d_set_max_syn_count(*even_cortex, 24);
-    // char touchFileName[40];
-    // char inhexcFileName[40];
-    // sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
-    // sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
-    // c2d_touch_from_map(*even_cortex, touchFileName);
-    // c2d_inhexc_from_map(*even_cortex, inhexcFileName);
+    error = c2d_create(even_cortex, cortex_width, cortex_height, nh_radius);
+    if (error) return error;
+    error = c2d_create(odd_cortex, cortex_width, cortex_height, nh_radius);
+    if (error) return error;
+    error = c2d_set_evol_step(*even_cortex, 0x01U);
+    if (error) return error;
+    error = c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
+    if (error) return error;
+    error = c2d_set_max_syn_count(*even_cortex, 24);
+    if (error) return error;
+    char touchFileName[40];
+    char inhexcFileName[40];
+    sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
+    sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+    error = c2d_touch_from_map(*even_cortex, touchFileName);
+    if (error) return error;
+    error = c2d_inhexc_from_map(*even_cortex, inhexcFileName);
+    if (error) return error;
 
     // Copy the first cortex properties to the second one.
-    c2d_copy(*odd_cortex, *even_cortex);
+    error = c2d_copy(*odd_cortex, *even_cortex);
+    if (error) return error;
 }
 
 int main(int argc, char **argv) {
@@ -62,13 +78,15 @@ int main(int argc, char **argv) {
     // Cortex configuration.
     bhm_cortex2d_t* even_cortex;
     bhm_cortex2d_t* odd_cortex;
-    setup_cortices(
+    error = setup_cortices(
         &even_cortex,
         &odd_cortex,
         cortex_width,
         cortex_height,
         nh_radius
     );
+    if (error) return 1;
+
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
     dim3 cortex_grid_size = c2d_get_grid_size(even_cortex, cortex_block_size);
 

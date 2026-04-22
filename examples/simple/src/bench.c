@@ -12,6 +12,28 @@ int main(int argc, char **argv) {
     uint32_t iterations_count = 10000;
     bhm_nh_radius_t nh_radius = 2;
 
+    // Input handling.
+    switch (argc) {
+        case 1:
+            break;
+        case 2:
+            iterations_count = atoi(argv[1]);
+            break;
+        case 3:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            break;
+        case 4:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            cortex_height = atoi(argv[3]);
+            break;
+        default:
+            printf("USAGE: bench <iterations> <width> <height>\n");
+            exit(0);
+            break;
+    }
+
     bhm_error_code_t error;
 
     // Cortex init.
