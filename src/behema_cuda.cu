@@ -241,7 +241,8 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // |             |
     // |             |
     // +-|-|-|-|-|-|-+
-    bhm_cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
+    bhm_cortex_size_t nh_radius = prev_cortex->nh_radius;
+    bhm_cortex_size_t nh_diameter = NH_DIAM_2D(nh_radius);
 
     bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
     bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
@@ -284,14 +285,39 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // Copy the current neuron to make it available to others in the block.
     local_neurons[local_index] = prev_cortex->neurons[neuron_index];
 
-    // TODO Copy ghost cells.
+    // Copy ghost cells.
+    for (bhm_cortex_size_t i = 1; i < nh_radius; i++) {
+        // Leftmost threads load left ghost cells.
+        // TODO Handle cortex limits.
+        if (threadIdx.x <= 0) {
+            local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, prev_cortex->width)];
+        }
+
+        // Topmost threads load top ghost cells.
+        // TODO Handle cortex limits.
+        if (threadIdx.y <= 0) {
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y - i, prev_cortex->width)];
+        }
+
+        // Rightmost threads load right ghost cells.
+        // TODO Handle cortex limits.
+        if (threadIdx.x >= blockDim.x - 1) {
+            local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, prev_cortex->width)];
+        }
+
+        // Downmost threads load top ghost cells.
+        // TODO Handle cortex limits.
+        if (threadIdx.y >= blockDim.y - 1) {
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y + i, prev_cortex->width)];
+        }
+
+        // TODO Copy corners.
+    }
 
     __syncthreads();
 
     // Increment the current neuron value by reading its connected neighbors.
-    #pragma unroll
     for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
-        #pragma unroll
         for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
             bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
             bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
