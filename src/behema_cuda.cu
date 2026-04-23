@@ -263,7 +263,9 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     extern __shared__ bhm_neuron_t neighborhood[];
 
     // Increment the current neuron value by reading its connected neighbors.
+    #pragma unroll
     for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
+        #pragma unroll
         for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
             bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
             bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
