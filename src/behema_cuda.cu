@@ -229,19 +229,18 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // Copy prev neuron values to the new one.
     *next_neuron = prev_neuron;
 
-    /* Compute the neighborhood diameter:
-        d = 7
-        <------------->
-        r = 3
-        <----->
-        +-|-|-|-|-|-|-+
-        |             |
-        |             |
-        |      X      |
-        |             |
-        |             |
-        +-|-|-|-|-|-|-+
-    */
+    // Compute the neighborhood diameter:
+    // d = 7
+    // <------------->
+    // r = 3
+    // <----->
+    // +-|-|-|-|-|-|-+
+    // |             |
+    // |             |
+    // |      X      |
+    // |             |
+    // |             |
+    // +-|-|-|-|-|-|-+
     bhm_cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
 
     bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
@@ -259,8 +258,35 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // Copy the current neuron's rand state from global memory to thread-local.
     bhm_rand_state_t rand_state = prev_neuron.rand_state;
 
-    // TODO Copy neighborhood to shared memory: blocks are as big as the cortex neighborhood, this should allow for faster read speeds.
-    extern __shared__ bhm_neuron_t neighborhood[];
+    // Copy the cortex to shared memory with a halo of ghost cells for neighborhood stencils.
+    // shared_mem_width
+    // <------------------->
+    //    block_width
+    //    <------------->
+    // nh_radius
+    // <-->
+    // +-------------------+
+    // |                   |
+    // |                   |
+    // |  +-------------+  |
+    // |  |             |  |
+    // |  |             |  |
+    // |  |      X      |  |
+    // |  |             |  |
+    // |  |             |  |
+    // |  +-------------+  |
+    // |                   |
+    // |                   |
+    // +-------------------+
+    extern __shared__ bhm_neuron_t local_neurons[];
+    bhm_cortex_size_t local_index = IDX2D(threadIdx.x, threadIdx.y, blockDim.x);
+
+    // Copy the current neuron to make it available to others in the block.
+    local_neurons[local_index] = prev_cortex->neurons[neuron_index];
+
+    // TODO Copy ghost cells.
+
+    __syncthreads();
 
     // Increment the current neuron value by reading its connected neighbors.
     #pragma unroll
