@@ -300,7 +300,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         // Topmost threads load top ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.y <= 0) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y - i, cortex_width)];
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y - i, cortex_width)];
         }
 
         // Rightmost threads load right ghost cells.
@@ -312,7 +312,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         // Downmost threads load top ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.y >= blockDim.y - 1) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y + i, cortex_width)];
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y + i, cortex_width)];
         }
 
         // TODO Copy corners.
