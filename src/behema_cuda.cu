@@ -218,11 +218,15 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
+    // Fetch cortex size once.
+    bhm_cortex_size_t cortex_width = prev_cortex->width;
+    bhm_cortex_size_t cortex_height = prev_cortex->height;
+
     // Avoid accessing unallocated memory.
-    if (x >= prev_cortex->width || y >= prev_cortex->height) return;
+    if (x >= cortex_width || y >= cortex_height) return;
 
     // Retrieve the involved neurons.
-    bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
+    bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex_width);
     bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
     bhm_neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
 
@@ -290,25 +294,25 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         // Leftmost threads load left ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.x <= 0) {
-            local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, prev_cortex->width)];
+            local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, cortex_width)];
         }
 
         // Topmost threads load top ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.y <= 0) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y - i, prev_cortex->width)];
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y - i, cortex_width)];
         }
 
         // Rightmost threads load right ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.x >= blockDim.x - 1) {
-            local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, prev_cortex->width)];
+            local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, cortex_width)];
         }
 
         // Downmost threads load top ghost cells.
         // TODO Handle cortex limits.
         if (threadIdx.y >= blockDim.y - 1) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y + i, prev_cortex->width)];
+            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortx->neurons[IDX2D(x, y + i, cortex_width)];
         }
 
         // TODO Copy corners.
@@ -324,13 +328,13 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
             // Exclude the central neuron from the list of neighbors.
             if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
-                (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
+                (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < cortex_width && neighbor_y < cortex_height)) {
                 // The index of the current neighbor in the current neuron's neighborhood.
                 bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
                 bhm_cortex_size_t neighbor_index = IDX2D(
-                    WRAP(neighbor_x, prev_cortex->width),
-                    WRAP(neighbor_y, prev_cortex->height),
-                    prev_cortex->width
+                    WRAP(neighbor_x, cortex_width),
+                    WRAP(neighbor_y, cortex_height),
+                    cortex_width
                 );
 
                 // Fetch the current neighbor.
