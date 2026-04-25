@@ -101,8 +101,8 @@ int main(int argc, char **argv) {
 
         if ((i + 1) % 100 == 0) {
             uint64_t elapsed = millis() - start_time;
-            double fps = i /(elapsed / 1000.0f);
-            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i + 1, elapsed, fps);
+            double frequency = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f Hz\n", i + 1, elapsed, frequency);
             // c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 

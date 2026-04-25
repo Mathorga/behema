@@ -37,13 +37,19 @@ __host__ __device__ uint32_t cuda_xorshf32(uint32_t state);
 
 // Initialization functions:
 
-/// Computes and returns the grid size to allocate on device.
+/// @brief Computes and returns the grid size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
 dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex, dim3 block_size);
 
-/// Computes and returns the block size to allocate on device.
+/// @brief Computes and returns the block size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
 dim3 c2d_get_block_size(bhm_cortex2d_t* cortex);
+
+/// @brief Computes and returns the needed amount of shared memory for the provided cortex
+/// @param cortex The cortex for which to compute the amount of needed shared memory in device.
+/// @param block_size The size of the block allocated for the provided cortex.
+/// @return The amount of shared memory that ensures all computations can be performed.
+size_t c2d_get_shared_mem_size(bhm_cortex2d_t* cortex, dim3 block_size);
 
 /// Copies an input2d from host to device.
 bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_input);

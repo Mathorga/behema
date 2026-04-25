@@ -21,8 +21,13 @@ dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex, dim3 block_size) {
 }
 
 dim3 c2d_get_block_size(bhm_cortex2d_t* cortex) {
-    // Block size is computed from neighborhood diameter in order to have blocks as big as a neighborhood.
-    return dim3(NH_DIAM_2D(cortex->nh_radius), NH_DIAM_2D(cortex->nh_radius));
+    return dim3(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
+}
+
+size_t c2d_get_shared_mem_size(bhm_cortex2d_t* cortex, dim3 block_size) {
+    // Shared memory size is computed with extra space around it to act as ghost cells.
+    // This ensures the neighborhood for every thread in the block is stored in shared memory.
+    return (block_size.x + (2 * cortex->nh_radius)) * (block_size.y + (2 * cortex->nh_radius)) * sizeof(bhm_neuron_t);
 }
 
 bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_input) {
@@ -283,40 +288,40 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // |                   |
     // |                   |
     // +-------------------+
-    extern __shared__ bhm_neuron_t local_neurons[];
-    bhm_cortex_size_t local_index = IDX2D(threadIdx.x, threadIdx.y, blockDim.x);
+    extern __shared__ bhm_neuron_t* local_neurons;
+    bhm_cortex_size_t local_index = IDX2D(threadIdx.x + nh_radius, threadIdx.y + nh_radius, blockDim.x + (2 * nh_radius));
 
     // Copy the current neuron to make it available to others in the block.
-    local_neurons[local_index] = prev_cortex->neurons[neuron_index];
+    local_neurons[local_index] = prev_neuron;
 
     // Copy ghost cells.
-    for (bhm_cortex_size_t i = 1; i < nh_radius; i++) {
-        // Leftmost threads load left ghost cells.
-        // TODO Handle cortex limits.
-        if (threadIdx.x <= 0) {
-            local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, cortex_width)];
-        }
+    // for (bhm_cortex_size_t i = 1; i < nh_radius; i++) {
+    //     // Leftmost threads load left ghost cells.
+    //     // TODO Handle cortex limits.
+    //     if (threadIdx.x <= 0) {
+    //         local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, cortex_width)];
+    //     }
 
-        // Topmost threads load top ghost cells.
-        // TODO Handle cortex limits.
-        if (threadIdx.y <= 0) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y - i, cortex_width)];
-        }
+    //     // Topmost threads load top ghost cells.
+    //     // TODO Handle cortex limits.
+    //     if (threadIdx.y <= 0) {
+    //         local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y - i, cortex_width)];
+    //     }
 
-        // Rightmost threads load right ghost cells.
-        // TODO Handle cortex limits.
-        if (threadIdx.x >= blockDim.x - 1) {
-            local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, cortex_width)];
-        }
+    //     // Rightmost threads load right ghost cells.
+    //     // TODO Handle cortex limits.
+    //     if (threadIdx.x >= blockDim.x - 1) {
+    //         local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, cortex_width)];
+    //     }
 
-        // Downmost threads load top ghost cells.
-        // TODO Handle cortex limits.
-        if (threadIdx.y >= blockDim.y - 1) {
-            local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y + i, cortex_width)];
-        }
+    //     // Downmost threads load top ghost cells.
+    //     // TODO Handle cortex limits.
+    //     if (threadIdx.y >= blockDim.y - 1) {
+    //         local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y + i, cortex_width)];
+    //     }
 
-        // TODO Copy corners.
-    }
+    //     // TODO Copy corners.
+    // }
 
     __syncthreads();
 
