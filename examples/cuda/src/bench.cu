@@ -89,7 +89,6 @@ int main(int argc, char **argv) {
     
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
     dim3 cortex_grid_size = c2d_get_grid_size(even_cortex, cortex_block_size);
-    size_t shared_mem_size = c2d_get_shared_mem_size(even_cortex, cortex_block_size);
 
     // Print the cortex out.
     char cortex_string[100];
@@ -142,24 +141,15 @@ int main(int argc, char **argv) {
         // i2d_to_device(d_input, input);
         
         // Feed.
-        printf("PREFEED\n");
-        fflush(stdout);
         c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_input);
-        printf("POSTFEED\n");
-        fflush(stdout);
         cudaCheckError();
         cudaDeviceSynchronize();
         
-        printf("SHARED_MEM_SIZE: %d\n", shared_mem_size);
-        printf("CORTEX_BLOCK_SIZE: %d\n", cortex_block_size.x * cortex_block_size.y);
-        fflush(stdout);
-        c2d_tick<<<cortex_grid_size, cortex_block_size, shared_mem_size>>>(prev_cortex, next_cortex);
-        printf("CORNO DI CERVO\n");
-        fflush(stdout);
+        c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
         cudaCheckError();
         cudaDeviceSynchronize();
         
-        if ((i + 1) % 1000 == 0) {
+        if ((i + 1) % 100 == 0) {
             uint64_t elapsed = millis() - start_time;
             double frequency = i /(elapsed / 1000.0f);
             printf("\nPerformed %d iterations in %lums; %.2f Hz\n", i + 1, elapsed, frequency);

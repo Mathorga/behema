@@ -232,11 +232,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
     // Retrieve the involved neurons.
     bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex_width);
-    bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
-    bhm_neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
-
-    // Copy prev neuron values to the new one.
-    *next_neuron = prev_neuron;
 
     // Compute the neighborhood diameter:
     // d = 7
@@ -253,86 +248,51 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     bhm_cortex_size_t nh_radius = prev_cortex->nh_radius;
     bhm_cortex_size_t nh_diameter = NH_DIAM_2D(nh_radius);
 
-    bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
-    bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
-    bhm_nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
-    bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
-    bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
-
     // Defines whether to evolve or not.
     // evol_step is incremented by 1 to account for edge cases and human readable behavior:
     // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
     // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
     bool evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
+    // bhm_neuron_t prev_neuron = local_neurons[local_index];
+    bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
+    bhm_neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
+
+    bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
+    bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
+    bhm_nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
+    bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
+    bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
+
     // Copy the current neuron's rand state from global memory to thread-local.
     bhm_rand_state_t rand_state = prev_neuron.rand_state;
 
-    // Copy the cortex to shared memory with a halo of ghost cells for neighborhood stencils.
-    // shared_mem_width
-    // <------------------->
-    //    block_width
-    //    <------------->
-    // nh_radius
-    // <-->
-    // +-------------------+
-    // |                   |
-    // |                   |
-    // |  +-------------+  |
-    // |  |             |  |
-    // |  |             |  |
-    // |  |      X      |  |
-    // |  |             |  |
-    // |  |             |  |
-    // |  +-------------+  |
-    // |                   |
-    // |                   |
-    // +-------------------+
-    extern __shared__ bhm_neuron_t* local_neurons;
-    bhm_cortex_size_t local_index = IDX2D(threadIdx.x + nh_radius, threadIdx.y + nh_radius, blockDim.x + (2 * nh_radius));
+    // Copy prev neuron values to the new one.
+    // *next_neuron = prev_neuron;
+    next_neuron->value = prev_neuron.value;
+    next_neuron->pulse = prev_neuron.pulse;
+    next_neuron->pulse_mask = prev_neuron.pulse_mask;
+    next_neuron->rand_state = prev_neuron.rand_state;
 
-    // Copy the current neuron to make it available to others in the block.
-    local_neurons[local_index] = prev_neuron;
-
-    // Copy ghost cells.
-    // for (bhm_cortex_size_t i = 1; i < nh_radius; i++) {
-    //     // Leftmost threads load left ghost cells.
-    //     // TODO Handle cortex limits.
-    //     if (threadIdx.x <= 0) {
-    //         local_neurons[IDX2D(threadIdx.x - i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x - i, y, cortex_width)];
-    //     }
-
-    //     // Topmost threads load top ghost cells.
-    //     // TODO Handle cortex limits.
-    //     if (threadIdx.y <= 0) {
-    //         local_neurons[IDX2D(threadIdx.x, threadIdx.y - i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y - i, cortex_width)];
-    //     }
-
-    //     // Rightmost threads load right ghost cells.
-    //     // TODO Handle cortex limits.
-    //     if (threadIdx.x >= blockDim.x - 1) {
-    //         local_neurons[IDX2D(threadIdx.x + i, threadIdx.y, blockDim.x + (2 * nh_radius))] = prev_cortex->neurons[IDX2D(x + i, y, cortex_width)];
-    //     }
-
-    //     // Downmost threads load top ghost cells.
-    //     // TODO Handle cortex limits.
-    //     if (threadIdx.y >= blockDim.y - 1) {
-    //         local_neurons[IDX2D(threadIdx.x, threadIdx.y + i, blockDim.x)] = prev_cortex->neurons[IDX2D(x, y + i, cortex_width)];
-    //     }
-
-    //     // TODO Copy corners.
-    // }
-
-    __syncthreads();
+    if (evolve) {
+        next_neuron->synac_mask = prev_ac_mask;
+        next_neuron->synex_mask = prev_exc_mask;
+        next_neuron->synstr_mask_a = prev_str_mask_a;
+        next_neuron->synstr_mask_b = prev_str_mask_b;
+        next_neuron->synstr_mask_c = prev_str_mask_c;
+    }
 
     // Increment the current neuron value by reading its connected neighbors.
     for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
         for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
-            bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
-            bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
+            bhm_cortex_size_t neighbor_x = x + (i - nh_radius);
+            bhm_cortex_size_t neighbor_y = y + (j - nh_radius);
+
+            // bhm_cortex_size_t neighbor_shared_mem_x = shared_mem_x + (i - nh_radius);
+            // bhm_cortex_size_t neighbor_shared_mem_y = shared_mem_y + (j - nh_radius);
 
             // Exclude the central neuron from the list of neighbors.
-            if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
+            if ((j != nh_radius || i != nh_radius) &&
                 (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < cortex_width && neighbor_y < cortex_height)) {
                 // The index of the current neighbor in the current neuron's neighborhood.
                 bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
@@ -344,6 +304,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
                 // Fetch the current neighbor.
                 bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
+                // bhm_neuron_t neighbor = local_neurons[IDX2D(neighbor_shared_mem_x, neighbor_shared_mem_y, shared_mem_width)];
 
                 // Compute the current synapse strength.
                 bhm_syn_strength_t syn_strength = (
@@ -434,7 +395,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
 
                     // Increment evolutions count.
                     // TODO WARNING: This should not be updated by ALL threads!!!!
-                    next_cortex->evols_count++;
+                    if (threadIdx.x <= 0 && threadIdx.y <= 0) next_cortex->evols_count++;
                 }
             }
 
@@ -475,7 +436,7 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     }
 
     // TODO WARNING: This should not be updated by ALL threads!!!!
-    next_cortex->ticks_count++;
+    if (threadIdx.x <= 0 && threadIdx.y <= 0) next_cortex->ticks_count++;
 }
 
 __host__ __device__ bhm_bool_t value_to_pulse(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input, bhm_pulse_mapping_t pulse_mapping) {
