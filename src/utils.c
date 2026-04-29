@@ -206,8 +206,6 @@ bhm_error_code_t c2d_to_file(
     // Write cortex metadata to the output file.
     fwrite(&(cortex->width), sizeof(bhm_cortex_size_t), 1, out_file);
     fwrite(&(cortex->height), sizeof(bhm_cortex_size_t), 1, out_file);
-    fwrite(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, out_file);
 
@@ -256,8 +254,6 @@ bhm_error_code_t c2d_from_file(
     // Read cortex metadata from the input file.
     fread(&(cortex->width), sizeof(bhm_cortex_size_t), 1, in_file);
     fread(&(cortex->height), sizeof(bhm_cortex_size_t), 1, in_file);
-    fread(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, in_file);
-    fread(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, in_file);
     fread(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, in_file);
 

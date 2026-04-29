@@ -108,8 +108,6 @@ bhm_error_code_t c2d_init(
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
-    cortex->ticks_count = 0x00U;
-    cortex->evols_count = 0x00U;
     cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
     cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
 
@@ -171,8 +169,6 @@ bhm_error_code_t c2d_rand_init(
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
-    cortex->ticks_count = 0x00U;
-    cortex->evols_count = 0x00U;
     cortex->rand_state = (bhm_rand_state_t) time(NULL);
     cortex->evol_step = cortex->rand_state % BHM_EVOL_STEP_NEVER;
     cortex->rand_state = xorshf32(cortex->rand_state);
@@ -303,8 +299,6 @@ bhm_error_code_t c2d_copy(
 ) {
     to->width = from->width;
     to->height = from->height;
-    to->ticks_count = from->ticks_count;
-    to->evols_count = from->evols_count;
     to->evol_step = from->evol_step;
     to->pulse_window = from->pulse_window;
 

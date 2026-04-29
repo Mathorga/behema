@@ -2,7 +2,8 @@
 
 void c2d_feed2d(
     bhm_cortex2d_t* cortex,
-    bhm_input2d_t* input
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
 ) {
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = input->y0; y < input->y1; y++) {
@@ -10,7 +11,7 @@ void c2d_feed2d(
             // Check whether the current input neuron should be excited or not.
             bhm_bool_t excite = value_to_pulse(
                 cortex->sample_window,
-                cortex->ticks_count % cortex->sample_window,
+                ticks_count % cortex->sample_window,
                 input->values[
                     IDX2D(
                         x - input->x0,
@@ -49,7 +50,11 @@ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     }
 }
 
-void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
+void c2d_tick(
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex,
+    bhm_bool_t evolve
+) {
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < prev_cortex->width; x++) {
@@ -81,12 +86,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
             bhm_nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
             bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
             bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
-
-            // Defines whether to evolve or not.
-            // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-            // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
-            // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-            bhm_bool_t evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
             // Increment the current neuron value by reading its connected neighbors.
             for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
@@ -195,9 +194,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
                                     next_neuron->tot_syn_strength--;
                                 }
                             }
-
-                            // Increment evolutions count.
-                            next_cortex->evols_count++;
                         }
                     }
 
@@ -235,8 +231,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
             }
         }
     }
-
-    next_cortex->ticks_count++;
 }
 
 

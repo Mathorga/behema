@@ -199,6 +199,14 @@ typedef struct {
     bhm_chance_t inhexc_ratio;
 } bhm_neuron_t;
 
+/// @brief Cortex counters, used for sessions monitoring.
+typedef struct {
+    // Ticks performed since cortex creation.
+    bhm_ticks_count_t ticks_count;
+    // Evolutions performed since cortex creation.
+    bhm_ticks_count_t evols_count;
+} bhm_cortex_counts_t;
+
 /// @brief 2D cortex of neurons.
 typedef struct {
     // Width of the cortex.
@@ -207,10 +215,6 @@ typedef struct {
     // Height of the cortex.
     //* Mutable.
     bhm_cortex_size_t height;
-    // Ticks performed since cortex creation.
-    bhm_ticks_count_t ticks_count;
-    // Evolutions performed since cortex creation.
-    bhm_ticks_count_t evols_count;
     // Amount of ticks between each evolution.
     bhm_ticks_count_t evol_step;
     // Length of the window used to count pulses in the cortex' neurons.
