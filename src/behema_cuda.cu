@@ -178,7 +178,8 @@ bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex) {
 
 __global__ void c2d_feed2d(
     bhm_cortex2d_t* cortex,
-    bhm_input2d_t* input
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
 ) {
     bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -191,7 +192,7 @@ __global__ void c2d_feed2d(
     // Check whether the current input neuron should be excited or not.
     bhm_bool_t excite = value_to_pulse(
         cortex->sample_window,
-        cortex->ticks_count % cortex->sample_window,
+        ticks_count % cortex->sample_window,
         input->values[
             IDX2D(
                 x,
@@ -219,7 +220,11 @@ __global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     // TODO.
 }
 
-__global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
+__global__ void c2d_tick(
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex,
+    bhm_bool_t evolve
+) {
     bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
 
@@ -247,12 +252,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
     // +-|-|-|-|-|-|-+
     bhm_cortex_size_t nh_radius = prev_cortex->nh_radius;
     bhm_cortex_size_t nh_diameter = NH_DIAM_2D(nh_radius);
-
-    // Defines whether to evolve or not.
-    // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-    // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
-    // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-    bool evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
     // bhm_neuron_t prev_neuron = local_neurons[local_index];
     bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
@@ -392,10 +391,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
                             next_neuron->tot_syn_strength--;
                         }
                     }
-
-                    // Increment evolutions count.
-                    // TODO WARNING: This should not be updated by ALL threads!!!!
-                    if (threadIdx.x <= 0 && threadIdx.y <= 0) next_cortex->evols_count++;
                 }
             }
 
@@ -434,9 +429,6 @@ __global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_corte
         next_neuron->pulse_mask |= 0x01U;
         next_neuron->pulse++;
     }
-
-    // TODO WARNING: This should not be updated by ALL threads!!!!
-    if (threadIdx.x <= 0 && threadIdx.y <= 0) next_cortex->ticks_count++;
 }
 
 __host__ __device__ bhm_bool_t value_to_pulse(bhm_ticks_count_t sample_window, bhm_ticks_count_t sample_step, bhm_ticks_count_t input, bhm_pulse_mapping_t pulse_mapping) {

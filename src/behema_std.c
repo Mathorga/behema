@@ -98,9 +98,11 @@ void c2d_tick(
                         (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // The index of the current neighbor in the current neuron's neighborhood.
                         bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                        bhm_cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
-                                                             WRAP(neighbor_y, prev_cortex->height),
-                                                             prev_cortex->width);
+                        bhm_cortex_size_t neighbor_index = IDX2D(
+                            WRAP(neighbor_x, prev_cortex->width),
+                            WRAP(neighbor_y, prev_cortex->height),
+                            prev_cortex->width
+                        );
 
                         // Fetch the current neighbor.
                         bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];

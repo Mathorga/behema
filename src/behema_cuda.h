@@ -81,9 +81,11 @@ bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex);
 /// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
+/// @param ticks_count The number of executions performed so far.
 __global__ void c2d_feed2d(
     bhm_cortex2d_t* cortex,
-    bhm_input2d_t* input
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
 );
 
 /// @brief Reads data from a cortex through the provided output2d. When the mapping is done, output data is stored in the provided output2d.
@@ -97,10 +99,12 @@ __global__ void c2d_read2d(
 /// @brief Performs a full run cycle over the provided cortex.
 /// @param prev_cortex The cortex at its current state.
 /// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @param evolve Whether the cortex should update its internal structure or not.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
 __global__ void c2d_tick(
     bhm_cortex2d_t* prev_cortex,
-    bhm_cortex2d_t* next_cortex
+    bhm_cortex2d_t* next_cortex,
+    bhm_bool_t evolve
 );
 
 
