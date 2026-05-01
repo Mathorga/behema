@@ -104,7 +104,7 @@ __global__ void c2d_read2d(
 __global__ void c2d_tick(
     bhm_cortex2d_t* prev_cortex,
     bhm_cortex2d_t* next_cortex,
-    bhm_bool_t evolve
+    bool evolve
 );
 
 
