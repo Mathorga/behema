@@ -1,8 +1,5 @@
 #include "behema_cuda.h"
 
-/// @brief Shared memory on the device.
-extern __shared__ unsigned char sh_mem[];
-
 // The state must be initialized to non-zero.
 __host__ __device__ uint32_t cuda_xorshf32(uint32_t state) {
     // Algorithm "xor" from p. 4 of Marsaglia, "Xorshift RNGs".
