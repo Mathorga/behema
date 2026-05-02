@@ -207,6 +207,9 @@ int main(int argc, char** argv) {
     c2d_set_max_syn_count(even_cortex, 24);
     c2d_copy(odd_cortex, even_cortex);
 
+    bhm_cortex_counts_t* counts = (bhm_cortex_counts_t*) malloc(sizeof(bhm_cortex_counts_t));
+    counts->ticks_count = 0x00;
+    counts->evols_count = 0x00;
 
     float* xNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
     float* yNeuronPositions = (float*) malloc(cortex_width * cortex_height * sizeof(float));
@@ -257,6 +260,12 @@ int main(int argc, char** argv) {
 
         bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+
+        // Defines whether to evolve or not.
+        // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+        // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
+        // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
+        bhm_bool_t evolve = (counts->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0 ? BHM_TRUE : BHM_FALSE;
 
         // Check all the window's events that were triggered since the last iteration of the loop.
         sf::Event event;
@@ -331,8 +340,16 @@ int main(int argc, char** argv) {
             }
 
             // Feed the cortex.
-            c2d_feed2d(prev_cortex, leftEye);
-            c2d_feed2d(prev_cortex, rightEye);
+            c2d_feed2d(
+                prev_cortex,
+                leftEye,
+                counts->ticks_count
+            );
+            c2d_feed2d(
+                prev_cortex,
+                rightEye,
+                counts->ticks_count
+            );
 
             sample_step++;
         }
@@ -366,7 +383,15 @@ int main(int argc, char** argv) {
         // usleep(10000);
 
         // Tick the cortex.
-        c2d_tick(prev_cortex, next_cortex);
+        c2d_tick(
+            prev_cortex, 
+            next_cortex,
+            evolve
+        );
+
+        counts->ticks_count++;
+        // Increment evolutions count.
+        if (evolve) counts->evols_count++;
     }
     
     return 0;
