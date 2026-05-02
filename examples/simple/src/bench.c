@@ -12,6 +12,28 @@ int main(int argc, char **argv) {
     uint32_t iterations_count = 10000;
     bhm_nh_radius_t nh_radius = 2;
 
+    // Input handling.
+    switch (argc) {
+        case 1:
+            break;
+        case 2:
+            iterations_count = atoi(argv[1]);
+            break;
+        case 3:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            break;
+        case 4:
+            iterations_count = atoi(argv[1]);
+            cortex_width = atoi(argv[2]);
+            cortex_height = atoi(argv[3]);
+            break;
+        default:
+            printf("USAGE: bench <iterations> <width> <height>\n");
+            exit(0);
+            break;
+    }
+
     bhm_error_code_t error;
 
     // Cortex init.
@@ -27,6 +49,10 @@ int main(int argc, char **argv) {
         printf("There was an error initializing the odd cortex %d\n", error);
         return 1;
     }
+
+    bhm_cortex_counts_t* counts = (bhm_cortex_counts_t*) malloc(sizeof(bhm_cortex_counts_t));
+    counts->ticks_count = 0x00;
+    counts->evols_count = 0x00;
 
     // Cortex setup.
     c2d_set_evol_step(even_cortex, 0x01U);
@@ -72,23 +98,41 @@ int main(int argc, char **argv) {
         bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
         bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
-        // Feed.
-        c2d_feed2d(prev_cortex, input);
+        // Defines whether to evolve or not.
+        // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+        // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
+        // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
+        bhm_bool_t evolve = (counts->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
 
-        c2d_tick(prev_cortex, next_cortex);
+        // Feed.
+        c2d_feed2d(
+            prev_cortex,
+            input,
+            counts->ticks_count
+        );
+
+        c2d_tick(
+            prev_cortex,
+            next_cortex,
+            evolve
+        );
+
+        counts->ticks_count++;
+        // Increment evolutions count.
+        if (evolve) counts->evols_count++;
 
         if ((i + 1) % 100 == 0) {
             uint64_t elapsed = millis() - start_time;
-            double fps = i /(elapsed / 1000.0f);
-            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i + 1, elapsed, fps);
-            c2d_to_file(even_cortex, (char*) "out/test.c2d");
+            double frequency = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f Hz\n", i + 1, elapsed, frequency);
+            // c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
         // usleep(100);
     }
 
     // Copy the cortex back to host to check the results.
-    c2d_to_file(even_cortex, (char*) "out/test.c2d");
+    // c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
     c2d_destroy(even_cortex);

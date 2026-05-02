@@ -4,22 +4,38 @@
 #include <unistd.h>
 #include <behema/behema.h>
 
-void setup_cortices(bhm_cortex2d_t** even_cortex, bhm_cortex2d_t** odd_cortex, bhm_cortex_size_t cortex_width, bhm_cortex_size_t cortex_height, bhm_nh_radius_t nh_radius) {
+bhm_error_code_t setup_cortices(
+    bhm_cortex2d_t** even_cortex,
+    bhm_cortex2d_t** odd_cortex,
+    bhm_cortex_size_t cortex_width,
+    bhm_cortex_size_t cortex_height,
+    bhm_nh_radius_t nh_radius
+) {
+    bhm_error_code_t error = BHM_ERROR_NONE;
+
     // Initialize the first cortex.
-    c2d_create(even_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_create(odd_cortex, cortex_width, cortex_height, nh_radius);
-    c2d_set_evol_step(*even_cortex, 0x01U);
-    c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
-    c2d_set_max_syn_count(*even_cortex, 24);
+    error = c2d_create(even_cortex, cortex_width, cortex_height, nh_radius);
+    if (error) return error;
+    error = c2d_create(odd_cortex, cortex_width, cortex_height, nh_radius);
+    if (error) return error;
+    error = c2d_set_evol_step(*even_cortex, 0x01U);
+    if (error) return error;
+    error = c2d_set_pulse_mapping(*even_cortex, BHM_PULSE_MAPPING_RPROP);
+    if (error) return error;
+    error = c2d_set_max_syn_count(*even_cortex, 24);
+    if (error) return error;
     char touchFileName[40];
     char inhexcFileName[40];
     sprintf(touchFileName, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
     sprintf(inhexcFileName, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+
+    // No error check since any error in files read should not impact the program.
     c2d_touch_from_map(*even_cortex, touchFileName);
     c2d_inhexc_from_map(*even_cortex, inhexcFileName);
 
     // Copy the first cortex properties to the second one.
-    c2d_copy(*odd_cortex, *even_cortex);
+    error = c2d_copy(*odd_cortex, *even_cortex);
+    return error;
 }
 
 int main(int argc, char **argv) {
@@ -62,15 +78,21 @@ int main(int argc, char **argv) {
     // Cortex configuration.
     bhm_cortex2d_t* even_cortex;
     bhm_cortex2d_t* odd_cortex;
-    setup_cortices(
+    error = setup_cortices(
         &even_cortex,
         &odd_cortex,
         cortex_width,
         cortex_height,
         nh_radius
     );
-    dim3 cortex_grid_size = c2d_get_grid_size(even_cortex);
+    if (error) return 1;
+
+    bhm_cortex_counts_t* counts = (bhm_cortex_counts_t*) malloc(sizeof(bhm_cortex_counts_t));
+    counts->ticks_count = 0x00;
+    counts->evols_count = 0x00;
+    
     dim3 cortex_block_size = c2d_get_block_size(even_cortex);
+    dim3 cortex_grid_size = c2d_get_grid_size(even_cortex, cortex_block_size);
 
     // Print the cortex out.
     char cortex_string[100];
@@ -109,34 +131,51 @@ int main(int argc, char **argv) {
     cudaMalloc((void**) &d_input, sizeof(bhm_input2d_t));
     cudaCheckError();
     i2d_to_device(d_input, input);
-
+    
     // Start timer.
     uint64_t start_time = millis();
-
+    
     for (uint32_t i = 0; i < iterations_count; i++) {
         bhm_cortex2d_t* prev_cortex = i % 2 ? d_odd_cortex : d_even_cortex;
         bhm_cortex2d_t* next_cortex = i % 2 ? d_even_cortex : d_odd_cortex;
 
+        // Defines whether to evolve or not.
+        // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+        // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
+        // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
+        bool evolve = (counts->ticks_count % (((bhm_evol_step_t) even_cortex->evol_step) + 1)) == 0;
+        
         // TODO Fetch input.
-
+        
         // Copy input to device.
-        i2d_to_device(d_input, input);
-
+        // i2d_to_device(d_input, input);
+        
         // Feed.
-        c2d_feed2d<<<input_grid_size, input_block_size>>>(prev_cortex, d_input);
+        c2d_feed2d<<<input_grid_size, input_block_size>>>(
+            prev_cortex,
+            d_input,
+            counts->ticks_count
+        );
+        cudaCheckError();
+        cudaDeviceSynchronize();
+        
+        c2d_tick<<<cortex_grid_size, cortex_block_size>>>(
+            prev_cortex,
+            next_cortex,
+            evolve
+        );
         cudaCheckError();
         cudaDeviceSynchronize();
 
-        // printf("\ncortex\t%d - %d\ngrid\t%d - %d\nblock\t%d - %d", even_cortex->width, even_cortex->height, cortex_grid_size.x, cortex_grid_size.y, cortex_block_size.x, cortex_block_size.y);
-        c2d_tick<<<cortex_grid_size, cortex_block_size>>>(prev_cortex, next_cortex);
-        cudaCheckError();
-        cudaDeviceSynchronize();
+        counts->ticks_count++;
+        // Increment evolutions count.
+        if (evolve) counts->evols_count++;
 
-        if ((i + 1) % 1000 == 0) {
+        if ((i + 1) % 100 == 0) {
             uint64_t elapsed = millis() - start_time;
-            double fps = i /(elapsed / 1000.0f);
-            printf("\nPerformed %d iterations in %llums; %.2f ticks per second\n", i + 1, elapsed, fps);
-            c2d_to_file(even_cortex, (char*) "out/test.c2d");
+            double frequency = i /(elapsed / 1000.0f);
+            printf("\nPerformed %d iterations in %llums; %.2f Hz\n", i + 1, elapsed, frequency);
+            // c2d_to_file(even_cortex, (char*) "out/test.c2d");
         }
 
         // usleep(100);

@@ -1,13 +1,17 @@
 #include "behema_std.h"
 
-void c2d_feed2d(bhm_cortex2d_t* cortex, bhm_input2d_t* input) {
+void c2d_feed2d(
+    bhm_cortex2d_t* cortex,
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
+) {
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = input->y0; y < input->y1; y++) {
         for (bhm_cortex_size_t x = input->x0; x < input->x1; x++) {
             // Check whether the current input neuron should be excited or not.
             bhm_bool_t excite = value_to_pulse(
                 cortex->sample_window,
-                cortex->ticks_count % cortex->sample_window,
+                ticks_count % cortex->sample_window,
                 input->values[
                     IDX2D(
                         x - input->x0,
@@ -46,7 +50,11 @@ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     }
 }
 
-void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
+void c2d_tick(
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex,
+    bhm_bool_t evolve
+) {
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < prev_cortex->width; x++) {
@@ -79,12 +87,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
             bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
             bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
 
-            // Defines whether to evolve or not.
-            // evol_step is incremented by 1 to account for edge cases and human readable behavior:
-            // 0x0000 -> 0 + 1 = 1, so the cortex evolves at every tick, meaning that there are no free ticks between evolutions.
-            // 0xFFFF -> 65535 + 1 = 65536, so the cortex never evolves, meaning that there is an infinite amount of ticks between evolutions.
-            bhm_bool_t evolve = (prev_cortex->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
-
             // Increment the current neuron value by reading its connected neighbors.
             for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
                 for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
@@ -96,9 +98,11 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
                         (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // The index of the current neighbor in the current neuron's neighborhood.
                         bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                        bhm_cortex_size_t neighbor_index = IDX2D(WRAP(neighbor_x, prev_cortex->width),
-                                                             WRAP(neighbor_y, prev_cortex->height),
-                                                             prev_cortex->width);
+                        bhm_cortex_size_t neighbor_index = IDX2D(
+                            WRAP(neighbor_x, prev_cortex->width),
+                            WRAP(neighbor_y, prev_cortex->height),
+                            prev_cortex->width
+                        );
 
                         // Fetch the current neighbor.
                         bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
@@ -107,10 +111,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
                         bhm_syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
                                                       ((prev_str_mask_b & 0x01U) << 0x01U) |
                                                       ((prev_str_mask_c & 0x01U) << 0x02U);
-
-                        // Pick a random number for each neighbor, capped to the max uint16 value.
-                        next_neuron->rand_state = xorshf32(next_neuron->rand_state);
-                        bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
 
                         // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
                         bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
@@ -129,6 +129,10 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
 
                         // Perform the evolution phase if allowed.
                         if (evolve) {
+                            // Pick a random number for each neighbor, capped to the max uint16 value.
+                            next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                            bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
+
                             // Structural plasticity: create or destroy a synapse.
                             if (
                                 !(prev_ac_mask & 0x01U) &&
@@ -192,9 +196,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
                                     next_neuron->tot_syn_strength--;
                                 }
                             }
-
-                            // Increment evolutions count.
-                            next_cortex->evols_count++;
                         }
                     }
 
@@ -232,8 +233,6 @@ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex) {
             }
         }
     }
-
-    next_cortex->ticks_count++;
 }
 
 

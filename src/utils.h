@@ -115,44 +115,63 @@ uint64_t nanos();
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name);
+bhm_error_code_t c2d_to_file(
+    bhm_cortex2d_t* cortex,
+    const char* file_name
+);
 
 /// Reads the content from a file and initializes the provided cortex accordingly.
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name);
+bhm_error_code_t c2d_from_file(
+    bhm_cortex2d_t* cortex,
+    const char* file_name
+);
 
 /// Dumps the population's content to a file.
 /// The file is created if not already present, overwritten otherwise.
 /// @param population The population to be written to file.
 /// @param file_name The destination file to write the population to.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name);
+bhm_error_code_t p2d_to_file(
+    bhm_population2d_t* population,
+    const char* file_name
+);
 
 /// Reads the content from a file and initializes the provided population accordingly.
 /// @param cortex The population to init from file.
 /// @param file_name The file to read the population from.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_name);
+bhm_error_code_t p2d_from_file(
+    bhm_population2d_t* population,
+    const char* file_name
+);
 
-/// @brief Sets touch for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_touch_from_map(
+    bhm_cortex2d_t* cortex,
+    const char* map_file_name
+);
 
-/// @brief Sets inhexc ratio for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_inhexc_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_inhexc_from_map(
+    bhm_cortex2d_t* cortex,
+    const char* map_file_name
+);
 
 /// @brief Sets fire threshold for each neuron in the provided cortex by reading it from a pgm map file.
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_fthold_from_map(bhm_cortex2d_t* cortex, char* map_file_name);
+bhm_error_code_t c2d_fthold_from_map(
+    bhm_cortex2d_t* cortex,
+    const char* map_file_name
+);
 
 #ifdef __cplusplus
 }

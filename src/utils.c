@@ -191,7 +191,10 @@ uint64_t nanos() {
 }
 
 
-bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
+bhm_error_code_t c2d_to_file(
+    bhm_cortex2d_t* cortex,
+    const char* file_name
+) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
 
@@ -203,8 +206,6 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Write cortex metadata to the output file.
     fwrite(&(cortex->width), sizeof(bhm_cortex_size_t), 1, out_file);
     fwrite(&(cortex->height), sizeof(bhm_cortex_size_t), 1, out_file);
-    fwrite(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, out_file);
-    fwrite(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, out_file);
 
@@ -238,7 +239,10 @@ bhm_error_code_t c2d_to_file(bhm_cortex2d_t* cortex, const char* file_name) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
+bhm_error_code_t c2d_from_file(
+    bhm_cortex2d_t* cortex,
+    const char* file_name
+) {
     // Open input file if possible.
     FILE* in_file = fopen(file_name, "rb");
 
@@ -250,8 +254,6 @@ bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
     // Read cortex metadata from the input file.
     fread(&(cortex->width), sizeof(bhm_cortex_size_t), 1, in_file);
     fread(&(cortex->height), sizeof(bhm_cortex_size_t), 1, in_file);
-    fread(&(cortex->ticks_count), sizeof(bhm_ticks_count_t), 1, in_file);
-    fread(&(cortex->evols_count), sizeof(bhm_ticks_count_t), 1, in_file);
     fread(&(cortex->evol_step), sizeof(bhm_ticks_count_t), 1, in_file);
     fread(&(cortex->pulse_window), sizeof(bhm_ticks_count_t), 1, in_file);
 
@@ -286,7 +288,10 @@ bhm_error_code_t c2d_from_file(bhm_cortex2d_t* cortex, const char* file_name) {
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_name) {
+bhm_error_code_t p2d_to_file(
+    bhm_population2d_t* population,
+    const char* file_name
+) {
     // Open output file if possible.
     FILE* out_file = fopen(file_name, "wb");
     if (out_file == NULL) {
@@ -338,7 +343,10 @@ bhm_error_code_t p2d_to_file(bhm_population2d_t* population, const char* file_na
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_name) {
+bhm_error_code_t p2d_from_file(
+    bhm_population2d_t* population,
+    const char* file_name
+) {
     // Open input file if possible.
     FILE* in_file = fopen(file_name, "rb");
 
@@ -391,14 +399,15 @@ bhm_error_code_t p2d_from_file(bhm_population2d_t* population, const char* file_
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_touch_from_map(
+    bhm_cortex2d_t* cortex,
+    const char* map_file_name
+) {
     pgm_content_t pgm_content;
 
     // Read file.
     bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
-    if (error) {
-        return error;
-    }
+    if (error) return error;
 
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
@@ -413,14 +422,15 @@ bhm_error_code_t c2d_touch_from_map(bhm_cortex2d_t* cortex, char* map_file_name)
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_inhexc_from_map(bhm_cortex2d_t* cortex, char* map_file_name) {
+bhm_error_code_t c2d_inhexc_from_map(
+    bhm_cortex2d_t* cortex,
+    const char* map_file_name
+) {
     pgm_content_t pgm_content;
 
     // Read file.
     bhm_error_code_t error = pgm_read(&pgm_content, map_file_name);
-    if (error) {
-        return error;
-    }
+    if (error) return error;
 
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {

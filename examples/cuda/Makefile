@@ -29,7 +29,7 @@ OBJS=$(patsubst %.o,$(BLD_DIR)/%.o,$@.o)
 MKDIR=mkdir -p
 RM=rm -rf
 
-all: bench
+all: bench bench_soa
 
 bench: create
 	@printf "\n"

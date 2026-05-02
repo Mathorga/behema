@@ -29,7 +29,7 @@ Copyright (C) 2022 Luka Micheletti
 // dim3 block_size(BLOCK_SIZE_2D, BLOCK_SIZE_2D);
 // dim3 block_size(BLOCK_SIZE_3D, BLOCK_SIZE_3D, BLOCK_SIZE_3D);
 #define BLOCK_SIZE_1D 256
-#define BLOCK_SIZE_2D 32
+#define BLOCK_SIZE_2D 16
 #define BLOCK_SIZE_3D 8
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
@@ -37,13 +37,19 @@ __host__ __device__ uint32_t cuda_xorshf32(uint32_t state);
 
 // Initialization functions:
 
-/// Computes and returns the grid size to allocate on device.
+/// @brief Computes and returns the grid size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
-dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex);
+dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex, dim3 block_size);
 
-/// Computes and returns the block size to allocate on device.
+/// @brief Computes and returns the block size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
 dim3 c2d_get_block_size(bhm_cortex2d_t* cortex);
+
+/// @brief Computes and returns the needed amount of shared memory for the provided cortex
+/// @param cortex The cortex for which to compute the amount of needed shared memory in device.
+/// @param block_size The size of the block allocated for the provided cortex.
+/// @return The amount of shared memory that ensures all computations can be performed.
+size_t c2d_get_shared_mem_size(bhm_cortex2d_t* cortex, dim3 block_size);
 
 /// Copies an input2d from host to device.
 bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_input);
@@ -52,10 +58,16 @@ bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_
 bhm_error_code_t i2d_to_host(bhm_input2d_t* host_input, bhm_input2d_t* device_input);
 
 /// Copies a cortex2d from host to device.
-bhm_error_code_t c2d_to_device(bhm_cortex2d_t* device_cortex, bhm_cortex2d_t* host_cortex);
+bhm_error_code_t c2d_to_device(
+    bhm_cortex2d_t* device_cortex,
+    bhm_cortex2d_t* host_cortex
+);
 
 /// Copies a cortex2d from device to host.
-bhm_error_code_t c2d_to_host(bhm_cortex2d_t* host_cortex, bhm_cortex2d_t* device_cortex);
+bhm_error_code_t c2d_to_host(
+    bhm_cortex2d_t* host_cortex,
+    bhm_cortex2d_t* device_cortex
+);
 
 /// Destroys the given cortex (on device) and frees memory.
 bhm_error_code_t i2d_device_destroy(bhm_input2d_t* input);
@@ -69,18 +81,31 @@ bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex);
 /// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
-__global__ void c2d_feed2d(bhm_cortex2d_t* cortex, bhm_input2d_t* input);
+/// @param ticks_count The number of executions performed so far.
+__global__ void c2d_feed2d(
+    bhm_cortex2d_t* cortex,
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
+);
 
 /// @brief Reads data from a cortex through the provided output2d. When the mapping is done, output data is stored in the provided output2d.
 /// @param cortex The cortex to read values from.
 /// @param output The output used to read data from the cortex.
-__global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output);
+__global__ void c2d_read2d(
+    bhm_cortex2d_t* cortex,
+    bhm_output2d_t* output
+);
 
 /// @brief Performs a full run cycle over the provided cortex.
 /// @param prev_cortex The cortex at its current state.
 /// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @param evolve Whether the cortex should update its internal structure or not.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
-__global__ void c2d_tick(bhm_cortex2d_t* prev_cortex, bhm_cortex2d_t* next_cortex);
+__global__ void c2d_tick(
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex,
+    bool evolve
+);
 
 
 // ########################################## Input mapping functions ##########################################

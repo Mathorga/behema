@@ -89,9 +89,7 @@ bhm_error_code_t c2d_alloc(
 ) {
     // Allocate the cortex.
     (*cortex) = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
-    if ((*cortex) == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if ((*cortex) == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     return BHM_ERROR_NONE;
 }
@@ -110,8 +108,6 @@ bhm_error_code_t c2d_init(
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
-    cortex->ticks_count = 0x00U;
-    cortex->evols_count = 0x00U;
     cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
     cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
 
@@ -132,9 +128,7 @@ bhm_error_code_t c2d_init(
 
     // Allocate neurons.
     cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
@@ -169,22 +163,12 @@ bhm_error_code_t c2d_rand_init(
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
 ) {
-    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) {
-        // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
-        return BHM_ERROR_NH_RADIUS_TOO_BIG;
-    }
-
-    // Allocate the cortex.
-    cortex = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
-    if (cortex == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
+    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) return BHM_ERROR_NH_RADIUS_TOO_BIG;
 
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
-    cortex->ticks_count = 0x00U;
-    cortex->evols_count = 0x00U;
     cortex->rand_state = (bhm_rand_state_t) time(NULL);
     cortex->evol_step = cortex->rand_state % BHM_EVOL_STEP_NEVER;
     cortex->rand_state = xorshf32(cortex->rand_state);
@@ -219,9 +203,7 @@ bhm_error_code_t c2d_rand_init(
 
     // Allocate neurons.
     cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) {
-        return BHM_ERROR_FAILED_ALLOC;
-    }
+    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
@@ -317,8 +299,6 @@ bhm_error_code_t c2d_copy(
 ) {
     to->width = from->width;
     to->height = from->height;
-    to->ticks_count = from->ticks_count;
-    to->evols_count = from->evols_count;
     to->evol_step = from->evol_step;
     to->pulse_window = from->pulse_window;
 

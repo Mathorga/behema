@@ -53,7 +53,7 @@ ifdef BHM_LIB_DIR
     CLINK_FLAGS+=-L${BHM_LIB_DIR}
 endif
 
-all: clean bench sampled output
+all: clean bench bench_soa sampled output
 
 bench: create
 	@printf "\n"
