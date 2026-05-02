@@ -39,7 +39,15 @@ __host__ __device__ uint32_t cuda_xorshf32(uint32_t state);
 
 /// @brief Computes and returns the grid size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
+dim3 c2d_get_grid_size_soa(bhm_soa_cortex_t* cortex, dim3 block_size);
+
+/// @brief Computes and returns the grid size to allocate on device.
+/// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
 dim3 c2d_get_grid_size(bhm_cortex2d_t* cortex, dim3 block_size);
+
+/// @brief Computes and returns the block size to allocate on device.
+/// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
+dim3 c2d_get_block_size_soa(bhm_soa_cortex_t* cortex);
 
 /// @brief Computes and returns the block size to allocate on device.
 /// Warning: the passed cortex must be initialized before this function is called, otherwise an error may occur.
@@ -58,9 +66,21 @@ bhm_error_code_t i2d_to_device(bhm_input2d_t* device_input, bhm_input2d_t* host_
 bhm_error_code_t i2d_to_host(bhm_input2d_t* host_input, bhm_input2d_t* device_input);
 
 /// Copies a cortex2d from host to device.
+bhm_error_code_t c2d_to_device_soa(
+    bhm_soa_cortex_t* device_cortex,
+    bhm_soa_cortex_t* host_cortex
+);
+
+/// Copies a cortex2d from host to device.
 bhm_error_code_t c2d_to_device(
     bhm_cortex2d_t* device_cortex,
     bhm_cortex2d_t* host_cortex
+);
+
+/// Copies a cortex2d from device to host.
+bhm_error_code_t c2d_to_host_soa(
+    bhm_soa_cortex_t* host_cortex,
+    bhm_soa_cortex_t* device_cortex
 );
 
 /// Copies a cortex2d from device to host.
@@ -73,10 +93,23 @@ bhm_error_code_t c2d_to_host(
 bhm_error_code_t i2d_device_destroy(bhm_input2d_t* input);
 
 /// Destroys the given cortex (on device) and frees memory.
+bhm_error_code_t c2d_device_destroy_soa(bhm_soa_cortex_t* cortex);
+
+/// Destroys the given cortex (on device) and frees memory.
 bhm_error_code_t c2d_device_destroy(bhm_cortex2d_t* cortex);
 
 
 // ########################################## Execution functions ##########################################
+
+/// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
+/// @param cortex The cortex to feed.
+/// @param input The input to feed the cortex.
+/// @param ticks_count The number of executions performed so far.
+__global__ void c2d_feed2d_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_input2d_t* input,
+    bhm_ticks_count_t ticks_count
+);
 
 /// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
 /// @param cortex The cortex to feed.
@@ -94,6 +127,17 @@ __global__ void c2d_feed2d(
 __global__ void c2d_read2d(
     bhm_cortex2d_t* cortex,
     bhm_output2d_t* output
+);
+
+/// @brief Performs a full run cycle over the provided cortex.
+/// @param prev_cortex The cortex at its current state.
+/// @param next_cortex The cortex that will be updated by the tick cycle.
+/// @param evolve Whether the cortex should update its internal structure or not.
+/// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
+__global__ void c2d_tick_soa(
+    bhm_soa_cortex_t* prev_cortex,
+    bhm_soa_cortex_t* next_cortex,
+    bool evolve
 );
 
 /// @brief Performs a full run cycle over the provided cortex.

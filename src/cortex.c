@@ -84,12 +84,83 @@ bhm_error_code_t o2d_init(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_alloc_soa(
+    bhm_soa_cortex_t** cortex
+) {
+    // Allocate the cortex.
+    (*cortex) = (bhm_soa_cortex_t*) malloc(sizeof(bhm_soa_cortex_t));
+    if ((*cortex) == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_alloc(
     bhm_cortex2d_t** cortex
 ) {
     // Allocate the cortex.
     (*cortex) = (bhm_cortex2d_t*) malloc(sizeof(bhm_cortex2d_t));
     if ((*cortex) == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_init_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
+    // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
+    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) return BHM_ERROR_NH_RADIUS_TOO_BIG;
+
+    // Setup cortex data.
+    cortex->width = width;
+    cortex->height = height;
+    cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
+    cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
+
+    cortex->nh_radius = nh_radius;
+    cortex->fire_threshold = BHM_DEFAULT_THRESHOLD;
+    cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
+    cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
+    cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
+    cortex->g_rand_state = BHM_RAND_OFFSET;
+    cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
+    cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
+    cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
+    cortex->max_syn_count = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
+    cortex->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
+
+    cortex->sample_window = BHM_DEFAULT_SAMPLE_WINDOW;
+    cortex->pulse_mapping = BHM_PULSE_MAPPING_LINEAR;
+
+    // Allocate neurons data.
+    cortex->n_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * cortex->height * sizeof(bhm_rand_state_t));
+    if (cortex->n_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_pulse_mask_t));
+    if (cortex->n_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulses = (bhm_ticks_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_ticks_count_t));
+    if (cortex->n_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_values = (bhm_neuron_value_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_value_t));
+    if (cortex->n_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_strength_t));
+    if (cortex->n_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
+    if (cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     return BHM_ERROR_NONE;
 }
@@ -234,6 +305,25 @@ bhm_error_code_t c2d_rand_init(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_create_soa(
+    bhm_soa_cortex_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
+    bhm_error_code_t error;
+
+    // Allocate the cortex.
+    error = c2d_alloc_soa(cortex);
+    if (error != BHM_ERROR_NONE) return error;
+
+    // Initialize its values.
+    error = c2d_init_soa(*cortex, width, height, nh_radius);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_create(
     bhm_cortex2d_t** cortex,
     bhm_cortex_size_t width,
@@ -281,6 +371,30 @@ bhm_error_code_t o2d_destroy(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_destroy_soa(
+    bhm_soa_cortex_t* cortex
+) {
+    // Free neurons data.
+    free(cortex->n_synac_masks);
+    free(cortex->n_synex_masks);
+    free(cortex->n_synstr_masks_a);
+    free(cortex->n_synstr_masks_b);
+    free(cortex->n_synstr_masks_c);
+    free(cortex->n_l_rand_states);
+    free(cortex->n_pulse_masks);
+    free(cortex->n_pulses);
+    free(cortex->n_values);
+    free(cortex->n_max_syn_counts);
+    free(cortex->n_syn_counts);
+    free(cortex->n_tot_syn_strengths);
+    free(cortex->n_inhexc_ratios);
+
+    // Free cortex.
+    free(cortex);
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_destroy(
     bhm_cortex2d_t* cortex
 ) {
@@ -289,6 +403,50 @@ bhm_error_code_t c2d_destroy(
 
     // Free cortex.
     free(cortex);
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_copy_soa(
+    bhm_soa_cortex_t* to,
+    bhm_soa_cortex_t* from
+) {
+    to->width = from->width;
+    to->height = from->height;
+    to->evol_step = from->evol_step;
+    to->pulse_window = from->pulse_window;
+
+    to->nh_radius = from->nh_radius;
+    to->fire_threshold = from->fire_threshold;
+    to->recovery_value = from->recovery_value;
+    to->exc_value = from->exc_value;
+    to->decay_value = from->decay_value;
+    to->syngen_chance = from->syngen_chance;
+    to->synstr_chance = from->synstr_chance;
+    to->max_tot_strength = from->max_tot_strength;
+    to->max_syn_count = from->max_syn_count;
+    to->inhexc_range = from->inhexc_range;
+
+    to->sample_window = from->sample_window;
+    to->pulse_mapping = from->pulse_mapping;
+
+    for (bhm_cortex_size_t y = 0; y < from->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < from->width; x++) {
+            to->n_synac_masks[IDX2D(x, y, from->width)] = from->n_synac_masks[IDX2D(x, y, from->width)];
+            to->n_synex_masks[IDX2D(x, y, from->width)] = from->n_synex_masks[IDX2D(x, y, from->width)];
+            to->n_synstr_masks_a[IDX2D(x, y, from->width)] = from->n_synstr_masks_a[IDX2D(x, y, from->width)];
+            to->n_synstr_masks_b[IDX2D(x, y, from->width)] = from->n_synstr_masks_b[IDX2D(x, y, from->width)];
+            to->n_synstr_masks_c[IDX2D(x, y, from->width)] = from->n_synstr_masks_c[IDX2D(x, y, from->width)];
+            to->n_l_rand_states[IDX2D(x, y, from->width)] = from->n_l_rand_states[IDX2D(x, y, from->width)];
+            to->n_pulse_masks[IDX2D(x, y, from->width)] = from->n_pulse_masks[IDX2D(x, y, from->width)];
+            to->n_pulses[IDX2D(x, y, from->width)] = from->n_pulses[IDX2D(x, y, from->width)];
+            to->n_values[IDX2D(x, y, from->width)] = from->n_values[IDX2D(x, y, from->width)];
+            to->n_max_syn_counts[IDX2D(x, y, from->width)] = from->n_max_syn_counts[IDX2D(x, y, from->width)];
+            to->n_syn_counts[IDX2D(x, y, from->width)] = from->n_syn_counts[IDX2D(x, y, from->width)];
+            to->n_tot_syn_strengths[IDX2D(x, y, from->width)] = from->n_tot_syn_strengths[IDX2D(x, y, from->width)];
+            to->n_inhexc_ratios[IDX2D(x, y, from->width)] = from->n_inhexc_ratios[IDX2D(x, y, from->width)];
+        }
+    }
 
     return BHM_ERROR_NONE;
 }
@@ -360,6 +518,15 @@ bhm_error_code_t c2d_set_nhmask(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_set_evol_step_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_evol_step_t evol_step
+) {
+    cortex->evol_step = evol_step;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_set_evol_step(
     bhm_cortex2d_t* cortex,
     bhm_evol_step_t evol_step
@@ -419,6 +586,15 @@ bhm_error_code_t c2d_set_synstr_chance(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t c2d_set_max_syn_count_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_syn_count_t syn_count
+) {
+    cortex->max_syn_count = syn_count;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t syn_count
@@ -436,6 +612,15 @@ bhm_error_code_t c2d_set_max_touch(
     if (touch <= 1 && touch >= 0) {
         cortex->max_syn_count = touch * NH_COUNT_2D(NH_DIAM_2D(cortex->nh_radius));
     }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_set_pulse_mapping_soa(
+    bhm_soa_cortex_t* cortex,
+    bhm_pulse_mapping_t pulse_mapping
+) {
+    cortex->pulse_mapping = pulse_mapping;
 
     return BHM_ERROR_NONE;
 }
@@ -598,6 +783,28 @@ bhm_error_code_t n2d_mutate(
 // ##########################################
 // Getter functions
 // ##########################################
+
+bhm_error_code_t c2d_to_string_soa(
+    bhm_soa_cortex_t* cortex,
+    char* result
+) {
+    int string_length = 0;
+
+    // Header.
+    string_length += sprintf(result + string_length, "\ncortex(\n");
+
+    // Data.
+    string_length += sprintf(result + string_length, "\twidth:%d\n", cortex->width);
+    string_length += sprintf(result + string_length, "\theight:%d\n", cortex->height);
+    string_length += sprintf(result + string_length, "\tnh_radius:%d\n", cortex->nh_radius);
+    string_length += sprintf(result + string_length, "\tpulse_window:%d\n", cortex->pulse_window);
+    string_length += sprintf(result + string_length, "\tsample_window:%d\n", cortex->sample_window);
+
+    // Footer.
+    string_length += sprintf(result + string_length, ")\n");
+
+    return BHM_ERROR_NONE;
+}
 
 bhm_error_code_t c2d_to_string(
     bhm_cortex2d_t* cortex,
