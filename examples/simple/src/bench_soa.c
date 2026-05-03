@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
     uint64_t start_time = millis();
 
     for (uint32_t i = 0; i < iterations_count; i++) {
-        bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-        bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+        bhm_soa_cortex_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
+        bhm_soa_cortex_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
 
         // Defines whether to evolve or not.
         // evol_step is incremented by 1 to account for edge cases and human readable behavior:
