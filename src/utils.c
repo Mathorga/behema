@@ -215,7 +215,7 @@ bhm_error_code_t c2d_to_file(
     fwrite(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, out_file);
     fwrite(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, out_file);
 
-    fwrite(&(cortex->rand_state), sizeof(bhm_rand_state_t), 1, out_file);
+    fwrite(&(cortex->g_rand_state), sizeof(bhm_rand_state_t), 1, out_file);
 
     fwrite(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, out_file);
     fwrite(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, out_file);
@@ -227,11 +227,22 @@ bhm_error_code_t c2d_to_file(
     fwrite(&(cortex->sample_window), sizeof(bhm_ticks_count_t), 1, out_file);
     fwrite(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, out_file);
 
-    // Write all neurons.
-    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
-        }
+    // Write all neurons data.
+    // TODO Use fwrite's third argument to print more than one element at a time. No loop needed.
+    for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+        fwrite(&(cortex->n_synac_masks[i]), sizeof(bhm_nh_mask_t), 1, out_file);
+        fwrite(&(cortex->n_synex_masks[i]), sizeof(bhm_nh_mask_t), 1, out_file);
+        fwrite(&(cortex->n_synstr_masks_a[i]), sizeof(bhm_nh_mask_t), 1, out_file);
+        fwrite(&(cortex->n_synstr_masks_b[i]), sizeof(bhm_nh_mask_t), 1, out_file);
+        fwrite(&(cortex->n_synstr_masks_c[i]), sizeof(bhm_nh_mask_t), 1, out_file);
+        fwrite(&(cortex->n_l_rand_states[i]), sizeof(bhm_rand_state_t), 1, out_file);
+        fwrite(&(cortex->n_pulse_masks[i]), sizeof(bhm_pulse_mask_t), 1, out_file);
+        fwrite(&(cortex->n_pulses[i]), sizeof(bhm_ticks_count_t), 1, out_file);
+        fwrite(&(cortex->n_values[i]), sizeof(bhm_neuron_value_t), 1, out_file);
+        fwrite(&(cortex->n_max_syn_counts[i]), sizeof(bhm_syn_count_t), 1, out_file);
+        fwrite(&(cortex->n_syn_counts[i]), sizeof(bhm_syn_count_t), 1, out_file);
+        fwrite(&(cortex->n_tot_syn_strengths[i]), sizeof(bhm_syn_strength_t), 1, out_file);
+        fwrite(&(cortex->n_inhexc_ratios[i]), sizeof(bhm_chance_t), 1, out_file);
     }
 
     fclose(out_file);
@@ -263,7 +274,7 @@ bhm_error_code_t c2d_from_file(
     fread(&(cortex->exc_value), sizeof(bhm_neuron_value_t), 1, in_file);
     fread(&(cortex->decay_value), sizeof(bhm_neuron_value_t), 1, in_file);
 
-    fread(&(cortex->rand_state), sizeof(bhm_rand_state_t), 1, in_file);
+    fread(&(cortex->g_rand_state), sizeof(bhm_rand_state_t), 1, in_file);
 
     fread(&(cortex->syngen_chance), sizeof(bhm_chance_t), 1, in_file);
     fread(&(cortex->synstr_chance), sizeof(bhm_chance_t), 1, in_file);
@@ -276,11 +287,48 @@ bhm_error_code_t c2d_from_file(
     fread(&(cortex->pulse_mapping), sizeof(bhm_pulse_mapping_t), 1, in_file);
 
     // Read all neurons.
-    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            fread(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, in_file);
-        }
+    cortex->n_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * cortex->height * sizeof(bhm_rand_state_t));
+    if (cortex->n_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_pulse_mask_t));
+    if (cortex->n_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulses = (bhm_ticks_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_ticks_count_t));
+    if (cortex->n_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_values = (bhm_neuron_value_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_value_t));
+    if (cortex->n_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_strength_t));
+    if (cortex->n_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
+    if (cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // TODO Use fwrite's third argument to print more than one element at a time. No loop needed.
+    for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+        fread(&(cortex->n_synac_masks[i]), sizeof(bhm_nh_mask_t), 1, in_file);
+        fread(&(cortex->n_synex_masks[i]), sizeof(bhm_nh_mask_t), 1, in_file);
+        fread(&(cortex->n_synstr_masks_a[i]), sizeof(bhm_nh_mask_t), 1, in_file);
+        fread(&(cortex->n_synstr_masks_b[i]), sizeof(bhm_nh_mask_t), 1, in_file);
+        fread(&(cortex->n_synstr_masks_c[i]), sizeof(bhm_nh_mask_t), 1, in_file);
+        fread(&(cortex->n_l_rand_states[i]), sizeof(bhm_rand_state_t), 1, in_file);
+        fread(&(cortex->n_pulse_masks[i]), sizeof(bhm_pulse_mask_t), 1, in_file);
+        fread(&(cortex->n_pulses[i]), sizeof(bhm_ticks_count_t), 1, in_file);
+        fread(&(cortex->n_values[i]), sizeof(bhm_neuron_value_t), 1, in_file);
+        fread(&(cortex->n_max_syn_counts[i]), sizeof(bhm_syn_count_t), 1, in_file);
+        fread(&(cortex->n_syn_counts[i]), sizeof(bhm_syn_count_t), 1, in_file);
+        fread(&(cortex->n_tot_syn_strengths[i]), sizeof(bhm_syn_strength_t), 1, in_file);
+        fread(&(cortex->n_inhexc_ratios[i]), sizeof(bhm_chance_t), 1, in_file);
     }
 
     fclose(in_file);
@@ -412,7 +460,7 @@ bhm_error_code_t c2d_touch_from_map(
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
         for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->neurons[i].max_syn_count = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
+            cortex->n_max_syn_counts[i] = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->max_syn_count);
         }
     } else {
         printf("\nc2d_touch_from_map file sizes do not match with cortex\n");
@@ -435,7 +483,7 @@ bhm_error_code_t c2d_inhexc_from_map(
     // Make sure sizes are correct.
     if (cortex->width == pgm_content.width && cortex->height == pgm_content.height) {
         for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
-            cortex->neurons[i].inhexc_ratio = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
+            cortex->n_inhexc_ratios[i] = fmap(pgm_content.data[i], 0, pgm_content.max_value, 0, cortex->inhexc_range);
         }
     } else {
         printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");

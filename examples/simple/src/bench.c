@@ -58,12 +58,12 @@ int main(int argc, char **argv) {
     c2d_set_evol_step(even_cortex, 0x01U);
     c2d_set_pulse_mapping(even_cortex, BHM_PULSE_MAPPING_RPROP);
     c2d_set_max_syn_count(even_cortex, 24);
-    char touchFileName[40];
-    char inhexcFileName[40];
-    snprintf(touchFileName, 40, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
-    snprintf(inhexcFileName, 40, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
-    c2d_touch_from_map(even_cortex, touchFileName);
-    c2d_inhexc_from_map(even_cortex, inhexcFileName);
+    // char touchFileName[40];
+    // char inhexcFileName[40];
+    // snprintf(touchFileName, 40, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
+    // snprintf(inhexcFileName, 40, "./res/%d_%d_inhexc.pgm", cortex_width, cortex_height);
+    // c2d_touch_from_map(even_cortex, touchFileName);
+    // c2d_inhexc_from_map(even_cortex, inhexcFileName);
     c2d_copy(odd_cortex, even_cortex);
 
     // Print the cortex out.

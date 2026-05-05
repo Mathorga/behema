@@ -83,7 +83,7 @@ bhm_error_code_t p2d_populate(
             return error;
         }
 
-        population->cortices[i].rand_state = population->rand_state + BHM_RAND_OFFSET * i;
+        population->cortices[i].g_rand_state = population->rand_state + BHM_RAND_OFFSET * i;
     }
 
     return BHM_ERROR_NONE;
@@ -113,7 +113,7 @@ bhm_error_code_t p2d_rand_populate(
 
 bhm_error_code_t p2d_destroy_cortices(bhm_population2d_t* population) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        free(population->cortices[i].neurons);
+        c2d_destroy(&population->cortices[i]);
     }
 
     free(population->cortices);
@@ -313,8 +313,8 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     // Pick neuron values from parents.
     for (bhm_cortex_size_t y = 0; y < (*child)->height; y++) {
         for (bhm_cortex_size_t x = 0; x < (*child)->width; x++) {
-            (*child)->neurons[IDX2D(x, y, (*child)->width)].max_syn_count = msc_parent.neurons[IDX2D(x, y, (*child)->width)].max_syn_count;
-            (*child)->neurons[IDX2D(x, y, (*child)->width)].inhexc_ratio = inhexc_parent.neurons[IDX2D(x, y, (*child)->width)].inhexc_ratio;
+            (*child)->n_max_syn_counts[IDX2D(x, y, (*child)->width)] = msc_parent.n_max_syn_counts[IDX2D(x, y, (*child)->width)];
+            (*child)->n_inhexc_ratios[IDX2D(x, y, (*child)->width)] = inhexc_parent.n_inhexc_ratios[IDX2D(x, y, (*child)->width)];
         }
     }
 
@@ -339,7 +339,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         error = p2d_breed(population, &child);
         if (error != BHM_ERROR_NONE) return error;
 
-        child->rand_state = population->rand_state + BHM_RAND_OFFSET * i;
+        child->g_rand_state = population->rand_state + BHM_RAND_OFFSET * i;
 
         // Mutate the newborn if so specified.
         if (mutate) {

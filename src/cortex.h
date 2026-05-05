@@ -152,53 +152,6 @@ typedef struct {
     bhm_ticks_count_t* values;
 } bhm_output2d_t;
 
-/// @brief Neuron definition data structure.
-typedef struct {
-    // Neighborhood connections pattern (SYNapses ACtivation state):
-    // 1|1|0
-    // 0|x|1 => 1100x1100
-    // 1|0|0
-    bhm_nh_mask_t synac_mask;
-    // Neighborhood excitatory states pattern (SYNapses EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
-    // Only values corresponding to active synapses are used.
-    bhm_nh_mask_t synex_mask;
-    // Neighborhood synapses strength pattern (SYNapses STRength). Defines a 3 bit value defined as [cba].
-    bhm_nh_mask_t synstr_mask_a;
-    bhm_nh_mask_t synstr_mask_b;
-    bhm_nh_mask_t synstr_mask_c;
-
-
-    // Random state. The random state has to be consistent inside a single neuron in order to allow for parallel edits without any race condition.
-    // The random state is used to generate consistent random numbers across the lifespan of a neuron, therefore should NEVER be manually changed.
-    bhm_rand_state_t rand_state;
-
-
-    // Activation history pattern:
-    //           |<--pulse_window-->|
-    // xxxxxxxxxx01001010001010001001--------> t
-    //                              ^
-    // Used to know the pulse frequency at a given moment (e.g. for syngen).
-    bhm_pulse_mask_t pulse_mask;
-    // Amount of activations in the cortex' pulse window.
-    bhm_ticks_count_t pulse;
-
-
-    // Current internal value.
-    bhm_neuron_value_t value;
-    // Maximum number of synapses to the neuron. Cannot be greater than the cortex' max_syn_count.
-    //* Mutable.
-    bhm_syn_count_t max_syn_count;
-    // Amount of connected neighbors.
-    bhm_syn_count_t syn_count;
-    // Total amount of syn strength from input neurons.
-    bhm_syn_strength_t tot_syn_strength;
-    // Proportion between excitatory and inhibitory generated synapses. Can vary between 0 and cortex.inhexc_range.
-    // inhexc_ratio = 0 -> all synapses are excitatory.
-    // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
-    //* Mutable.
-    bhm_chance_t inhexc_ratio;
-} bhm_neuron_t;
-
 /// @brief Cortex counters, used for sessions monitoring.
 typedef struct {
     // Ticks performed since cortex creation.
@@ -206,6 +159,51 @@ typedef struct {
     // Evolutions performed since cortex creation.
     bhm_ticks_count_t evols_count;
 } bhm_cortex_counts_t;
+
+typedef struct {
+    // Neighborhood connections pattern (SYNapses ACtivation state):
+    // 1|1|0
+    // 0|x|1 => 1100x1100
+    // 1|0|0
+    bhm_nh_mask_t* n_synac_masks;
+    // Neighborhood excitatory states pattern (SYNapses EXcitatory state), defines whether the synapses from the neighbors are excitatory (1) or inhibitory (0).
+    // Only values corresponding to active synapses are used.
+    bhm_nh_mask_t* n_synex_masks;
+    // Neighborhood synapses strength pattern (SYNapses STRength). Defines a 3 bit value defined as [cba].
+    bhm_nh_mask_t* n_synstr_masks_a;
+    bhm_nh_mask_t* n_synstr_masks_b;
+    bhm_nh_mask_t* n_synstr_masks_c;
+
+    // Local random states, one for each neuron.
+    bhm_rand_state_t* n_l_rand_states;
+
+
+    // Activation history pattern:
+    //           |<--pulse_window-->|
+    // xxxxxxxxxx01001010001010001001--------> t
+    //                              ^
+    // Used to know the pulse frequency at a given moment (e.g. for syngen).
+    bhm_pulse_mask_t* n_pulse_masks;
+    // Amount of activations in the cortex' pulse window.
+    bhm_ticks_count_t* n_pulses;
+
+
+    // Current internal value.
+    bhm_neuron_value_t* n_values;
+    // Maximum number of synapses to the neuron. Cannot be greater than the cortex' max_syn_count.
+    //* Mutable.
+    bhm_syn_count_t* n_max_syn_counts;
+    // Amount of connected neighbors.
+    bhm_syn_count_t* n_syn_counts;
+    // Total amount of syn strength from input neurons.
+    bhm_syn_strength_t* n_tot_syn_strengths;
+    // Proportion between excitatory and inhibitory generated synapses. Can vary between 0 and cortex.inhexc_range.
+    // inhexc_ratio = 0 -> all synapses are excitatory.
+    // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
+    //* Mutable.
+    bhm_chance_t* n_inhexc_ratios;
+
+} bhm_neurons_t;
 
 typedef struct {
     // ##########################################
@@ -263,6 +261,7 @@ typedef struct {
 
     // ##########################################
     // Neurons data.
+    // TODO Use a bhm_neurons_t instead.
     // ##########################################
 
     // Neighborhood connections pattern (SYNapses ACtivation state):
@@ -306,60 +305,6 @@ typedef struct {
     // inhexc_ratio = cortex.inhexc_range -> all synapses are inhibitory.
     //* Mutable.
     bhm_chance_t* n_inhexc_ratios;
-} bhm_soa_cortex_t;
-
-/// @brief 2D cortex of neurons.
-typedef struct {
-    // Width of the cortex.
-    //* Mutable.
-    bhm_cortex_size_t width;
-    // Height of the cortex.
-    //* Mutable.
-    bhm_cortex_size_t height;
-    // Amount of ticks between each evolution.
-    bhm_ticks_count_t evol_step;
-    // Length of the window used to count pulses in the cortex' neurons.
-    //* Mutable.
-    bhm_ticks_count_t pulse_window;
-
-
-    // Radius of each neuron's neighborhood.
-    bhm_nh_radius_t nh_radius;
-
-    // TODO Move to single neurons!
-    bhm_neuron_value_t fire_threshold;
-    bhm_neuron_value_t recovery_value;
-    bhm_neuron_value_t exc_value;
-    bhm_neuron_value_t decay_value;
-
-
-    // Random state.
-    // The random state is used to generate consistent random numbers across the lifespan of a cortex, therefore should NEVER be manually changed.
-    // Embedding the rand state allows for completely deterministic and reproducible results.
-    bhm_rand_state_t rand_state;
-
-
-    // Chance (out of 0xFFFFU) of synapse generation or deletion (structural plasticity).
-    //* Mutable.
-    bhm_chance_t syngen_chance;
-    // Chance (out of 0xFFFFU) of synapse strengthening or weakening (functional plasticity).
-    //* Mutable.
-    bhm_chance_t synstr_chance;
-
-
-    // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.
-    bhm_syn_strength_t max_tot_strength;
-    // Maximum number of synapses between a neuron and its neighbors.
-    bhm_syn_count_t max_syn_count;
-    // Maximum range for inhexc chance: single neurons' inhexc ratio will vary between 0 and inhexc_range. 0 means all excitatory, inhexc_range means all inhibitory.
-    bhm_chance_t inhexc_range;
-
-
-    // Length of the window used to sample inputs.
-    bhm_ticks_count_t sample_window;
-    bhm_pulse_mapping_t pulse_mapping;
-
-    bhm_neuron_t* neurons;
 } bhm_cortex2d_t;
 
 /// @brief 3D cortex of neurons.
@@ -373,7 +318,7 @@ typedef struct {
 
     // TODO Other data.
 
-    bhm_neuron_t* neurons;
+    // TODO Neurons data.
 } bhm_cortex3d_t;
 
 
@@ -422,28 +367,8 @@ bhm_error_code_t o2d_init(
 /// @brief Allocates a new cortex.
 /// @param cortex The cortex to be allocated.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_alloc_soa(
-    bhm_soa_cortex_t** cortex
-);
-
-/// @brief Allocates a new cortex.
-/// @param cortex The cortex to be allocated.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_alloc(
     bhm_cortex2d_t** cortex
-);
-
-/// @brief Initializes the given cortex with default values.
-/// @param cortex The cortex to initialize.
-/// @param width The width of the cortex.
-/// @param height The height of the cortex.
-/// @param nh_radius The neighborhood radius for each individual cortex neuron.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_init_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_cortex_size_t width,
-    bhm_cortex_size_t height,
-    bhm_nh_radius_t nh_radius
 );
 
 /// @brief Initializes the given cortex with default values.
@@ -478,19 +403,6 @@ bhm_error_code_t c2d_rand_init(
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_create_soa(
-    bhm_soa_cortex_t** cortex,
-    bhm_cortex_size_t width,
-    bhm_cortex_size_t height,
-    bhm_nh_radius_t nh_radius
-);
-
-/// @brief Allocates and initializes a new cortex.
-/// @param cortex The cortex to be created.
-/// @param width The width of the cortex.
-/// @param height The height of the cortex.
-/// @param nh_radius The neighborhood radius for each individual cortex neuron.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_create(
     bhm_cortex2d_t** cortex,
     bhm_cortex_size_t width,
@@ -513,24 +425,8 @@ bhm_error_code_t o2d_destroy(
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_destroy_soa(
-    bhm_soa_cortex_t* cortex
-);
-
-/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
-/// @param cortex The cortex to destroy
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_destroy(
     bhm_cortex2d_t* cortex
-);
-
-/// @brief Returns a cortex with the same properties as the given one.
-/// @param to The destination cortex.
-/// @param from The source cortex.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_copy_soa(
-    bhm_soa_cortex_t* to,
-    bhm_soa_cortex_t* from
 );
 
 /// @brief Returns a cortex with the same properties as the given one.
@@ -562,13 +458,6 @@ bhm_error_code_t c2d_set_nhradius(
 bhm_error_code_t c2d_set_nhmask(
     bhm_cortex2d_t* cortex,
     bhm_nh_mask_t mask
-);
-
-/// @brief Sets the evolution step for the cortex.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_evol_step_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_evol_step_t evol_step
 );
 
 /// @brief Sets the evolution step for the cortex.
@@ -619,15 +508,6 @@ bhm_error_code_t c2d_set_synstr_chance(
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_max_syn_count_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_syn_count_t syn_count
-);
-
-/// @brief Sets the maximum number of (input) synapses for the neurons of the cortex.
-/// @param cortex The cortex to edit.
-/// @param syn_count The max number of allowable synapses.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t syn_count
@@ -640,13 +520,6 @@ bhm_error_code_t c2d_set_max_syn_count(
 bhm_error_code_t c2d_set_max_touch(
     bhm_cortex2d_t* cortex,
     float touch
-);
-
-/// @brief Sets the preferred input mapping for the given cortex.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_pulse_mapping_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_pulse_mapping_t pulse_mapping
 );
 
 /// @brief Sets the preferred input mapping for the given cortex.
@@ -699,11 +572,13 @@ bhm_error_code_t c2d_mutate(
 );
 
 /// @brief Randomly mutates the provided neuron.
-/// @param neuron The neuron to mutate.
+/// @param cortex The cortex whose neuron to mutate.
+/// @param index The index of the neuron to mutate.
 /// @param mut_chance The probability of applying a mutation to any mutable property of the neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t n2d_mutate(
-    bhm_neuron_t* neuron,
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t index,
     bhm_chance_t mut_chance
 );
 
@@ -714,15 +589,6 @@ bhm_error_code_t n2d_mutate(
 // ##########################################
 // Getter functions
 // ##########################################
-
-/// @brief Stores the string representation of the given cortex to the provided string [result].
-/// @param cortex The cortex to inspect.
-/// @param result The string to fill with cortex data.
-/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_string_soa(
-    bhm_soa_cortex_t* cortex,
-    char* result
-);
 
 /// @brief Stores the string representation of the given cortex to the provided string [result].
 /// @param cortex The cortex to inspect.

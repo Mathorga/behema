@@ -84,16 +84,6 @@ bhm_error_code_t o2d_init(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_alloc_soa(
-    bhm_soa_cortex_t** cortex
-) {
-    // Allocate the cortex.
-    (*cortex) = (bhm_soa_cortex_t*) malloc(sizeof(bhm_soa_cortex_t));
-    if ((*cortex) == NULL) return BHM_ERROR_FAILED_ALLOC;
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_alloc(
     bhm_cortex2d_t** cortex
 ) {
@@ -104,8 +94,8 @@ bhm_error_code_t c2d_alloc(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_init_soa(
-    bhm_soa_cortex_t* cortex,
+bhm_error_code_t c2d_init(
+    bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
@@ -162,66 +152,27 @@ bhm_error_code_t c2d_init_soa(
     cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
     if (cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_init(
-    bhm_cortex2d_t* cortex,
-    bhm_cortex_size_t width,
-    bhm_cortex_size_t height,
-    bhm_nh_radius_t nh_radius
-) {
-    if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) {
-        // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
-        return BHM_ERROR_NH_RADIUS_TOO_BIG;
-    }
-
-    // Setup cortex properties.
-    cortex->width = width;
-    cortex->height = height;
-    cortex->evol_step = BHM_DEFAULT_EVOL_STEP;
-    cortex->pulse_window = BHM_DEFAULT_PULSE_WINDOW;
-
-    cortex->nh_radius = nh_radius;
-    cortex->fire_threshold = BHM_DEFAULT_THRESHOLD;
-    cortex->recovery_value = BHM_DEFAULT_RECOVERY_VALUE;
-    cortex->exc_value = BHM_DEFAULT_EXC_VALUE;
-    cortex->decay_value = BHM_DEFAULT_DECAY_RATE;
-    cortex->rand_state = BHM_RAND_OFFSET;
-    cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
-    cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
-    cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
-    cortex->max_syn_count = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius));
-    cortex->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
-
-    cortex->sample_window = BHM_DEFAULT_SAMPLE_WINDOW;
-    cortex->pulse_mapping = BHM_PULSE_MAPPING_LINEAR;
-
-    // Allocate neurons.
-    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
-
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            bhm_neuron_t* neuron = &(cortex->neurons[IDX2D(x, y, cortex->width)]);
+            bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
 
-            neuron->synac_mask = 0x00U;
-            neuron->synex_mask = 0x00U;
-            neuron->synstr_mask_a = 0x00U;
-            neuron->synstr_mask_b = 0x00U;
-            neuron->synstr_mask_c = 0x00U;
+            cortex->n_synac_masks[neuron_index] = 0x00U;
+            cortex->n_synex_masks[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_a[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_b[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_c[neuron_index] = 0x00U;
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
             // Also the starting state should never be 0, so an arbitrary integer is added to every state.
-            neuron->rand_state = BHM_RAND_OFFSET + x * y;
-            neuron->pulse_mask = 0x00U;
-            neuron->pulse = 0x00U;
-            neuron->value = BHM_DEFAULT_STARTING_VALUE;
-            neuron->max_syn_count = cortex->max_syn_count;
-            neuron->syn_count = 0x00U;
-            neuron->tot_syn_strength = 0x00U;
-            neuron->inhexc_ratio = BHM_DEFAULT_INHEXC_RATIO;
+            cortex->n_l_rand_states[neuron_index] = BHM_RAND_OFFSET + x * y;
+            cortex->n_pulse_masks[neuron_index] = 0x00U;
+            cortex->n_pulses[neuron_index] = 0x00U;
+            cortex->n_values[neuron_index] = BHM_DEFAULT_STARTING_VALUE;
+            cortex->n_max_syn_counts[neuron_index] = cortex->max_syn_count;
+            cortex->n_syn_counts[neuron_index] = 0x00U;
+            cortex->n_tot_syn_strengths[neuron_index] = 0x00U;
+            cortex->n_inhexc_ratios[neuron_index] = BHM_DEFAULT_INHEXC_RATIO;
         }
     }
 
@@ -240,86 +191,91 @@ bhm_error_code_t c2d_rand_init(
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
-    cortex->rand_state = (bhm_rand_state_t) time(NULL);
-    cortex->evol_step = cortex->rand_state % BHM_EVOL_STEP_NEVER;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->pulse_window = cortex->rand_state % BHM_MAX_PULSE_WINDOW;
+    cortex->g_rand_state = (bhm_rand_state_t) time(NULL);
+    cortex->evol_step = cortex->g_rand_state % BHM_EVOL_STEP_NEVER;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->pulse_window = cortex->g_rand_state % BHM_MAX_PULSE_WINDOW;
 
     cortex->nh_radius = nh_radius;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->fire_threshold = cortex->rand_state % BHM_MAX_THRESHOLD;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->recovery_value = (cortex->rand_state % BHM_MAX_RECOVERY_VALUE) - BHM_MAX_RECOVERY_VALUE;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->exc_value = cortex->rand_state % BHM_MAX_EXC_VALUE;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->decay_value = cortex->rand_state % BHM_MAX_DECAY_RATE;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->syngen_chance = cortex->rand_state % BHM_MAX_SYNGEN_CHANCE;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->synstr_chance = cortex->rand_state % BHM_MAX_SYNSTR_CHANCE;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->max_tot_strength = cortex->rand_state % BHM_MAX_MAX_TOT_STRENGTH;
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->max_syn_count = cortex->rand_state % ((bhm_syn_count_t) (BHM_MAX_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius))));
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->inhexc_range = cortex->rand_state % BHM_MAX_INHEXC_RANGE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->fire_threshold = cortex->g_rand_state % BHM_MAX_THRESHOLD;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->recovery_value = (cortex->g_rand_state % BHM_MAX_RECOVERY_VALUE) - BHM_MAX_RECOVERY_VALUE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->exc_value = cortex->g_rand_state % BHM_MAX_EXC_VALUE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->decay_value = cortex->g_rand_state % BHM_MAX_DECAY_RATE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->syngen_chance = cortex->g_rand_state % BHM_MAX_SYNGEN_CHANCE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->synstr_chance = cortex->g_rand_state % BHM_MAX_SYNSTR_CHANCE;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->max_tot_strength = cortex->g_rand_state % BHM_MAX_MAX_TOT_STRENGTH;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->max_syn_count = cortex->g_rand_state % ((bhm_syn_count_t) (BHM_MAX_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(nh_radius))));
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->inhexc_range = cortex->g_rand_state % BHM_MAX_INHEXC_RANGE;
 
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    cortex->sample_window = cortex->rand_state % BHM_MAX_SAMPLE_WINDOW;
-    cortex->rand_state = xorshf32(cortex->rand_state);
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    cortex->sample_window = cortex->g_rand_state % BHM_MAX_SAMPLE_WINDOW;
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
     // There are 4 possible pulse mappings, so pick one and assign it.
-    int pulse_mapping = cortex->rand_state % 4 + 0x100000;
+    int pulse_mapping = cortex->g_rand_state % 4 + 0x100000;
     cortex->pulse_mapping = pulse_mapping;
 
-    // Allocate neurons.
-    cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (cortex->neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+    // Allocate neurons data.
+    cortex->n_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (cortex->n_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * cortex->height * sizeof(bhm_rand_state_t));
+    if (cortex->n_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_pulse_mask_t));
+    if (cortex->n_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_pulses = (bhm_ticks_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_ticks_count_t));
+    if (cortex->n_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_values = (bhm_neuron_value_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_value_t));
+    if (cortex->n_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (cortex->n_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_strength_t));
+    if (cortex->n_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    cortex->n_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
+    if (cortex->n_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Setup neurons' properties.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            bhm_neuron_t* neuron = &cortex->neurons[IDX2D(x, y, cortex->width)];
+            bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
 
-            neuron->synac_mask = 0x00U;
-            neuron->synex_mask = 0x00U;
-            neuron->synstr_mask_a = 0x00U;
-            neuron->synstr_mask_b = 0x00U;
-            neuron->synstr_mask_c = 0x00U;
+            cortex->n_synac_masks[neuron_index] = 0x00U;
+            cortex->n_synex_masks[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_a[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_b[neuron_index] = 0x00U;
+            cortex->n_synstr_masks_c[neuron_index] = 0x00U;
 
             // The starting random state should be different for each neuron, otherwise repeting patterns occur.
             // Also the starting state should never be 0, so an arbitrary integer is added to every state.
-            neuron->rand_state = BHM_RAND_OFFSET + x * y;
-            neuron->pulse_mask = 0x00U;
-            neuron->pulse = 0x00U;
-            neuron->value = BHM_DEFAULT_STARTING_VALUE;
-            neuron->rand_state = xorshf32(neuron->rand_state);
-            neuron->max_syn_count = neuron->rand_state % cortex->max_syn_count;
-            neuron->syn_count = 0x00U;
-            neuron->tot_syn_strength = 0x00U;
-            neuron->rand_state = xorshf32(neuron->rand_state);
-            neuron->inhexc_ratio = neuron->rand_state % cortex->inhexc_range;
+            cortex->n_l_rand_states[neuron_index] = BHM_RAND_OFFSET + x * y;
+            cortex->n_pulse_masks[neuron_index] = 0x00U;
+            cortex->n_pulses[neuron_index] = 0x00U;
+            cortex->n_values[neuron_index] = BHM_DEFAULT_STARTING_VALUE;
+            cortex->n_l_rand_states[neuron_index] = xorshf32(cortex->n_l_rand_states[neuron_index]);
+            cortex->n_max_syn_counts[neuron_index] = cortex->n_l_rand_states[neuron_index] % cortex->max_syn_count;
+            cortex->n_syn_counts[neuron_index] = 0x00U;
+            cortex->n_tot_syn_strengths[neuron_index] = 0x00U;
+            cortex->n_l_rand_states[neuron_index] = xorshf32(cortex->n_l_rand_states[neuron_index]);
+            cortex->n_inhexc_ratios[neuron_index] = cortex->n_l_rand_states[neuron_index] % cortex->inhexc_range;
         }
     }
-
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_create_soa(
-    bhm_soa_cortex_t** cortex,
-    bhm_cortex_size_t width,
-    bhm_cortex_size_t height,
-    bhm_nh_radius_t nh_radius
-) {
-    bhm_error_code_t error;
-
-    // Allocate the cortex.
-    error = c2d_alloc_soa(cortex);
-    if (error != BHM_ERROR_NONE) return error;
-
-    // Initialize its values.
-    error = c2d_init_soa(*cortex, width, height, nh_radius);
-    if (error != BHM_ERROR_NONE) return error;
 
     return BHM_ERROR_NONE;
 }
@@ -334,15 +290,11 @@ bhm_error_code_t c2d_create(
 
     // Allocate the cortex.
     error = c2d_alloc(cortex);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    if (error != BHM_ERROR_NONE) return error;
 
     // Initialize its values.
     error = c2d_init(*cortex, width, height, nh_radius);
-    if (error != BHM_ERROR_NONE) {
-        return error;
-    }
+    if (error != BHM_ERROR_NONE) return error;
 
     return BHM_ERROR_NONE;
 }
@@ -371,8 +323,8 @@ bhm_error_code_t o2d_destroy(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_destroy_soa(
-    bhm_soa_cortex_t* cortex
+bhm_error_code_t c2d_destroy(
+    bhm_cortex2d_t* cortex
 ) {
     // Free neurons data.
     free(cortex->n_synac_masks);
@@ -395,21 +347,9 @@ bhm_error_code_t c2d_destroy_soa(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_destroy(
-    bhm_cortex2d_t* cortex
-) {
-    // Free neurons.
-    free(cortex->neurons);
-
-    // Free cortex.
-    free(cortex);
-
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_copy_soa(
-    bhm_soa_cortex_t* to,
-    bhm_soa_cortex_t* from
+bhm_error_code_t c2d_copy(
+    bhm_cortex2d_t* to,
+    bhm_cortex2d_t* from
 ) {
     to->width = from->width;
     to->height = from->height;
@@ -451,38 +391,6 @@ bhm_error_code_t c2d_copy_soa(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_copy(
-    bhm_cortex2d_t* to,
-    bhm_cortex2d_t* from
-) {
-    to->width = from->width;
-    to->height = from->height;
-    to->evol_step = from->evol_step;
-    to->pulse_window = from->pulse_window;
-
-    to->nh_radius = from->nh_radius;
-    to->fire_threshold = from->fire_threshold;
-    to->recovery_value = from->recovery_value;
-    to->exc_value = from->exc_value;
-    to->decay_value = from->decay_value;
-    to->syngen_chance = from->syngen_chance;
-    to->synstr_chance = from->synstr_chance;
-    to->max_tot_strength = from->max_tot_strength;
-    to->max_syn_count = from->max_syn_count;
-    to->inhexc_range = from->inhexc_range;
-
-    to->sample_window = from->sample_window;
-    to->pulse_mapping = from->pulse_mapping;
-
-    for (bhm_cortex_size_t y = 0; y < from->height; y++) {
-        for (bhm_cortex_size_t x = 0; x < from->width; x++) {
-            to->neurons[IDX2D(x, y, from->width)] = from->neurons[IDX2D(x, y, from->width)];
-        }
-    }
-
-    return BHM_ERROR_NONE;
-}
-
 // ##########################################
 // ##########################################
 
@@ -511,18 +419,9 @@ bhm_error_code_t c2d_set_nhmask(
 ) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            cortex->neurons[IDX2D(x, y, cortex->width)].synac_mask = mask;
+            cortex->n_synac_masks[IDX2D(x, y, cortex->width)] = mask;
         }
     }
-
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_set_evol_step_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_evol_step_t evol_step
-) {
-    cortex->evol_step = evol_step;
 
     return BHM_ERROR_NONE;
 }
@@ -586,15 +485,6 @@ bhm_error_code_t c2d_set_synstr_chance(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_max_syn_count_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_syn_count_t syn_count
-) {
-    cortex->max_syn_count = syn_count;
-
-    return BHM_ERROR_NONE;
-}
-
 bhm_error_code_t c2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t syn_count
@@ -612,15 +502,6 @@ bhm_error_code_t c2d_set_max_touch(
     if (touch <= 1 && touch >= 0) {
         cortex->max_syn_count = touch * NH_COUNT_2D(NH_DIAM_2D(cortex->nh_radius));
     }
-
-    return BHM_ERROR_NONE;
-}
-
-bhm_error_code_t c2d_set_pulse_mapping_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_pulse_mapping_t pulse_mapping
-) {
-    cortex->pulse_mapping = pulse_mapping;
 
     return BHM_ERROR_NONE;
 }
@@ -650,7 +531,7 @@ bhm_error_code_t c2d_set_inhexc_ratio(
     if (inhexc_ratio <= cortex->inhexc_range) {
         for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
             for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].inhexc_ratio = inhexc_ratio;
+                cortex->n_inhexc_ratios[IDX2D(x, y, cortex->width)] = inhexc_ratio;
             }
         }
     }
@@ -669,7 +550,7 @@ bhm_error_code_t c2d_syn_disable(
     if (x0 >= 0 && y0 >= 0 && x1 <= cortex->width && y1 <= cortex->height) {
         for (bhm_cortex_size_t y = y0; y < y1; y++) {
             for (bhm_cortex_size_t x = x0; x < x1; x++) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].max_syn_count = 0x00U;
+                cortex->n_max_syn_counts[IDX2D(x, y, cortex->width)] = 0x00U;
             }
         }
     }
@@ -682,13 +563,13 @@ bhm_error_code_t c2d_mutate_shape(
     bhm_chance_t mut_chance
 ) {
     // Mutate the cortex height.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    if (cortex->g_rand_state < mut_chance) {
         // Decide the index at which to insert/delete the row.
-        bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
+        bhm_cortex_size_t row_index = cortex->g_rand_state % cortex->height;
 
         // Decide whether to increase or decrease the cortex height.
-        if (cortex->rand_state % 2 == 0) {
+        if (cortex->g_rand_state % 2 == 0) {
             c2d_add_row(cortex, row_index);
         } else {
             c2d_remove_row(cortex, row_index);
@@ -696,13 +577,13 @@ bhm_error_code_t c2d_mutate_shape(
     }
 
     // Mutate the cortex width.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    if (cortex->g_rand_state < mut_chance) {
         // Decide the index at which to insert/delete the column.
-        bhm_cortex_size_t column_index = cortex->rand_state % cortex->width;
+        bhm_cortex_size_t column_index = cortex->g_rand_state % cortex->width;
 
         // Decide whether to increase or decrease the cortex width.
-        if (cortex->rand_state % 2 == 0) {
+        if (cortex->g_rand_state % 2 == 0) {
             c2d_add_column(cortex, column_index);
         } else {
             c2d_remove_column(cortex, column_index);
@@ -725,30 +606,30 @@ bhm_error_code_t c2d_mutate(
     }
 
     // Mutate pulse window.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    if (cortex->g_rand_state < mut_chance) {
         // Decide whether to increase or decrease the pulse window.
-        cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->pulse_window += cortex->g_rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate syngen chance.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    if (cortex->g_rand_state < mut_chance) {
         // Decide whether to increase or decrease the syngen chance.
-        cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->syngen_chance += cortex->g_rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate synstr chance.
-    cortex->rand_state = xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    cortex->g_rand_state = xorshf32(cortex->g_rand_state);
+    if (cortex->g_rand_state < mut_chance) {
         // Decide whether to increase or decrease the synstr chance.
-        cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->synstr_chance += cortex->g_rand_state % 2 == 0 ? 1 : -1;
     }
 
     // Mutate neurons.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            n2d_mutate(&(cortex->neurons[IDX2D(x, y, cortex->width)]), mut_chance);
+            n2d_mutate(cortex, IDX2D(x, y, cortex->width), mut_chance);
         }
     }
 
@@ -756,21 +637,22 @@ bhm_error_code_t c2d_mutate(
 }
 
 bhm_error_code_t n2d_mutate(
-    bhm_neuron_t* neuron,
+    bhm_cortex2d_t* cortex,
+    bhm_cortex_size_t neuron_index,
     bhm_chance_t mut_chance
 ) {
     // Mutate max syn count.
-    neuron->rand_state = xorshf32(neuron->rand_state);
-    if (neuron->rand_state < mut_chance) {
+    cortex->n_l_rand_states[neuron_index] = xorshf32(cortex->n_l_rand_states[neuron_index]);
+    if (cortex->n_l_rand_states[neuron_index] < mut_chance) {
         // Decide whether to increase or decrease the max syn count.
-        neuron->max_syn_count += neuron->rand_state % 2 == 0 ? 1 : -1;
+        cortex->n_max_syn_counts[neuron_index] += cortex->n_l_rand_states[neuron_index] % 2 == 0 ? 1 : -1;
     }
 
     // Mutate inhexc ratio.
-    neuron->rand_state = xorshf32(neuron->rand_state);
-    if (neuron->rand_state < mut_chance) {
+    cortex->n_l_rand_states[neuron_index] = xorshf32(cortex->n_l_rand_states[neuron_index]);
+    if (cortex->n_l_rand_states[neuron_index] < mut_chance) {
         // Decide whether to increase or decrease the inhexc ratio.
-        neuron->inhexc_ratio += neuron->rand_state % 2 == 0 ? 1 : -1;
+        cortex->n_inhexc_ratios[neuron_index] += cortex->n_l_rand_states[neuron_index] % 2 == 0 ? 1 : -1;
     }
 
     return BHM_ERROR_NONE;
@@ -783,28 +665,6 @@ bhm_error_code_t n2d_mutate(
 // ##########################################
 // Getter functions
 // ##########################################
-
-bhm_error_code_t c2d_to_string_soa(
-    bhm_soa_cortex_t* cortex,
-    char* result
-) {
-    int string_length = 0;
-
-    // Header.
-    string_length += sprintf(result + string_length, "\ncortex(\n");
-
-    // Data.
-    string_length += sprintf(result + string_length, "\twidth:%d\n", cortex->width);
-    string_length += sprintf(result + string_length, "\theight:%d\n", cortex->height);
-    string_length += sprintf(result + string_length, "\tnh_radius:%d\n", cortex->nh_radius);
-    string_length += sprintf(result + string_length, "\tpulse_window:%d\n", cortex->pulse_window);
-    string_length += sprintf(result + string_length, "\tsample_window:%d\n", cortex->sample_window);
-
-    // Footer.
-    string_length += sprintf(result + string_length, ")\n");
-
-    return BHM_ERROR_NONE;
-}
 
 bhm_error_code_t c2d_to_string(
     bhm_cortex2d_t* cortex,
@@ -836,7 +696,7 @@ bhm_error_code_t c2d_get_spiking_state(
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             // Store true if the value of the neuron at location (x, y) is above the cortex' threshold value.
-            result[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)].value > cortex->fire_threshold;
+            result[IDX2D(x, y, cortex->width)] = cortex->n_values[IDX2D(x, y, cortex->width)] > cortex->fire_threshold;
         }
     }
 
@@ -851,7 +711,7 @@ bhm_error_code_t c2d_get_synout_state(
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             // Store the synapses count value for the neuron at location (x, y).
-            result[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)].syn_count;
+            result[IDX2D(x, y, cortex->width)] = cortex->n_syn_counts[IDX2D(x, y, cortex->width)];
         }
     }
 
@@ -916,18 +776,69 @@ bhm_error_code_t c2d_add_row(
 
     bhm_cortex_size_t new_height = cortex->height + 1;
 
-    // Allocate a temporary array of neurons.
-    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_t));
-    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+    // Allocate a temporary neuron arrays.
+    bhm_nh_mask_t* tmp_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_rand_state_t* tmp_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * new_height * sizeof(bhm_rand_state_t));
+    if (tmp_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_pulse_mask_t* tmp_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_pulse_mask_t));
+    if (tmp_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_ticks_count_t* tmp_pulses = (bhm_ticks_count_t*) malloc(cortex->width * new_height * sizeof(bhm_ticks_count_t));
+    if (tmp_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_neuron_value_t* tmp_values = (bhm_neuron_value_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_value_t));
+    if (tmp_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_count_t));
+    if (tmp_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_count_t));
+    if (tmp_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_strength_t* tmp_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_strength_t));
+    if (tmp_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_chance_t* tmp_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * new_height * sizeof(bhm_chance_t));
+    if (tmp_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Move all neurons to their new location.
     // TODO Could this be performed using memmove?
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
+            bhm_cortex_size_t offset_index = IDX2D(x, y + 1, cortex->width);
+
             if (y < index) {
-                tmp_neurons[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+                tmp_synac_masks[neuron_index] = cortex->n_synac_masks[neuron_index];
+                tmp_synex_masks[neuron_index] = cortex->n_synex_masks[neuron_index];
+                tmp_synstr_masks_a[neuron_index] = cortex->n_synstr_masks_a[neuron_index];
+                tmp_synstr_masks_b[neuron_index] = cortex->n_synstr_masks_b[neuron_index];
+                tmp_synstr_masks_c[neuron_index] = cortex->n_synstr_masks_c[neuron_index];
+                tmp_l_rand_states[neuron_index] = cortex->n_l_rand_states[neuron_index];
+                tmp_pulse_masks[neuron_index] = cortex->n_pulse_masks[neuron_index];
+                tmp_pulses[neuron_index] = cortex->n_pulses[neuron_index];
+                tmp_values[neuron_index] = cortex->n_values[neuron_index];
+                tmp_max_syn_counts[neuron_index] = cortex->n_max_syn_counts[neuron_index];
+                tmp_syn_counts[neuron_index] = cortex->n_syn_counts[neuron_index];
+                tmp_tot_syn_strengths[neuron_index] = cortex->n_tot_syn_strengths[neuron_index];
+                tmp_inhexc_ratios[neuron_index] = cortex->n_inhexc_ratios[neuron_index];
             } else if (y > index) {
-                tmp_neurons[IDX2D(x, y + 1, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+                tmp_synac_masks[offset_index] = cortex->n_synac_masks[neuron_index];
+                tmp_synex_masks[offset_index] = cortex->n_synex_masks[neuron_index];
+                tmp_synstr_masks_a[offset_index] = cortex->n_synstr_masks_a[neuron_index];
+                tmp_synstr_masks_b[offset_index] = cortex->n_synstr_masks_b[neuron_index];
+                tmp_synstr_masks_c[offset_index] = cortex->n_synstr_masks_c[neuron_index];
+                tmp_l_rand_states[offset_index] = cortex->n_l_rand_states[neuron_index];
+                tmp_pulse_masks[offset_index] = cortex->n_pulse_masks[neuron_index];
+                tmp_pulses[offset_index] = cortex->n_pulses[neuron_index];
+                tmp_values[offset_index] = cortex->n_values[neuron_index];
+                tmp_max_syn_counts[offset_index] = cortex->n_max_syn_counts[neuron_index];
+                tmp_syn_counts[offset_index] = cortex->n_syn_counts[neuron_index];
+                tmp_tot_syn_strengths[offset_index] = cortex->n_tot_syn_strengths[neuron_index];
+                tmp_inhexc_ratios[offset_index] = cortex->n_inhexc_ratios[neuron_index];
             }
         }
     }
@@ -935,20 +846,21 @@ bhm_error_code_t c2d_add_row(
     // Initialize all new neurons with values from their neighbors.
     for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
         bhm_cortex_size_t y = index;
-        bhm_neuron_t* neuron = &(cortex->neurons[IDX2D(x, y, cortex->width)]);
+        bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
 
-        neuron->synac_mask = 0x00U;
-        neuron->synex_mask = 0x00U;
-        neuron->synstr_mask_a = 0x00U;
-        neuron->synstr_mask_b = 0x00U;
-        neuron->synstr_mask_c = 0x00U;
-
-        neuron->rand_state = BHM_RAND_OFFSET + x * y;
-        neuron->pulse_mask = 0x00U;
-        neuron->pulse = 0x00U;
-        neuron->syn_count = 0x00U;
-        neuron->tot_syn_strength = 0x00U;
-        neuron->value = BHM_DEFAULT_STARTING_VALUE;
+        tmp_synac_masks[neuron_index] = 0x00U;
+        tmp_synex_masks[neuron_index] = 0x00U;
+        tmp_synstr_masks_a[neuron_index] = 0x00U;
+        tmp_synstr_masks_b[neuron_index] = 0x00U;
+        tmp_synstr_masks_c[neuron_index] = 0x00U;
+        tmp_l_rand_states[neuron_index] = BHM_RAND_OFFSET + x * y;;
+        tmp_pulse_masks[neuron_index] = 0x00U;
+        tmp_pulses[neuron_index] = 0x00U;
+        tmp_values[neuron_index] = 0x00U;
+        tmp_max_syn_counts[neuron_index] = BHM_DEFAULT_MAX_TOUCH * NH_COUNT_2D(NH_DIAM_2D(cortex->nh_radius));
+        tmp_syn_counts[neuron_index] = 0x00U;
+        tmp_tot_syn_strengths[neuron_index] = 0x00U;
+        tmp_inhexc_ratios[neuron_index] = BHM_DEFAULT_INHEXC_RATIO;
 
         // Max synapses count and inhibitory to excitatory ratio are the only neuron parameters that go through mutation,
         // so they need to be copied from neighboring neurons when mutating.
@@ -970,22 +882,47 @@ bhm_error_code_t c2d_add_row(
                     cortex->width
                 );
 
-                bhm_neuron_t neighbor = cortex->neurons[neighbor_index];
+                bhm_syn_count_t neighbor_max_syn_count = cortex->n_max_syn_counts[neighbor_index];
+                bhm_chance_t neighbor_inhexc_ratio = cortex->n_inhexc_ratios[neighbor_index];
 
-                max_syn_count += neighbor.max_syn_count;
-                inhexc_ratio += neighbor.inhexc_ratio;
+                max_syn_count += neighbor_max_syn_count;
+                inhexc_ratio += neighbor_inhexc_ratio;
             }
         }
 
         int32_t neighbors_count = (nh_diameter * (nh_diameter - 1));
 
-        neuron->max_syn_count = max_syn_count / neighbors_count;
-        neuron->inhexc_ratio = inhexc_ratio / neighbors_count;
+        tmp_max_syn_counts[neuron_index] = max_syn_count / neighbors_count;
+        tmp_inhexc_ratios[neuron_index] = inhexc_ratio / neighbors_count;
     }
 
     cortex->height = new_height;
-    free(cortex->neurons);
-    cortex->neurons = tmp_neurons;
+    free(cortex->n_synac_masks);
+    free(cortex->n_synex_masks);
+    free(cortex->n_synstr_masks_a);
+    free(cortex->n_synstr_masks_b);
+    free(cortex->n_synstr_masks_c);
+    free(cortex->n_l_rand_states);
+    free(cortex->n_pulse_masks);
+    free(cortex->n_pulses);
+    free(cortex->n_values);
+    free(cortex->n_max_syn_counts);
+    free(cortex->n_syn_counts);
+    free(cortex->n_tot_syn_strengths);
+    free(cortex->n_inhexc_ratios);
+    cortex->n_synac_masks = tmp_synac_masks;
+    cortex->n_synex_masks = tmp_synex_masks;
+    cortex->n_synstr_masks_a = tmp_synstr_masks_a;
+    cortex->n_synstr_masks_b = tmp_synstr_masks_b;
+    cortex->n_synstr_masks_c = tmp_synstr_masks_c;
+    cortex->n_l_rand_states = tmp_l_rand_states;
+    cortex->n_pulse_masks = tmp_pulse_masks;
+    cortex->n_pulses = tmp_pulses;
+    cortex->n_values = tmp_values;
+    cortex->n_max_syn_counts = tmp_max_syn_counts;
+    cortex->n_syn_counts = tmp_syn_counts;
+    cortex->n_tot_syn_strengths = tmp_tot_syn_strengths;
+    cortex->n_inhexc_ratios = tmp_inhexc_ratios;
 
     return BHM_ERROR_NONE;
 }
@@ -1023,24 +960,99 @@ bhm_error_code_t c2d_remove_row(
 
     bhm_cortex_size_t new_height = cortex->height - 1;
 
-    // Allocate a temporary array of neurons.
-    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_t));
-    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+    // Allocate a temporary neuron arrays.
+    bhm_nh_mask_t* tmp_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_rand_state_t* tmp_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * new_height * sizeof(bhm_rand_state_t));
+    if (tmp_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_pulse_mask_t* tmp_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * new_height * sizeof(bhm_pulse_mask_t));
+    if (tmp_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_ticks_count_t* tmp_pulses = (bhm_ticks_count_t*) malloc(cortex->width * new_height * sizeof(bhm_ticks_count_t));
+    if (tmp_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_neuron_value_t* tmp_values = (bhm_neuron_value_t*) malloc(cortex->width * new_height * sizeof(bhm_neuron_value_t));
+    if (tmp_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_count_t));
+    if (tmp_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_count_t));
+    if (tmp_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_strength_t* tmp_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * new_height * sizeof(bhm_syn_strength_t));
+    if (tmp_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_chance_t* tmp_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * new_height * sizeof(bhm_chance_t));
+    if (tmp_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Move all neurons to their new location.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
+            bhm_cortex_size_t offset_index = IDX2D(x, y - 1, cortex->width);
+
             if (y < index) {
-                tmp_neurons[IDX2D(x, y, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+                tmp_synac_masks[neuron_index] = cortex->n_synac_masks[neuron_index];
+                tmp_synex_masks[neuron_index] = cortex->n_synex_masks[neuron_index];
+                tmp_synstr_masks_a[neuron_index] = cortex->n_synstr_masks_a[neuron_index];
+                tmp_synstr_masks_b[neuron_index] = cortex->n_synstr_masks_b[neuron_index];
+                tmp_synstr_masks_c[neuron_index] = cortex->n_synstr_masks_c[neuron_index];
+                tmp_l_rand_states[neuron_index] = cortex->n_l_rand_states[neuron_index];
+                tmp_pulse_masks[neuron_index] = cortex->n_pulse_masks[neuron_index];
+                tmp_pulses[neuron_index] = cortex->n_pulses[neuron_index];
+                tmp_values[neuron_index] = cortex->n_values[neuron_index];
+                tmp_max_syn_counts[neuron_index] = cortex->n_max_syn_counts[neuron_index];
+                tmp_syn_counts[neuron_index] = cortex->n_syn_counts[neuron_index];
+                tmp_tot_syn_strengths[neuron_index] = cortex->n_tot_syn_strengths[neuron_index];
+                tmp_inhexc_ratios[neuron_index] = cortex->n_inhexc_ratios[neuron_index];
             } else if (y > index) {
-                tmp_neurons[IDX2D(x, y - 1, cortex->width)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+                tmp_synac_masks[offset_index] = cortex->n_synac_masks[neuron_index];
+                tmp_synex_masks[offset_index] = cortex->n_synex_masks[neuron_index];
+                tmp_synstr_masks_a[offset_index] = cortex->n_synstr_masks_a[neuron_index];
+                tmp_synstr_masks_b[offset_index] = cortex->n_synstr_masks_b[neuron_index];
+                tmp_synstr_masks_c[offset_index] = cortex->n_synstr_masks_c[neuron_index];
+                tmp_l_rand_states[offset_index] = cortex->n_l_rand_states[neuron_index];
+                tmp_pulse_masks[offset_index] = cortex->n_pulse_masks[neuron_index];
+                tmp_pulses[offset_index] = cortex->n_pulses[neuron_index];
+                tmp_values[offset_index] = cortex->n_values[neuron_index];
+                tmp_max_syn_counts[offset_index] = cortex->n_max_syn_counts[neuron_index];
+                tmp_syn_counts[offset_index] = cortex->n_syn_counts[neuron_index];
+                tmp_tot_syn_strengths[offset_index] = cortex->n_tot_syn_strengths[neuron_index];
+                tmp_inhexc_ratios[offset_index] = cortex->n_inhexc_ratios[neuron_index];
             }
         }
     }
 
     cortex->height = new_height;
-    free(cortex->neurons);
-    cortex->neurons = tmp_neurons;
+    free(cortex->n_synac_masks);
+    free(cortex->n_synex_masks);
+    free(cortex->n_synstr_masks_a);
+    free(cortex->n_synstr_masks_b);
+    free(cortex->n_synstr_masks_c);
+    free(cortex->n_l_rand_states);
+    free(cortex->n_pulse_masks);
+    free(cortex->n_pulses);
+    free(cortex->n_values);
+    free(cortex->n_max_syn_counts);
+    free(cortex->n_syn_counts);
+    free(cortex->n_tot_syn_strengths);
+    free(cortex->n_inhexc_ratios);
+    cortex->n_synac_masks = tmp_synac_masks;
+    cortex->n_synex_masks = tmp_synex_masks;
+    cortex->n_synstr_masks_a = tmp_synstr_masks_a;
+    cortex->n_synstr_masks_b = tmp_synstr_masks_b;
+    cortex->n_synstr_masks_c = tmp_synstr_masks_c;
+    cortex->n_l_rand_states = tmp_l_rand_states;
+    cortex->n_pulse_masks = tmp_pulse_masks;
+    cortex->n_pulses = tmp_pulses;
+    cortex->n_values = tmp_values;
+    cortex->n_max_syn_counts = tmp_max_syn_counts;
+    cortex->n_syn_counts = tmp_syn_counts;
+    cortex->n_tot_syn_strengths = tmp_tot_syn_strengths;
+    cortex->n_inhexc_ratios = tmp_inhexc_ratios;
 
     return BHM_ERROR_NONE;
 }
@@ -1072,20 +1084,82 @@ bhm_error_code_t c2d_remove_column(
 bhm_error_code_t c2d_transpose(
     bhm_cortex2d_t* cortex
 ) {
-    // Allocate a temporary neurons array.
-    bhm_neuron_t* tmp_neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
-    if (tmp_neurons == NULL) return BHM_ERROR_FAILED_ALLOC;
+    // Allocate a temporary neuron arrays.
+    bhm_nh_mask_t* tmp_synac_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (tmp_synac_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synex_masks = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (tmp_synex_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_a = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_a == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_b = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_b == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_nh_mask_t* tmp_synstr_masks_c = (bhm_nh_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_nh_mask_t));
+    if (tmp_synstr_masks_c == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_rand_state_t* tmp_l_rand_states = (bhm_rand_state_t*) malloc(cortex->width * cortex->height * sizeof(bhm_rand_state_t));
+    if (tmp_l_rand_states == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_pulse_mask_t* tmp_pulse_masks = (bhm_pulse_mask_t*) malloc(cortex->width * cortex->height * sizeof(bhm_pulse_mask_t));
+    if (tmp_pulse_masks == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_ticks_count_t* tmp_pulses = (bhm_ticks_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_ticks_count_t));
+    if (tmp_pulses == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_neuron_value_t* tmp_values = (bhm_neuron_value_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_value_t));
+    if (tmp_values == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_max_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (tmp_max_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_count_t* tmp_syn_counts = (bhm_syn_count_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_count_t));
+    if (tmp_syn_counts == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_syn_strength_t* tmp_tot_syn_strengths = (bhm_syn_strength_t*) malloc(cortex->width * cortex->height * sizeof(bhm_syn_strength_t));
+    if (tmp_tot_syn_strengths == NULL) return BHM_ERROR_FAILED_ALLOC;
+    bhm_chance_t* tmp_inhexc_ratios = (bhm_chance_t*) malloc(cortex->width * cortex->height * sizeof(bhm_chance_t));
+    if (tmp_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Transpose the neurons matrix by swapping xs for ys.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            tmp_neurons[IDX2D(y, x, cortex->height)] = cortex->neurons[IDX2D(x, y, cortex->width)];
+            bhm_cortex_size_t index = IDX2D(x, y, cortex->width);
+            bhm_cortex_size_t t_index = IDX2D(y, x, cortex->height);
+            tmp_synac_masks[t_index] = cortex->n_synac_masks[index];
+            tmp_synex_masks[t_index] = cortex->n_synex_masks[index];
+            tmp_synstr_masks_a[t_index] = cortex->n_synstr_masks_a[index];
+            tmp_synstr_masks_b[t_index] = cortex->n_synstr_masks_b[index];
+            tmp_synstr_masks_c[t_index] = cortex->n_synstr_masks_c[index];
+            tmp_l_rand_states[t_index] = cortex->n_l_rand_states[index];
+            tmp_pulse_masks[t_index] = cortex->n_pulse_masks[index];
+            tmp_pulses[t_index] = cortex->n_pulses[index];
+            tmp_values[t_index] = cortex->n_values[index];
+            tmp_max_syn_counts[t_index] = cortex->n_max_syn_counts[index];
+            tmp_syn_counts[t_index] = cortex->n_syn_counts[index];
+            tmp_tot_syn_strengths[t_index] = cortex->n_tot_syn_strengths[index];
+            tmp_inhexc_ratios[t_index] = cortex->n_inhexc_ratios[index];
         }
     }
 
     // Store the newly populated neurons in the cortex.
-    free(cortex->neurons);
-    cortex->neurons = tmp_neurons;
+    free(cortex->n_synac_masks);
+    free(cortex->n_synex_masks);
+    free(cortex->n_synstr_masks_a);
+    free(cortex->n_synstr_masks_b);
+    free(cortex->n_synstr_masks_c);
+    free(cortex->n_l_rand_states);
+    free(cortex->n_pulse_masks);
+    free(cortex->n_pulses);
+    free(cortex->n_values);
+    free(cortex->n_max_syn_counts);
+    free(cortex->n_syn_counts);
+    free(cortex->n_tot_syn_strengths);
+    free(cortex->n_inhexc_ratios);
+    cortex->n_synac_masks = tmp_synac_masks;
+    cortex->n_synex_masks = tmp_synex_masks;
+    cortex->n_synstr_masks_a = tmp_synstr_masks_a;
+    cortex->n_synstr_masks_b = tmp_synstr_masks_b;
+    cortex->n_synstr_masks_c = tmp_synstr_masks_c;
+    cortex->n_l_rand_states = tmp_l_rand_states;
+    cortex->n_pulse_masks = tmp_pulse_masks;
+    cortex->n_pulses = tmp_pulses;
+    cortex->n_values = tmp_values;
+    cortex->n_max_syn_counts = tmp_max_syn_counts;
+    cortex->n_syn_counts = tmp_syn_counts;
+    cortex->n_tot_syn_strengths = tmp_tot_syn_strengths;
+    cortex->n_inhexc_ratios = tmp_inhexc_ratios;
 
     // Swap width with height.
     bhm_cortex_size_t cortex_width = cortex->width;

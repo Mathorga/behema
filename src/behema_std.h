@@ -30,16 +30,6 @@ extern "C" {
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
 /// @param ticks_count The number of executions performed so far.
-void c2d_feed2d_soa(
-    bhm_soa_cortex_t* cortex,
-    bhm_input2d_t* input,
-    bhm_ticks_count_t ticks_count
-);
-
-/// @brief Feeds a cortex through the provided input2d. Input data should already be in the provided input2d by the time this function is called.
-/// @param cortex The cortex to feed.
-/// @param input The input to feed the cortex.
-/// @param ticks_count The number of executions performed so far.
 void c2d_feed2d(
     bhm_cortex2d_t* cortex,
     bhm_input2d_t* input,
@@ -52,17 +42,6 @@ void c2d_feed2d(
 void c2d_read2d(
     bhm_cortex2d_t* cortex,
     bhm_output2d_t* output
-);
-
-/// @brief Performs a full run cycle over the provided cortex.
-/// @param prev_cortex The cortex at its current state.
-/// @param next_cortex The cortex that will be updated by the tick cycle.
-/// @param evolve Whether the cortex should update its internal structure or not.
-/// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
-void c2d_tick_soa(
-    bhm_soa_cortex_t* prev_cortex,
-    bhm_soa_cortex_t* next_cortex,
-    bhm_bool_t evolve
 );
 
 /// @brief Performs a full run cycle over the provided cortex.
