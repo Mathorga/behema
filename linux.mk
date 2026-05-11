@@ -3,6 +3,7 @@ LIB_EXT=.so
 HDR_DST_DIR=/usr/include
 LIB_DST_DIR=/usr/lib
 STD_LIBS_EXTRA=-lrt
+INSTALL_NAME_FLAGS=
 
 # Linker flags for C (GCC)
 # We use -shared and set the SONAME
