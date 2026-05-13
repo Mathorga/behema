@@ -352,6 +352,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
     }
 
     // Replace the old generation with the new one by destroying the current one and pointing to the new one.
+    // TODO THIS IS NOT WORKING! CHECK THIS OUT AND DEBUG!!!
     error = p2d_destroy_cortices(population);
     if (error != BHM_ERROR_NONE) return error;
     population->cortices = offspring;
