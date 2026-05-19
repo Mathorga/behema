@@ -113,7 +113,7 @@ bhm_error_code_t p2d_rand_populate(
 
 bhm_error_code_t p2d_destroy_cortices(bhm_population2d_t* population) {
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        c2d_destroy(&(population->cortices[i]));
+        c2d_clean(&(population->cortices[i]));
     }
 
     free(population->cortices);

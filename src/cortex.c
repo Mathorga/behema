@@ -323,7 +323,7 @@ bhm_error_code_t o2d_destroy(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_destroy(
+bhm_error_code_t c2d_clean(
     bhm_cortex2d_t* cortex
 ) {
     // Free neurons data.
@@ -340,6 +340,15 @@ bhm_error_code_t c2d_destroy(
     free(cortex->n_syn_counts);
     free(cortex->n_tot_syn_strengths);
     free(cortex->n_inhexc_ratios);
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t c2d_destroy(
+    bhm_cortex2d_t* cortex
+) {
+    // Free all internal pointers.
+    c2d_clean(cortex);
 
     // Free cortex.
     free(cortex);

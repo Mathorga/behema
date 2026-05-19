@@ -422,7 +422,14 @@ bhm_error_code_t o2d_destroy(
     bhm_output2d_t* output
 );
 
-/// @brief Destroys the given cortex2d and frees memory for it and its neurons.
+/// @brief Frees all the cortex' internal pointers.
+/// @param cortex The cortex to clean.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t c2d_clean(
+    bhm_cortex2d_t* cortex
+);
+
+/// @brief Destroys the given cortex2d by freeing it from memory.
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_destroy(
