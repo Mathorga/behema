@@ -19,26 +19,30 @@ void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeur
     }
 }
 
-void drawNeurons(bhm_cortex2d_t* cortex,
-                 sf::RenderWindow* window,
-                 sf::VideoMode videoMode,
-                 float* xNeuronPositions,
-                 float* yNeuronPositions,
-                 bool drawInfo,
-                 sf::VideoMode desktopMode,
-                 sf::Font font) {
+void drawNeurons(
+    bhm_cortex2d_t* cortex,
+    sf::RenderWindow* window,
+    sf::VideoMode videoMode,
+    float* xNeuronPositions,
+    float* yNeuronPositions,
+    bool drawInfo,
+    sf::VideoMode desktopMode,
+    sf::Font font
+) {
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_value_t rawNeuronValue = cortex->n_values[IDX2D(j, i, cortex->width)];
+            bhm_ticks_count_t neuronPulse = cortex->n_pulses[IDX2D(j, i, cortex->width)];
+            bhm_pulse_mask_t neuronPulseMask = cortex->n_pulse_masks[IDX2D(j, i, cortex->width)];
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
+            float neuronValue = ((float) rawNeuronValue) / ((float) cortex->fire_threshold + (float) (neuronPulse));
             // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
-            bool fired = currentNeuron->pulse_mask & 0x01U;
+            bool fired = neuronPulseMask & 0x01U;
 
-            float radius = 1.0F + 6.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
+            float radius = 1.0F + 6.0F * ((float) neuronPulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
@@ -60,7 +64,7 @@ void drawNeurons(bhm_cortex2d_t* cortex,
             if (drawInfo) {
                 sf::Text pulseText;
                 pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
-                pulseText.setString(std::to_string(neuronValue));
+                pulseText.setString(std::to_string(neuronPulse));
                 pulseText.setFont(font);
                 pulseText.setCharacterSize(8);
                 pulseText.setFillColor(sf::Color::White);
@@ -78,15 +82,14 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
             bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            bhm_nh_mask_t acMask = currentNeuron->synac_mask;
-            bhm_nh_mask_t excMask = currentNeuron->synex_mask;
-            bhm_nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
-            bhm_nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
-            bhm_nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
+            bhm_nh_mask_t acMask = cortex->n_synac_masks[neuronIndex];
+            bhm_nh_mask_t excMask = cortex->n_synex_masks[neuronIndex];
+            bhm_nh_mask_t str_mask_a = cortex->n_synstr_masks_a[neuronIndex];
+            bhm_nh_mask_t str_mask_b = cortex->n_synstr_masks_b[neuronIndex];
+            bhm_nh_mask_t str_mask_c = cortex->n_synstr_masks_c[neuronIndex];
             
             for (bhm_nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (bhm_nh_radius_t l = 0; l < nh_diameter; l++) {
@@ -380,7 +383,7 @@ int main(int argc, char** argv) {
         // End the current frame.
         window.display();
 
-        // usleep(10000);
+        usleep(100000);
 
         // Tick the cortex.
         c2d_tick(

@@ -13,6 +13,7 @@ Copyright (C) 2021 Luka Micheletti
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
 
 #include "error.h"
 

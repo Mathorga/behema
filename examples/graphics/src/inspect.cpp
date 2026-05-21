@@ -27,17 +27,19 @@ void drawNeurons(
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_value_t rawNeuronValue = cortex->n_values[IDX2D(j, i, cortex->width)];
+            bhm_ticks_count_t neuronPulse = cortex->n_pulses[IDX2D(j, i, cortex->width)];
+            bhm_pulse_mask_t neuronPulseMask = cortex->n_pulse_masks[IDX2D(j, i, cortex->width)];
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
+            float neuronValue = ((float) rawNeuronValue) / ((float) cortex->fire_threshold);
 
-            float radius = 0.5F + 2.0F * ((float) currentNeuron->pulse) / ((float) cortex->pulse_window);
+            float radius = 0.5F + 2.0F * ((float) neuronPulse) / ((float) cortex->pulse_window);
 
             neuronSpot.setRadius(radius);
 
             if (neuronValue < 0) {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 - 31 * neuronValue));
-            } else if (currentNeuron->value > cortex->fire_threshold) {
+            } else if (rawNeuronValue > cortex->fire_threshold) {
                 neuronSpot.setFillColor(sf::Color::White);
             } else {
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
@@ -57,15 +59,14 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
             bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-            bhm_nh_mask_t acMask = currentNeuron->synac_mask;
-            bhm_nh_mask_t excMask = currentNeuron->synex_mask;
-            bhm_nh_mask_t str_mask_a = currentNeuron->synstr_mask_a;
-            bhm_nh_mask_t str_mask_b = currentNeuron->synstr_mask_b;
-            bhm_nh_mask_t str_mask_c = currentNeuron->synstr_mask_c;
+            bhm_nh_mask_t acMask = cortex->n_synac_masks[neuronIndex];
+            bhm_nh_mask_t excMask = cortex->n_synex_masks[neuronIndex];
+            bhm_nh_mask_t str_mask_a = cortex->n_synstr_masks_a[neuronIndex];
+            bhm_nh_mask_t str_mask_b = cortex->n_synstr_masks_b[neuronIndex];
+            bhm_nh_mask_t str_mask_c = cortex->n_synstr_masks_c[neuronIndex];
             
             for (bhm_nh_radius_t k = 0; k < nh_diameter; k++) {
                 for (bhm_nh_radius_t l = 0; l < nh_diameter; l++) {
@@ -139,10 +140,8 @@ void highlightNeuron(
 
     int neuronIndex = IDX2D(xFocus, yFocus, cortex->width);
 
-    bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
-
-    bhm_nh_mask_t acMask = currentNeuron->synac_mask;
-    bhm_nh_mask_t excMask = currentNeuron->synex_mask;
+    bhm_nh_mask_t acMask = cortex->n_synac_masks[neuronIndex];
+    bhm_nh_mask_t excMask = cortex->n_synex_masks[neuronIndex];
     
     // Loop through neighbors.
     for (bhm_nh_radius_t y = 0; y < nh_diameter; y++) {

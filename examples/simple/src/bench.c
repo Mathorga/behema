@@ -132,7 +132,7 @@ int main(int argc, char **argv) {
     }
 
     // Copy the cortex back to host to check the results.
-    // c2d_to_file(even_cortex, (char*) "out/test.c2d");
+    c2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
     c2d_destroy(even_cortex);

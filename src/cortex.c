@@ -814,7 +814,43 @@ bhm_error_code_t c2d_add_row(
     if (tmp_inhexc_ratios == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Move all neurons to their new location.
-    // TODO Could this be performed using memmove?
+    // TODO Could this be performed using memcpy?
+    // bhm_cortex_size_t n_count_before = cortex->width * index;
+    // bhm_cortex_size_t offset_index = n_count_before + cortex->width;
+    // bhm_cortex_size_t n_count_after = cortex->width * (cortex->height - index);
+    // // Rows before the added one.
+    // if (index >= 0) {
+    //     memcpy(tmp_synac_masks, cortex->n_synac_masks, n_count_before * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synex_masks, cortex->n_synex_masks, n_count_before * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_a, cortex->n_synstr_masks_a, n_count_before * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_b, cortex->n_synstr_masks_b, n_count_before * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_c, cortex->n_synstr_masks_c, n_count_before * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_l_rand_states, cortex->n_l_rand_states, n_count_before * sizeof(bhm_rand_state_t));
+    //     memcpy(tmp_pulse_masks, cortex->n_pulse_masks, n_count_before * sizeof(bhm_pulse_mask_t));
+    //     memcpy(tmp_pulses, cortex->n_pulses, n_count_before * sizeof(bhm_ticks_count_t));
+    //     memcpy(tmp_values, cortex->n_values, n_count_before * sizeof(bhm_neuron_value_t));
+    //     memcpy(tmp_max_syn_counts, cortex->n_max_syn_counts, n_count_before * sizeof(bhm_syn_count_t));
+    //     memcpy(tmp_syn_counts, cortex->n_syn_counts, n_count_before * sizeof(bhm_syn_count_t));
+    //     memcpy(tmp_tot_syn_strengths, cortex->n_tot_syn_strengths, n_count_before * sizeof(bhm_syn_strength_t));
+    //     memcpy(tmp_inhexc_ratios, cortex->n_inhexc_ratios, n_count_before * sizeof(bhm_chance_t));
+    // }
+
+    // // Rows after the added one.
+    // if (index < cortex->height) {
+    //     memcpy(tmp_synac_masks + offset_index, cortex->n_synac_masks + n_count_before, n_count_after * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synex_masks + offset_index, cortex->n_synex_masks + n_count_before, n_count_after * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_a + offset_index, cortex->n_synstr_masks_a + n_count_before, n_count_after * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_b + offset_index, cortex->n_synstr_masks_b + n_count_before, n_count_after * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_synstr_masks_c + offset_index, cortex->n_synstr_masks_c + n_count_before, n_count_after * sizeof(bhm_nh_mask_t));
+    //     memcpy(tmp_l_rand_states + offset_index, cortex->n_l_rand_states + n_count_before, n_count_after * sizeof(bhm_rand_state_t));
+    //     memcpy(tmp_pulse_masks + offset_index, cortex->n_pulse_masks + n_count_before, n_count_after * sizeof(bhm_pulse_mask_t));
+    //     memcpy(tmp_pulses + offset_index, cortex->n_pulses + n_count_before, n_count_after * sizeof(bhm_ticks_count_t));
+    //     memcpy(tmp_values + offset_index, cortex->n_values + n_count_before, n_count_after * sizeof(bhm_neuron_value_t));
+    //     memcpy(tmp_max_syn_counts + offset_index, cortex->n_max_syn_counts + n_count_before, n_count_after * sizeof(bhm_syn_count_t));
+    //     memcpy(tmp_syn_counts + offset_index, cortex->n_syn_counts + n_count_before, n_count_after * sizeof(bhm_syn_count_t));
+    //     memcpy(tmp_tot_syn_strengths + offset_index, cortex->n_tot_syn_strengths + n_count_before, n_count_after * sizeof(bhm_syn_strength_t));
+    //     memcpy(tmp_inhexc_ratios + offset_index, cortex->n_inhexc_ratios + n_count_before, n_count_after * sizeof(bhm_chance_t));
+    // }
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex->width);
