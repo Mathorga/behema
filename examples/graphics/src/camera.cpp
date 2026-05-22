@@ -64,7 +64,7 @@ void drawNeurons(
             if (drawInfo) {
                 sf::Text pulseText;
                 pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
-                pulseText.setString(std::to_string(neuronPulse));
+                pulseText.setString(std::to_string(rawNeuronValue));
                 pulseText.setFont(font);
                 pulseText.setCharacterSize(8);
                 pulseText.setFillColor(sf::Color::White);
