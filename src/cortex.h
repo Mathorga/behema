@@ -161,6 +161,7 @@ typedef struct {
     bhm_ticks_count_t evols_count;
 } bhm_cortex_counts_t;
 
+/// UNUSED FOR NOW.
 typedef struct {
     // Neighborhood connections pattern (SYNapses ACtivation state):
     // 1|1|0

@@ -232,7 +232,15 @@ int main(int argc, char** argv) {
 
     // Inputs.
     bhm_input2d_t* leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
+    i2d_init(
+        &leftEye,
+        0,
+        0,
+        (cortex_width / 10) * 3,
+        1,
+        BHM_DEFAULT_EXC_VALUE / 2,
+        BHM_PULSE_MAPPING_FPROP
+    );
 
     bhm_input2d_t* rightEye;
     i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
@@ -383,7 +391,7 @@ int main(int argc, char** argv) {
         // End the current frame.
         window.display();
 
-        usleep(100000);
+        usleep(10000);
 
         // Tick the cortex.
         c2d_tick(
