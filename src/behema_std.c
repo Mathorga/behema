@@ -51,8 +51,8 @@ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
 }
 
 void c2d_tick(
-    bhm_cortex2d_t* prev_cortex,
-    bhm_cortex2d_t* next_cortex,
+    bhm_cortex2d_t* restrict prev_cortex,
+    bhm_cortex2d_t* restrict next_cortex,
     bhm_bool_t evolve
 ) {
     #pragma omp parallel for collapse(2)
