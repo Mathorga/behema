@@ -192,12 +192,22 @@ int main(int argc, char** argv) {
     // Create network model.
     bhm_cortex2d_t* even_cortex;
     bhm_cortex2d_t* odd_cortex;
-    bhm_error_code_t error = c2d_create(&even_cortex, cortex_width, cortex_height, nh_radius);
+    bhm_error_code_t error = c2d_create(
+        &even_cortex,
+        cortex_width,
+        cortex_height,
+        nh_radius
+    );
     if (error != 0) {
         printf("Error %d during init\n", error);
         exit(1);
     }
-    error = c2d_create(&odd_cortex, cortex_width, cortex_height, nh_radius);
+    error = c2d_create(
+        &odd_cortex,
+        cortex_width,
+        cortex_height,
+        nh_radius
+    );
     if (error != 0) {
         printf("Error %d during init\n", error);
         exit(1);
@@ -243,7 +253,15 @@ int main(int argc, char** argv) {
     );
 
     bhm_input2d_t* rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
+    i2d_init(
+        &rightEye,
+        (cortex_width / 10) * 7,
+        0,
+        cortex_width,
+        1,
+        BHM_DEFAULT_EXC_VALUE * 2,
+        BHM_PULSE_MAPPING_FPROP
+    );
 
     cv::Size eyeSize = cv::Size(leftEye->x1 - leftEye->x0, leftEye->y1 - leftEye->y0);
 
