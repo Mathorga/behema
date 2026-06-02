@@ -50,8 +50,8 @@ void c2d_read2d(
 /// @param evolve Whether the cortex should update its internal structure or not.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
 void c2d_tick(
-    bhm_cortex2d_t* restrict prev_cortex,
-    bhm_cortex2d_t* restrict next_cortex,
+    bhm_cortex2d_t* prev_cortex,
+    bhm_cortex2d_t* next_cortex,
     bhm_bool_t evolve
 );
 
