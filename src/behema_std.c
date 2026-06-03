@@ -61,6 +61,8 @@ void c2d_tick(
             // Retrieve the involved neuron index.
             bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
 
+            n2d_copy(next_cortex, prev_cortex, neuron_index);
+
             /* Compute the neighborhood diameter:
                    d = 7
               <------------->
@@ -218,7 +220,6 @@ void c2d_tick(
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
             if (prev_cortex->n_values[neuron_index] > prev_cortex->fire_threshold + prev_cortex->n_pulses[neuron_index]) {
-                printf("FIRE!\n");
                 // Fired at the previous step.
                 next_cortex->n_values[neuron_index] = next_cortex->recovery_value;
 

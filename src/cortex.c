@@ -356,6 +356,30 @@ bhm_error_code_t c2d_destroy(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t n2d_copy(
+    bhm_cortex2d_t* to,
+    bhm_cortex2d_t* from,
+    bhm_cortex_size_t index
+) {
+    if (index > from->width * from->height) return BHM_ERROR_SIZE_WRONG;
+
+    to->n_synac_masks[index] = from->n_synac_masks[index];
+    to->n_synex_masks[index] = from->n_synex_masks[index];
+    to->n_synstr_masks_a[index] = from->n_synstr_masks_a[index];
+    to->n_synstr_masks_b[index] = from->n_synstr_masks_b[index];
+    to->n_synstr_masks_c[index] = from->n_synstr_masks_c[index];
+    to->n_l_rand_states[index] = from->n_l_rand_states[index];
+    to->n_pulse_masks[index] = from->n_pulse_masks[index];
+    to->n_pulses[index] = from->n_pulses[index];
+    to->n_values[index] = from->n_values[index];
+    to->n_max_syn_counts[index] = from->n_max_syn_counts[index];
+    to->n_syn_counts[index] = from->n_syn_counts[index];
+    to->n_tot_syn_strengths[index] = from->n_tot_syn_strengths[index];
+    to->n_inhexc_ratios[index] = from->n_inhexc_ratios[index];
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_copy(
     bhm_cortex2d_t* to,
     bhm_cortex2d_t* from
@@ -381,19 +405,7 @@ bhm_error_code_t c2d_copy(
 
     for (bhm_cortex_size_t y = 0; y < from->height; y++) {
         for (bhm_cortex_size_t x = 0; x < from->width; x++) {
-            to->n_synac_masks[IDX2D(x, y, from->width)] = from->n_synac_masks[IDX2D(x, y, from->width)];
-            to->n_synex_masks[IDX2D(x, y, from->width)] = from->n_synex_masks[IDX2D(x, y, from->width)];
-            to->n_synstr_masks_a[IDX2D(x, y, from->width)] = from->n_synstr_masks_a[IDX2D(x, y, from->width)];
-            to->n_synstr_masks_b[IDX2D(x, y, from->width)] = from->n_synstr_masks_b[IDX2D(x, y, from->width)];
-            to->n_synstr_masks_c[IDX2D(x, y, from->width)] = from->n_synstr_masks_c[IDX2D(x, y, from->width)];
-            to->n_l_rand_states[IDX2D(x, y, from->width)] = from->n_l_rand_states[IDX2D(x, y, from->width)];
-            to->n_pulse_masks[IDX2D(x, y, from->width)] = from->n_pulse_masks[IDX2D(x, y, from->width)];
-            to->n_pulses[IDX2D(x, y, from->width)] = from->n_pulses[IDX2D(x, y, from->width)];
-            to->n_values[IDX2D(x, y, from->width)] = from->n_values[IDX2D(x, y, from->width)];
-            to->n_max_syn_counts[IDX2D(x, y, from->width)] = from->n_max_syn_counts[IDX2D(x, y, from->width)];
-            to->n_syn_counts[IDX2D(x, y, from->width)] = from->n_syn_counts[IDX2D(x, y, from->width)];
-            to->n_tot_syn_strengths[IDX2D(x, y, from->width)] = from->n_tot_syn_strengths[IDX2D(x, y, from->width)];
-            to->n_inhexc_ratios[IDX2D(x, y, from->width)] = from->n_inhexc_ratios[IDX2D(x, y, from->width)];
+            n2d_copy(to, from, IDX2D(x, y, from->width));
         }
     }
 

@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
         // End the current frame.
         window.display();
 
-        usleep(10000);
+        // usleep(10000);
 
         // Tick the cortex.
         c2d_tick(

@@ -438,6 +438,12 @@ bhm_error_code_t c2d_destroy(
     bhm_cortex2d_t* cortex
 );
 
+bhm_error_code_t n2d_copy(
+    bhm_cortex2d_t* to,
+    bhm_cortex2d_t* from,
+    bhm_cortex_size_t index
+);
+
 /// @brief Returns a cortex with the same properties as the given one.
 /// @param to The destination cortex.
 /// @param from The source cortex.
