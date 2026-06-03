@@ -284,11 +284,11 @@ int main(int argc, char** argv) {
         printf("Font not loaded\n");
     }
 
-    for (int i = 0; window.isOpen(); i++) {
+    for (;window.isOpen();) {
         counter++;
 
-        bhm_cortex2d_t* prev_cortex = i % 2 ? odd_cortex : even_cortex;
-        bhm_cortex2d_t* next_cortex = i % 2 ? even_cortex : odd_cortex;
+        bhm_cortex2d_t* prev_cortex = counter % 2 ? odd_cortex : even_cortex;
+        bhm_cortex2d_t* next_cortex = counter % 2 ? even_cortex : odd_cortex;
 
         // Defines whether to evolve or not.
         // evol_step is incremented by 1 to account for edge cases and human readable behavior:

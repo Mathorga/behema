@@ -111,11 +111,17 @@ int main(int argc, char **argv) {
             counts->ticks_count
         );
 
+        printf("%d BEFORE TICK %d\n", counts->ticks_count, prev_cortex->n_values[256]);
+        printf("%d BEFORE TICK %d\n", counts->ticks_count, next_cortex->n_values[256]);
+
         c2d_tick(
             prev_cortex,
             next_cortex,
             evolve
         );
+
+        printf("%d AFTER TICK %d\n", counts->ticks_count, prev_cortex->n_values[256]);
+        printf("%d AFTER TICK %d\n", counts->ticks_count, next_cortex->n_values[256]);
 
         counts->ticks_count++;
         // Increment evolutions count.

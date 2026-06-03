@@ -218,6 +218,7 @@ void c2d_tick(
 
             // Bring the neuron back to recovery if it just fired, otherwise fire it if its value is over its threshold.
             if (prev_cortex->n_values[neuron_index] > prev_cortex->fire_threshold + prev_cortex->n_pulses[neuron_index]) {
+                printf("FIRE!\n");
                 // Fired at the previous step.
                 next_cortex->n_values[neuron_index] = next_cortex->recovery_value;
 
