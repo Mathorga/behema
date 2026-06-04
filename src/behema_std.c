@@ -131,7 +131,8 @@ void c2d_tick(
                         if (evolve) {
                             // Pick a random number for each neighbor, capped to the max uint16 value.
                             next_neuron->rand_state = xorshf32(next_neuron->rand_state);
-                            bhm_chance_t random = next_neuron->rand_state % 0xFFFFU;
+                            // Here capping to the max uint16 value is performed by discarding bytes in positions bigger than the biggest wanted value.
+                            bhm_chance_t random = next_neuron->rand_state & 0xFFFFU;
 
                             // Structural plasticity: create or destroy a synapse.
                             if (
