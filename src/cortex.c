@@ -105,6 +105,10 @@ bhm_error_code_t c2d_init(
         return BHM_ERROR_NH_RADIUS_TOO_BIG;
     }
 
+    // Make sure the provided size is not below the minimum.
+    if (width < BHM_MIN_CORTEX_WIDTH) return BHM_ERROR_SIZE_WRONG;
+    if (height < BHM_MIN_CORTEX_HEIGHT) return BHM_ERROR_SIZE_WRONG;
+
     // Setup cortex properties.
     cortex->width = width;
     cortex->height = height;
@@ -165,6 +169,10 @@ bhm_error_code_t c2d_rand_init(
 ) {
     // The provided radius makes for too many neighbors, which will end up in overflows, resulting in unexpected behavior during syngen.
     if (NH_COUNT_2D(NH_DIAM_2D(nh_radius)) > sizeof(bhm_nh_mask_t) * 8) return BHM_ERROR_NH_RADIUS_TOO_BIG;
+
+    // Make sure the provided size is not below the minimum.
+    if (width < BHM_MIN_CORTEX_WIDTH) return BHM_ERROR_SIZE_WRONG;
+    if (height < BHM_MIN_CORTEX_HEIGHT) return BHM_ERROR_SIZE_WRONG;
 
     // Setup cortex properties.
     cortex->width = width;
@@ -505,7 +513,7 @@ bhm_error_code_t c2d_mutate_shape(
         // Decide whether to increase or decrease the cortex height.
         if (cortex->rand_state % 2 == 0) {
             c2d_add_row(cortex, row_index);
-        } else {
+        } else if (cortex->height > BHM_MIN_CORTEX_HEIGHT) {
             c2d_remove_row(cortex, row_index);
         }
     }
@@ -519,7 +527,7 @@ bhm_error_code_t c2d_mutate_shape(
         // Decide whether to increase or decrease the cortex width.
         if (cortex->rand_state % 2 == 0) {
             c2d_add_column(cortex, column_index);
-        } else {
+        } else if (cortex->width > BHM_MIN_CORTEX_WIDTH) {
             c2d_remove_column(cortex, column_index);
         }
     }

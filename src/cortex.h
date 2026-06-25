@@ -62,6 +62,10 @@ extern "C" {
 #define BHM_MAX_SYN_STRENGTH 0x07U
 #define BHM_MAX_CHANCE 0xFFFFU
 
+#define BHM_MIN_CORTEX_WIDTH 2
+#define BHM_MIN_CORTEX_HEIGHT 2
+#define BHM_MIN_CORTEX_DEPTH 2
+
 // Completely arbitrary values used to define a sort of acceptable cortex right away.
 #define BHM_DEFAULT_THRESHOLD 0x88U
 #define BHM_DEFAULT_STARTING_VALUE 0x00U
