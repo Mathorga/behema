@@ -511,7 +511,7 @@ bhm_error_code_t c2d_mutate_shape(
         bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
 
         // Decide whether to increase or decrease the cortex height.
-        if (cortex->rand_state % 2 == 0) {
+        if ((cortex->rand_state & 0x01) == 0x00) {
             c2d_add_row(cortex, row_index);
         } else if (cortex->height > BHM_MIN_CORTEX_HEIGHT) {
             c2d_remove_row(cortex, row_index);
@@ -525,7 +525,7 @@ bhm_error_code_t c2d_mutate_shape(
         bhm_cortex_size_t column_index = cortex->rand_state % cortex->width;
 
         // Decide whether to increase or decrease the cortex width.
-        if (cortex->rand_state % 2 == 0) {
+        if ((cortex->rand_state & 0x01) == 0x00) {
             c2d_add_column(cortex, column_index);
         } else if (cortex->width > BHM_MIN_CORTEX_WIDTH) {
             c2d_remove_column(cortex, column_index);
@@ -551,21 +551,21 @@ bhm_error_code_t c2d_mutate(
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state < mut_chance) {
         // Decide whether to increase or decrease the pulse window.
-        cortex->pulse_window += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->pulse_window += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     // Mutate syngen chance.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state < mut_chance) {
         // Decide whether to increase or decrease the syngen chance.
-        cortex->syngen_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->syngen_chance += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     // Mutate synstr chance.
     cortex->rand_state = xorshf32(cortex->rand_state);
     if (cortex->rand_state < mut_chance) {
         // Decide whether to increase or decrease the synstr chance.
-        cortex->synstr_chance += cortex->rand_state % 2 == 0 ? 1 : -1;
+        cortex->synstr_chance += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     // Mutate neurons.
@@ -586,14 +586,14 @@ bhm_error_code_t n2d_mutate(
     neuron->rand_state = xorshf32(neuron->rand_state);
     if (neuron->rand_state < mut_chance) {
         // Decide whether to increase or decrease the max syn count.
-        neuron->max_syn_count += neuron->rand_state % 2 == 0 ? 1 : -1;
+        neuron->max_syn_count += (neuron->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     // Mutate inhexc ratio.
     neuron->rand_state = xorshf32(neuron->rand_state);
     if (neuron->rand_state < mut_chance) {
         // Decide whether to increase or decrease the inhexc ratio.
-        neuron->inhexc_ratio += neuron->rand_state % 2 == 0 ? 1 : -1;
+        neuron->inhexc_ratio += (neuron->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     return BHM_ERROR_NONE;

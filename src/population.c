@@ -342,7 +342,7 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         child->rand_state = population->rand_state + BHM_RAND_OFFSET * i;
 
         // Mutate the newborn if so specified.
-        if (mutate) {
+        if (mutate == BHM_TRUE) {
             error = c2d_mutate(child, population->mut_chance);
             if (error != BHM_ERROR_NONE) return error;
         }
