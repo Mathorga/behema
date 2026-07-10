@@ -325,7 +325,11 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate) {
+bhm_error_code_t p2d_crossover(
+    bhm_population2d_t* population,
+    bhm_bool_t mutate,
+    bhm_bool_t mutate_shape
+) {
     bhm_error_code_t error;
 
     // Create a temp population to hold the new generation.
@@ -342,8 +346,8 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
         child->rand_state = population->rand_state + BHM_RAND_OFFSET * i;
 
         // Mutate the newborn if so specified.
-        if (mutate == BHM_TRUE) {
-            error = c2d_mutate(child, population->mut_chance);
+        if (mutate) {
+            error = c2d_mutate(child, population->mut_chance, mutate_shape);
             if (error != BHM_ERROR_NONE) return error;
         }
 
@@ -359,10 +363,13 @@ bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t p2d_mutate(bhm_population2d_t* population) {
+bhm_error_code_t p2d_mutate(
+    bhm_population2d_t* population,
+    bhm_bool_t mutate_shape
+) {
     // Mutate each cortex in the population.
     for (bhm_population_size_t i = 0; i < population->size; i++) {
-        bhm_error_code_t error = c2d_mutate(&(population->cortices[i]), population->mut_chance);
+        bhm_error_code_t error = c2d_mutate(&(population->cortices[i]), population->mut_chance, mutate_shape);
         if (error != BHM_ERROR_NONE) return error;
     }
 

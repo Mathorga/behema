@@ -151,7 +151,7 @@ void c2d_tick(
                                 next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
 
                                 // Define whether the new synapse is excitatory or inhibitory.
-                                if (random % next_cortex->inhexc_range < next_neuron->inhexc_ratio) {
+                                if ((random % next_cortex->inhexc_range) < next_neuron->inhexc_ratio) {
                                     // Inhibitory.
                                     next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
                                 } else {
@@ -165,7 +165,7 @@ void c2d_tick(
                                 // Only 0-strength synapses can be deleted.
                                 syn_strength <= 0x00U &&
                                 // Frequency component.
-                                random < prev_cortex->syngen_chance / (neighbor.pulse + 1)
+                                random < (prev_cortex->syngen_chance / (neighbor.pulse + 1))
                             ) {
                                 // Delete synapse.
                                 next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);

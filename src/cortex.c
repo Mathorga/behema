@@ -537,14 +537,17 @@ bhm_error_code_t c2d_mutate_shape(
 
 bhm_error_code_t c2d_mutate(
     bhm_cortex2d_t *cortex,
-    bhm_chance_t mut_chance
+    bhm_chance_t mut_chance,
+    bhm_bool_t mutate_shape
 ) {
     // Start by mutating the cortex itself, then go on to single neurons.
 
-    // Mutate the cortex shape.
-    bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
-    if (error != BHM_ERROR_NONE) {
-        return error;
+    if (mutate_shape) {
+        // Mutate the cortex shape.
+        bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
+        if (error != BHM_ERROR_NONE) {
+            return error;
+        }
     }
 
     // Mutate pulse window.
@@ -566,6 +569,20 @@ bhm_error_code_t c2d_mutate(
     if (cortex->rand_state < mut_chance) {
         // Decide whether to increase or decrease the synstr chance.
         cortex->synstr_chance += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    }
+
+    // Mutate max tot strength.
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state < mut_chance) {
+        // Decide whether to increase or decrease the value.
+        cortex->max_tot_strength += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    }
+
+    // Mutate max synapses count
+    cortex->rand_state = xorshf32(cortex->rand_state);
+    if (cortex->rand_state < mut_chance) {
+        // Decide whether to increase or decrease the value.
+        cortex->max_syn_count += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
     }
 
     // Mutate neurons.

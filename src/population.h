@@ -182,15 +182,24 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
 /// @brief Breeds the currently selected selection_pool and generates a new population starting from them.
 /// @param population The population to breed.
 /// @param mutate Whether the newly generated population should also be mutated in place.
+/// @param mutate_shape Whether the newly generated population's cortices' shape should be mutated. This is ignored if mutate is false.
 /// Setting this to TRUE allows for faster cycles, since mutation occurs right after generating the offspring, without relooping the population all over.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 /// @warning When [mutate] is TRUE, the new population is automatically mutated, so there's no need to call p2d_mutate afterwards.
-bhm_error_code_t p2d_crossover(bhm_population2d_t* population, bhm_bool_t mutate);
+bhm_error_code_t p2d_crossover(
+    bhm_population2d_t* population,
+    bhm_bool_t mutate,
+    bhm_bool_t mutate_shape
+);
 
 /// @brief Mutates the given population in order to provide variability in the pool.
 /// @param population the population to mutate.
+/// @param mutate_shape Whether the population's cortices' shape should be mutated as well.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t p2d_mutate(bhm_population2d_t* population);
+bhm_error_code_t p2d_mutate(
+    bhm_population2d_t* population,
+    bhm_bool_t mutate_shape
+);
 
 // ##########################################
 // ##########################################

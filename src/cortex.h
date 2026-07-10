@@ -251,8 +251,10 @@ typedef struct {
 
 
     // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.
+    //* Mutable
     bhm_syn_strength_t max_tot_strength;
     // Maximum number of synapses between a neuron and its neighbors.
+    //* Mutable
     bhm_syn_count_t max_syn_count;
     // Maximum range for inhexc chance: single neurons' inhexc ratio will vary between 0 and inhexc_range. 0 means all excitatory, inhexc_range means all inhibitory.
     bhm_chance_t inhexc_range;
@@ -526,7 +528,8 @@ bhm_error_code_t c2d_mutate_shape(
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t c2d_mutate(
     bhm_cortex2d_t* cortex,
-    bhm_chance_t mut_chance
+    bhm_chance_t mut_chance,
+    bhm_bool_t mutate_shape
 );
 
 /// @brief Randomly mutates the provided neuron.
