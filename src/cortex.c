@@ -84,7 +84,7 @@ bhm_error_code_t o2d_init(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_alloc(
+bhm_error_code_t crx2d_alloc(
     bhm_cortex2d_t** cortex
 ) {
     // Allocate the cortex.
@@ -94,7 +94,7 @@ bhm_error_code_t c2d_alloc(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_init(
+bhm_error_code_t crx2d_init(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
@@ -161,7 +161,7 @@ bhm_error_code_t c2d_init(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_rand_init(
+bhm_error_code_t crx2d_rand_init(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
@@ -242,7 +242,7 @@ bhm_error_code_t c2d_rand_init(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_create(
+bhm_error_code_t crx2d_create(
     bhm_cortex2d_t** cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
@@ -251,18 +251,47 @@ bhm_error_code_t c2d_create(
     bhm_error_code_t error;
 
     // Allocate the cortex.
-    error = c2d_alloc(cortex);
+    error = crx2d_alloc(cortex);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
     // Initialize its values.
-    error = c2d_init(*cortex, width, height, nh_radius);
+    error = crx2d_init(*cortex, width, height, nh_radius);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
     return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t ctx2d_create(
+    bhm_context2d_t** context,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+) {
+    // First allocate the context itself.
+    (*context) = (bhm_context2d_t*) malloc(sizeof(bhm_context2d_t));
+    if ((*context) == NULL) return BHM_ERROR_FAILED_ALLOC;
+
+    // Then allocate its cortices.
+    bhm_error_code_t error = BHM_ERROR_NONE;
+    error = crx2d_create(&((*context)->even_cortex), width, height, nh_radius);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_create(&((*context)->odd_cortex), width, height, nh_radius);
+    if (error != BHM_ERROR_NONE) return error;
+
+    // Allocate the cortices counters.
+    (*context)->counts = (bhm_cortex_counts_t*) malloc(sizeof(bhm_cortex_counts_t));
+    (*context)->counts->ticks_count = 0x00;
+    (*context)->counts->evols_count = 0x00;
+
+    // Finally setup inputs and outputs counts.
+    (*context)->inputs_count = 0;
+    (*context)->outputs_count = 0;
+
+    return error;
 }
 
 bhm_error_code_t i2d_destroy(
@@ -289,7 +318,7 @@ bhm_error_code_t o2d_destroy(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_destroy(
+bhm_error_code_t crx2d_destroy(
     bhm_cortex2d_t* cortex
 ) {
     // Free neurons.
@@ -301,7 +330,32 @@ bhm_error_code_t c2d_destroy(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_copy(
+bhm_error_code_t ctx2d_destroy(
+    bhm_context2d_t* context
+) {
+    bhm_error_code_t error = BHM_ERROR_NONE;
+
+    error = crx2d_destroy(context->even_cortex);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_destroy(context->odd_cortex);
+    if (error != BHM_ERROR_NONE) return error;
+
+    // Free inputs.
+    for (bhm_cortex_size_t i = 0; i < context->inputs_count; i++) {
+        free(context->inputs[i]->values);
+    }
+    free(context->inputs);
+
+    // Free outputs.
+    for (bhm_cortex_size_t i = 0; i < context->outputs_count; i++) {
+        free(context->outputs[i]->values);
+    }
+    free(context->outputs);
+
+    return error;
+}
+
+bhm_error_code_t crx2d_copy(
     bhm_cortex2d_t* to,
     bhm_cortex2d_t* from
 ) {
@@ -341,7 +395,7 @@ bhm_error_code_t c2d_copy(
 // Setter functions
 // ##########################################
 
-bhm_error_code_t c2d_set_nhradius(
+bhm_error_code_t crx2d_set_nhradius(
     bhm_cortex2d_t* cortex,
     bhm_nh_radius_t radius
 ) {
@@ -355,7 +409,21 @@ bhm_error_code_t c2d_set_nhradius(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_nhmask(
+bhm_error_code_t ctx2d_set_nhradius(
+    bhm_context2d_t* context,
+    bhm_nh_radius_t radius
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_nhradius(context->even_cortex, radius);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_nhradius(context->odd_cortex, radius);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_nhmask(
     bhm_cortex2d_t* cortex,
     bhm_nh_mask_t mask
 ) {
@@ -368,7 +436,21 @@ bhm_error_code_t c2d_set_nhmask(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_evol_step(
+bhm_error_code_t ctx2d_set_nhmask(
+    bhm_context2d_t* context,
+    bhm_nh_mask_t mask
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_nhmask(context->even_cortex, mask);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_nhmask(context->odd_cortex, mask);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_evol_step(
     bhm_cortex2d_t* cortex,
     bhm_evol_step_t evol_step
 ) {
@@ -377,7 +459,21 @@ bhm_error_code_t c2d_set_evol_step(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_pulse_window(
+bhm_error_code_t ctx2d_set_evol_step(
+    bhm_context2d_t* context,
+    bhm_evol_step_t evol_step
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_evol_step(context->even_cortex, evol_step);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_evol_step(context->odd_cortex, evol_step);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_pulse_window(
     bhm_cortex2d_t* cortex,
     bhm_ticks_count_t window
 ) {
@@ -389,7 +485,21 @@ bhm_error_code_t c2d_set_pulse_window(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_sample_window(
+bhm_error_code_t ctx2d_set_pulse_window(
+    bhm_context2d_t* context,
+    bhm_ticks_count_t window
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_pulse_window(context->even_cortex, window);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_pulse_window(context->odd_cortex, window);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_sample_window(
     bhm_cortex2d_t* cortex,
     bhm_ticks_count_t sample_window
 ) {
@@ -398,7 +508,21 @@ bhm_error_code_t c2d_set_sample_window(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_fire_threshold(
+bhm_error_code_t ctx2d_set_sample_window(
+    bhm_context2d_t* context,
+    bhm_ticks_count_t sample_window
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_sample_window(context->even_cortex, sample_window);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_sample_window(context->odd_cortex, sample_window);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_fire_threshold(
     bhm_cortex2d_t* cortex,
     bhm_neuron_value_t threshold
 ) {
@@ -407,7 +531,7 @@ bhm_error_code_t c2d_set_fire_threshold(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_syngen_chance(
+bhm_error_code_t crx2d_set_syngen_chance(
     bhm_cortex2d_t* cortex,
     bhm_chance_t syngen_chance
 ) {
@@ -417,7 +541,7 @@ bhm_error_code_t c2d_set_syngen_chance(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_synstr_chance(
+bhm_error_code_t crx2d_set_synstr_chance(
     bhm_cortex2d_t* cortex,
     bhm_chance_t synstr_chance
 ) {
@@ -427,7 +551,7 @@ bhm_error_code_t c2d_set_synstr_chance(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_max_syn_count(
+bhm_error_code_t crx2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t syn_count
 ) {
@@ -436,7 +560,21 @@ bhm_error_code_t c2d_set_max_syn_count(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_max_touch(
+bhm_error_code_t ctx2d_set_max_syn_count(
+    bhm_context2d_t* context,
+    bhm_syn_count_t syn_count
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_max_syn_count(context->even_cortex, syn_count);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_max_syn_count(context->odd_cortex, syn_count);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_max_touch(
     bhm_cortex2d_t* cortex,
     float touch
 ) {
@@ -448,7 +586,7 @@ bhm_error_code_t c2d_set_max_touch(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_pulse_mapping(
+bhm_error_code_t crx2d_set_pulse_mapping(
     bhm_cortex2d_t* cortex,
     bhm_pulse_mapping_t pulse_mapping
 ) {
@@ -457,7 +595,21 @@ bhm_error_code_t c2d_set_pulse_mapping(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_inhexc_range(
+bhm_error_code_t ctx2d_set_pulse_mapping(
+    bhm_context2d_t* context,
+    bhm_pulse_mapping_t pulse_mapping
+) {
+    bhm_error_code_t error;
+
+    error = crx2d_set_pulse_mapping(context->even_cortex, pulse_mapping);
+    if (error != BHM_ERROR_NONE) return error;
+    error = crx2d_set_pulse_mapping(context->odd_cortex, pulse_mapping);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t crx2d_set_inhexc_range(
     bhm_cortex2d_t* cortex,
     bhm_chance_t inhexc_range
 ) {
@@ -466,7 +618,7 @@ bhm_error_code_t c2d_set_inhexc_range(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_set_inhexc_ratio(
+bhm_error_code_t crx2d_set_inhexc_ratio(
     bhm_cortex2d_t* cortex,
     bhm_chance_t inhexc_ratio
 ) {
@@ -481,7 +633,7 @@ bhm_error_code_t c2d_set_inhexc_ratio(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_syn_disable(
+bhm_error_code_t crx2d_syn_disable(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t x0,
     bhm_cortex_size_t y0,
@@ -500,7 +652,7 @@ bhm_error_code_t c2d_syn_disable(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_mutate_shape(
+bhm_error_code_t crx2d_mutate_shape(
     bhm_cortex2d_t *cortex,
     bhm_chance_t mut_chance
 ) {
@@ -512,9 +664,9 @@ bhm_error_code_t c2d_mutate_shape(
 
         // Decide whether to increase or decrease the cortex height.
         if ((cortex->rand_state & 0x01) == 0x00) {
-            c2d_add_row(cortex, row_index);
+            crx2d_add_row(cortex, row_index);
         } else if (cortex->height > BHM_MIN_CORTEX_HEIGHT) {
-            c2d_remove_row(cortex, row_index);
+            crx2d_remove_row(cortex, row_index);
         }
     }
 
@@ -526,16 +678,16 @@ bhm_error_code_t c2d_mutate_shape(
 
         // Decide whether to increase or decrease the cortex width.
         if ((cortex->rand_state & 0x01) == 0x00) {
-            c2d_add_column(cortex, column_index);
+            crx2d_add_column(cortex, column_index);
         } else if (cortex->width > BHM_MIN_CORTEX_WIDTH) {
-            c2d_remove_column(cortex, column_index);
+            crx2d_remove_column(cortex, column_index);
         }
     }
 
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_mutate(
+bhm_error_code_t crx2d_mutate(
     bhm_cortex2d_t *cortex,
     bhm_chance_t mut_chance,
     bhm_bool_t mutate_shape
@@ -544,7 +696,7 @@ bhm_error_code_t c2d_mutate(
 
     if (mutate_shape) {
         // Mutate the cortex shape.
-        bhm_error_code_t error = c2d_mutate_shape(cortex, mut_chance);
+        bhm_error_code_t error = crx2d_mutate_shape(cortex, mut_chance);
         if (error != BHM_ERROR_NONE) {
             return error;
         }
@@ -624,7 +776,7 @@ bhm_error_code_t n2d_mutate(
 // Getter functions
 // ##########################################
 
-bhm_error_code_t c2d_to_string(
+bhm_error_code_t crx2d_to_string(
     bhm_cortex2d_t* cortex,
     char* result
 ) {
@@ -646,7 +798,7 @@ bhm_error_code_t c2d_to_string(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_get_spiking_state(
+bhm_error_code_t crx2d_get_spiking_state(
     bhm_cortex2d_t* cortex,
     bhm_bool_t* result
 ) {
@@ -661,7 +813,7 @@ bhm_error_code_t c2d_get_spiking_state(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_get_synout_state(
+bhm_error_code_t crx2d_get_synout_state(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t* result
 ) {
@@ -726,7 +878,7 @@ bhm_error_code_t o2d_mean(
 // Utility Functions.
 // ##########################################
 
-bhm_error_code_t c2d_add_row(
+bhm_error_code_t crx2d_add_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
@@ -808,23 +960,23 @@ bhm_error_code_t c2d_add_row(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_add_column(
+bhm_error_code_t crx2d_add_column(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
     bhm_error_code_t error;
 
-    error = c2d_transpose(cortex);
+    error = crx2d_transpose(cortex);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
-    error = c2d_add_row(cortex, index);
+    error = crx2d_add_row(cortex, index);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
-    error = c2d_transpose(cortex);
+    error = crx2d_transpose(cortex);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
@@ -832,7 +984,7 @@ bhm_error_code_t c2d_add_column(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_remove_row(
+bhm_error_code_t crx2d_remove_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
@@ -863,23 +1015,23 @@ bhm_error_code_t c2d_remove_row(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_remove_column(
+bhm_error_code_t crx2d_remove_column(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 ) {
     bhm_error_code_t error;
 
-    error = c2d_transpose(cortex);
+    error = crx2d_transpose(cortex);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
-    error = c2d_remove_row(cortex, index);
+    error = crx2d_remove_row(cortex, index);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
 
-    error = c2d_transpose(cortex);
+    error = crx2d_transpose(cortex);
     if (error != BHM_ERROR_NONE) {
         return error;
     }
@@ -887,7 +1039,7 @@ bhm_error_code_t c2d_remove_column(
     return BHM_ERROR_NONE;
 }
 
-bhm_error_code_t c2d_transpose(
+bhm_error_code_t crx2d_transpose(
     bhm_cortex2d_t* cortex
 ) {
     // Allocate a temporary neurons array.

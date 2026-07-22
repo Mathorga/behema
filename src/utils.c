@@ -422,6 +422,20 @@ bhm_error_code_t c2d_touch_from_map(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t ctx2d_touch_from_map(
+    bhm_context2d_t* context,
+    const char* map_file_name
+) {
+    bhm_error_code_t error;
+
+    error = c2d_touch_from_map(context->even_cortex, map_file_name);
+    if (error != BHM_ERROR_NONE) return error;
+    error = c2d_touch_from_map(context->odd_cortex, map_file_name);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
 bhm_error_code_t c2d_inhexc_from_map(
     bhm_cortex2d_t* cortex,
     const char* map_file_name
@@ -441,6 +455,20 @@ bhm_error_code_t c2d_inhexc_from_map(
         printf("\nc2d_inhexc_from_map file sizes do not match with cortex\n");
         return BHM_ERROR_FILE_SIZE_WRONG;
     }
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t ctx2d_inhexc_from_map(
+    bhm_context2d_t* context,
+    const char* map_file_name
+) {
+    bhm_error_code_t error;
+
+    error = c2d_inhexc_from_map(context->even_cortex, map_file_name);
+    if (error != BHM_ERROR_NONE) return error;
+    error = c2d_inhexc_from_map(context->odd_cortex, map_file_name);
+    if (error != BHM_ERROR_NONE) return error;
 
     return BHM_ERROR_NONE;
 }

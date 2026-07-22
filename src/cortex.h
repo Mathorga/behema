@@ -281,6 +281,17 @@ typedef struct {
     bhm_neuron_t* neurons;
 } bhm_cortex3d_t;
 
+/// @brief Full context of 2D cortices. Embeds all that's needed for computing a single step over the cortex.
+typedef struct {
+    bhm_cortex2d_t* even_cortex;
+    bhm_cortex2d_t* odd_cortex;
+    bhm_cortex_counts_t* counts;
+    bhm_cortex_size_t inputs_count;
+    bhm_input2d_t** inputs;
+    bhm_cortex_size_t outputs_count;
+    bhm_output2d_t** outputs;
+} bhm_context2d_t;
+
 
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
 uint32_t xorshf32(uint32_t state);
@@ -327,7 +338,7 @@ bhm_error_code_t o2d_init(
 /// @brief Allocates a new cortex.
 /// @param cortex The cortex to be allocated.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_alloc(
+bhm_error_code_t crx2d_alloc(
     bhm_cortex2d_t** cortex
 );
 
@@ -337,7 +348,7 @@ bhm_error_code_t c2d_alloc(
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_init(
+bhm_error_code_t crx2d_init(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
@@ -350,7 +361,7 @@ bhm_error_code_t c2d_init(
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_rand_init(
+bhm_error_code_t crx2d_rand_init(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
@@ -363,8 +374,21 @@ bhm_error_code_t c2d_rand_init(
 /// @param height The height of the cortex.
 /// @param nh_radius The neighborhood radius for each individual cortex neuron.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_create(
+bhm_error_code_t crx2d_create(
     bhm_cortex2d_t** cortex,
+    bhm_cortex_size_t width,
+    bhm_cortex_size_t height,
+    bhm_nh_radius_t nh_radius
+);
+
+/// @brief Allocates and initializes a new cortices context.
+/// @param context The context to be created
+/// @param width The width of the cortices in the context.
+/// @param height The height of the cortices in the context.
+/// @param nh_radius The neighborhood radius for each individual cortex neuron.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_create(
+    bhm_context2d_t** context,
     bhm_cortex_size_t width,
     bhm_cortex_size_t height,
     bhm_nh_radius_t nh_radius
@@ -385,15 +409,22 @@ bhm_error_code_t o2d_destroy(
 /// @brief Destroys the given cortex2d and frees memory for it and its neurons.
 /// @param cortex The cortex to destroy
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_destroy(
+bhm_error_code_t crx2d_destroy(
     bhm_cortex2d_t* cortex
+);
+
+/// @brief Destroys the provided context and frees memory for it and its content.
+/// @param context The context to destroy.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_destroy(
+    bhm_context2d_t* context
 );
 
 /// @brief Returns a cortex with the same properties as the given one.
 /// @param to The destination cortex.
 /// @param from The source cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_copy(
+bhm_error_code_t crx2d_copy(
     bhm_cortex2d_t* to,
     bhm_cortex2d_t* from
 );
@@ -408,42 +439,82 @@ bhm_error_code_t c2d_copy(
 
 /// @brief Sets the neighborhood radius for all neurons in the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_nhradius(
+bhm_error_code_t crx2d_set_nhradius(
     bhm_cortex2d_t* cortex,
+    bhm_nh_radius_t radius
+);
+
+/// @brief Sets the neighborhood radius for all neurons in the cortex in the provided context.
+/// @param context The context whose cortex to apply changes to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_nhradius(
+    bhm_context2d_t* context,
     bhm_nh_radius_t radius
 );
 
 /// @brief Sets the neighborhood mask for all neurons in the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_nhmask(
+bhm_error_code_t crx2d_set_nhmask(
     bhm_cortex2d_t* cortex,
+    bhm_nh_mask_t mask
+);
+
+/// @brief Sets the neighborhood mask for all neurons in the cortex in the provided context.
+/// @param context The context whose cortex to apply changes to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_nhmask(
+    bhm_context2d_t* context,
     bhm_nh_mask_t mask
 );
 
 /// @brief Sets the evolution step for the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_evol_step(
+bhm_error_code_t crx2d_set_evol_step(
     bhm_cortex2d_t* cortex,
+    bhm_evol_step_t evol_step
+);
+
+/// @brief Sets the evolution step for the cortex in the provided context.
+/// @param context The context whose cortex to apply changes to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_evol_step(
+    bhm_context2d_t* context,
     bhm_evol_step_t evol_step
 );
 
 /// @brief Sets the pulse window width for the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_pulse_window(
+bhm_error_code_t crx2d_set_pulse_window(
     bhm_cortex2d_t* cortex,
+    bhm_ticks_count_t window
+);
+
+/// @brief Sets the pulse window width for the cortex in the provided context.
+/// @param context The context whose cortex to apply changes to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_pulse_window(
+    bhm_context2d_t* context,
     bhm_ticks_count_t window
 );
 
 /// @brief Sets the sample window for the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_sample_window(
+bhm_error_code_t crx2d_set_sample_window(
     bhm_cortex2d_t* cortex,
+    bhm_ticks_count_t sample_window
+);
+
+/// @brief Sets the sample window for the cortex.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+/// @param context The context whose cortex to apply changes to.
+bhm_error_code_t ctx2d_set_sample_window(
+    bhm_context2d_t* context,
     bhm_ticks_count_t sample_window
 );
 
 /// @brief Sets the fire threshold for all neurons in the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_fire_threshold(
+bhm_error_code_t crx2d_set_fire_threshold(
     bhm_cortex2d_t* cortex,
     bhm_neuron_value_t threshold
 );
@@ -451,7 +522,7 @@ bhm_error_code_t c2d_set_fire_threshold(
 /// @brief Sets the syngen chance for the cortex. Syngen chance defines the probability for synapse generation and deletion.
 /// @param syngen_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_syngen_chance(
+bhm_error_code_t crx2d_set_syngen_chance(
     bhm_cortex2d_t* cortex,
     bhm_chance_t syngen_chance
 );
@@ -459,7 +530,7 @@ bhm_error_code_t c2d_set_syngen_chance(
 /// @brief Sets the synstr chance for the cortex. Synstr chance defines the probability for synapse strengthening and weakening.
 /// @param synstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_synstr_chance(
+bhm_error_code_t crx2d_set_synstr_chance(
     bhm_cortex2d_t* cortex,
     bhm_chance_t synstr_chance
 );
@@ -468,8 +539,17 @@ bhm_error_code_t c2d_set_synstr_chance(
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_max_syn_count(
+bhm_error_code_t crx2d_set_max_syn_count(
     bhm_cortex2d_t* cortex,
+    bhm_syn_count_t syn_count
+);
+
+/// @brief Sets the maximum number of (input) synapses for the neurons of the cortex.
+/// @param context The context whose cortex to apply changes to.
+/// @param syn_count The max number of allowable synapses.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_max_syn_count(
+    bhm_context2d_t* context,
     bhm_syn_count_t syn_count
 );
 
@@ -477,35 +557,43 @@ bhm_error_code_t c2d_set_max_syn_count(
 /// A neuron touch is defined as its synapses count divided by its total neighbors count.
 /// @param touch The touch to assign the cortex. Only values between 0 and 1 are allowed.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_max_touch(
+bhm_error_code_t crx2d_set_max_touch(
     bhm_cortex2d_t* cortex,
     float touch
 );
 
 /// @brief Sets the preferred input mapping for the given cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_pulse_mapping(
+bhm_error_code_t crx2d_set_pulse_mapping(
     bhm_cortex2d_t* cortex,
+    bhm_pulse_mapping_t pulse_mapping
+);
+
+/// @brief Sets the preferred input mapping for the cortex in the provided context.
+/// @param context The context whose cortex to apply changes to.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_set_pulse_mapping(
+    bhm_context2d_t* context,
     bhm_pulse_mapping_t pulse_mapping
 );
 
 /// @brief Sets the range for excitatory to inhibitory ratios in single neurons.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_inhexc_range(
+bhm_error_code_t crx2d_set_inhexc_range(
     bhm_cortex2d_t* cortex,
     bhm_chance_t inhexc_range
 );
 
 /// @brief Sets the proportion between excitatory and inhibitory generated synapses.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_set_inhexc_ratio(
+bhm_error_code_t crx2d_set_inhexc_ratio(
     bhm_cortex2d_t* cortex,
     bhm_chance_t inhexc_ratio
 );
 
 /// @brief Disables self connections whithin the specified bounds.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_syn_disable(
+bhm_error_code_t crx2d_syn_disable(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t x0,
     bhm_cortex_size_t y0,
@@ -517,7 +605,7 @@ bhm_error_code_t c2d_syn_disable(
 /// @param cortex The cortex to edit.
 /// @param mut_chance The probability of applying a mutation to the cortex shape.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_mutate_shape(
+bhm_error_code_t crx2d_mutate_shape(
     bhm_cortex2d_t* cortex,
     bhm_chance_t mut_chance
 );
@@ -526,7 +614,7 @@ bhm_error_code_t c2d_mutate_shape(
 /// @param cortex The cortex to edit.
 /// @param mut_chance The probability of applying a mutation to any mutable property of the cortex.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_mutate(
+bhm_error_code_t crx2d_mutate(
     bhm_cortex2d_t* cortex,
     bhm_chance_t mut_chance,
     bhm_bool_t mutate_shape
@@ -553,7 +641,7 @@ bhm_error_code_t n2d_mutate(
 /// @param cortex The cortex to inspect.
 /// @param result The string to fill with cortex data.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_string(
+bhm_error_code_t crx2d_to_string(
     bhm_cortex2d_t* cortex,
     char* result
 );
@@ -562,7 +650,7 @@ bhm_error_code_t c2d_to_string(
 /// @param cortex The cortex to read from.
 /// @param result The array in which to store the spiking state to. The result is a flattened 2D array the size of [cortex].
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_get_spiking_state(
+bhm_error_code_t crx2d_get_spiking_state(
     bhm_cortex2d_t* cortex,
     bhm_bool_t* result
 );
@@ -571,7 +659,7 @@ bhm_error_code_t c2d_get_spiking_state(
 /// @param cortex The cortex to read from.
 /// @param result The array in which to store the synapses count state to. The result is a flattened 2d array the size of [cortex].
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_get_synout_state(
+bhm_error_code_t crx2d_get_synout_state(
     bhm_cortex2d_t* cortex,
     bhm_syn_count_t* result
 );
@@ -606,7 +694,7 @@ bhm_error_code_t o2d_mean(
 /// @param cortex The cortex to add a row to.
 /// @param index The index at which to add the new row of neurons.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_add_row(
+bhm_error_code_t crx2d_add_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 );
@@ -615,7 +703,7 @@ bhm_error_code_t c2d_add_row(
 /// @param cortex The cortex to add a column to.
 /// @param index The index at which to add the new column of neurons.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_add_column(
+bhm_error_code_t crx2d_add_column(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 );
@@ -624,7 +712,7 @@ bhm_error_code_t c2d_add_column(
 /// @param cortex The cortex to remove a row from.
 /// @param index The index of the row to remove.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_remove_row(
+bhm_error_code_t crx2d_remove_row(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 );
@@ -633,7 +721,7 @@ bhm_error_code_t c2d_remove_row(
 /// @param cortex The cortex to remove a column from.
 /// @param index The index of the column to remove.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_remove_column(
+bhm_error_code_t crx2d_remove_column(
     bhm_cortex2d_t* cortex,
     bhm_cortex_size_t index
 );
@@ -641,7 +729,7 @@ bhm_error_code_t c2d_remove_column(
 /// @brief Transposes the provided cortex' neurons. Width and height are switched as well.
 /// @param cortex The cortex whose neurons to transpose.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_transpose(
+bhm_error_code_t crx2d_transpose(
     bhm_cortex2d_t* cortex
 );
 

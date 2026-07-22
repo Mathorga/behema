@@ -30,7 +30,7 @@ extern "C" {
 /// @param cortex The cortex to feed.
 /// @param input The input to feed the cortex.
 /// @param ticks_count The number of executions performed so far.
-void c2d_feed2d(
+void crx2d_feed2d(
     bhm_cortex2d_t* cortex,
     bhm_input2d_t* input,
     bhm_ticks_count_t ticks_count
@@ -39,7 +39,7 @@ void c2d_feed2d(
 /// @brief Reads data from a cortex through the provided output2d. When the mapping is done, output data is stored in the provided output2d.
 /// @param cortex The cortex to read values from.
 /// @param output The output used to read data from the cortex.
-void c2d_read2d(
+void crx2d_read2d(
     bhm_cortex2d_t* cortex,
     bhm_output2d_t* output
 );
@@ -49,10 +49,19 @@ void c2d_read2d(
 /// @param next_cortex The cortex that will be updated by the tick cycle.
 /// @param evolve Whether the cortex should update its internal structure or not.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
-void c2d_tick(
+void crx2d_tick(
     bhm_cortex2d_t* prev_cortex,
     bhm_cortex2d_t* next_cortex,
     bhm_bool_t evolve
+);
+
+/// @brief Performs a full run cycle over the provided context, along with inputs feeding and outputs reading.
+/// Makes sure cortex evolution is performed when necessary according to the cortices' evolution step.
+/// By "a full run cycle" we mean is inputs feeding, then cortex ticking and finally outputs reading.
+/// @param context The context to perform a tick step on.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_tick(
+    bhm_context2d_t* context
 );
 
 

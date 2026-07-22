@@ -1,6 +1,6 @@
 #include "behema_std.h"
 
-void c2d_feed2d(
+void crx2d_feed2d(
     bhm_cortex2d_t* cortex,
     bhm_input2d_t* input,
     bhm_ticks_count_t ticks_count
@@ -29,7 +29,7 @@ void c2d_feed2d(
     }
 }
 
-void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
+void crx2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     #pragma omp parallel for collapse(2)
     for (bhm_cortex_size_t y = output->y0; y < output->y1; y++) {
         for (bhm_cortex_size_t x = output->x0; x < output->x1; x++) {
@@ -50,7 +50,7 @@ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     }
 }
 
-void c2d_tick(
+void crx2d_tick(
     bhm_cortex2d_t* prev_cortex,
     bhm_cortex2d_t* next_cortex,
     bhm_bool_t evolve
@@ -235,6 +235,50 @@ void c2d_tick(
             }
         }
     }
+}
+
+bhm_error_code_t ctx2d_tick(
+    bhm_context2d_t* context
+) {
+    // Setup.
+    bhm_cortex2d_t* prev_cortex = context->counts->ticks_count % 2 ? context->odd_cortex : context->even_cortex;
+    bhm_cortex2d_t* next_cortex = context->counts->ticks_count % 2 ? context->even_cortex : context->odd_cortex;
+
+    // #################### Step 1: Inputs feeding. ####################
+    for (bhm_cortex_size_t i = 0; i < context->inputs_count; i++) {
+        crx2d_feed2d(
+            prev_cortex,
+            context->inputs[i],
+            context->counts->ticks_count
+        );
+    }
+
+    // #################### Step 2: Cortex ticking. ####################
+
+    // Defines whether to evolve or not.
+    // evol_step is incremented by 1 to account for edge cases and human readable behavior:
+    // 0x0000 -> 0 + 1 = 1, so the cortex evolves at EVERY tick, meaning that there are no free ticks between evolutions.
+    // 0xFFFF -> 65535 + 1 = 65536, so the cortex NEVER evolves, meaning that there is an infinite amount of ticks between evolutions.
+    bhm_bool_t evolve = (context->counts->ticks_count % (((bhm_evol_step_t) prev_cortex->evol_step) + 1)) == 0;
+    crx2d_tick(
+        prev_cortex,
+        next_cortex,
+        evolve
+    );
+
+    // Increment counters.
+    context->counts->ticks_count++;
+    if (evolve) context->counts->evols_count++;
+
+    // #################### Step 3: Outputs reading. ####################
+    for (bhm_cortex_size_t i = 0; i < context->outputs_count; i++) {
+        crx2d_read2d(
+            next_cortex,
+            context->outputs[i]
+        );
+    }
+
+    return BHM_ERROR_NONE;
 }
 
 

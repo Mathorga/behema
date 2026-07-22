@@ -10,7 +10,11 @@
 #include <unistd.h>
 #include <iostream>
 
-void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
+void initPositions(
+    bhm_cortex2d_t* cortex,
+    float* xNeuronPositions,
+    float* yNeuronPositions
+) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
@@ -19,14 +23,16 @@ void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeur
     }
 }
 
-void drawNeurons(bhm_cortex2d_t* cortex,
-                 sf::RenderWindow* window,
-                 sf::VideoMode videoMode,
-                 float* xNeuronPositions,
-                 float* yNeuronPositions,
-                 bool drawInfo,
-                 sf::VideoMode desktopMode,
-                 sf::Font font) {
+void drawNeurons(
+    bhm_cortex2d_t* cortex,
+    sf::RenderWindow* window,
+    sf::VideoMode videoMode,
+    float* xNeuronPositions,
+    float* yNeuronPositions,
+    bool drawInfo,
+    sf::VideoMode desktopMode,
+    sf::Font font
+) {
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;

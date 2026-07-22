@@ -115,7 +115,7 @@ uint64_t nanos();
 /// @param cortex The cortex to be written to file.
 /// @param file_name The destination file to write the cortex to.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_to_file(
+bhm_error_code_t crx2d_to_file(
     bhm_cortex2d_t* cortex,
     const char* file_name
 );
@@ -124,7 +124,7 @@ bhm_error_code_t c2d_to_file(
 /// @param cortex The cortex to init from file.
 /// @param file_name The file to read the cortex from.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_from_file(
+bhm_error_code_t crx2d_from_file(
     bhm_cortex2d_t* cortex,
     const char* file_name
 );
@@ -151,16 +151,32 @@ bhm_error_code_t p2d_from_file(
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_touch_from_map(
+bhm_error_code_t crx2d_touch_from_map(
     bhm_cortex2d_t* cortex,
+    const char* map_file_name
+);
+
+/// @param context The context whose cortex to apply changes to.
+/// @param map_file_name The path to the pgm map file to read.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_touch_from_map(
+    bhm_context2d_t* context,
     const char* map_file_name
 );
 
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_inhexc_from_map(
+bhm_error_code_t crx2d_inhexc_from_map(
     bhm_cortex2d_t* cortex,
+    const char* map_file_name
+);
+
+/// @param context The context whose cortex to apply changes to.
+/// @param map_file_name The path to the pgm map file to read.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_inhexc_from_map(
+    bhm_context2d_t* context,
     const char* map_file_name
 );
 
@@ -168,7 +184,7 @@ bhm_error_code_t c2d_inhexc_from_map(
 /// @param cortex The cortex to apply changes to.
 /// @param map_file_name The path to the pgm map file to read.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
-bhm_error_code_t c2d_fthold_from_map(
+bhm_error_code_t crx2d_fthold_from_map(
     bhm_cortex2d_t* cortex,
     const char* map_file_name
 );
