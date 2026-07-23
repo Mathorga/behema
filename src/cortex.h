@@ -629,6 +629,24 @@ bhm_error_code_t n2d_mutate(
     bhm_chance_t mut_chance
 );
 
+/// @brief Adds the provided input to the provided context.
+/// @param context The context to add the input to.
+/// @param input The input to add to the context
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_add_input(
+    bhm_context2d_t* context,
+    bhm_input2d_t* input
+);
+
+/// @brief Adds the provided output to the provided context.
+/// @param context The context to add the output to.
+/// @param output The output to add to the context
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t ctx2d_add_output(
+    bhm_context2d_t* context,
+    bhm_output2d_t* output
+);
+
 // ##########################################
 // ##########################################
 

@@ -768,6 +768,39 @@ bhm_error_code_t n2d_mutate(
     return BHM_ERROR_NONE;
 }
 
+bhm_error_code_t ctx2d_add_input(
+    bhm_context2d_t* context,
+    bhm_input2d_t* input
+) {
+    context->inputs_count++;
+
+    // Reallocate inputs.
+    context->inputs = (bhm_input2d_t**) realloc(context->inputs, context->inputs_count * sizeof(bhm_input2d_t*));
+    if (context->inputs == NULL) {
+        return BHM_ERROR_FAILED_ALLOC;
+    }
+
+    context->inputs[context->inputs_count - 1] = input;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t ctx2d_add_output(
+    bhm_context2d_t* context,
+    bhm_output2d_t* output
+) {
+    context->outputs_count++;
+
+    // Reallocate inputs.
+    context->outputs = (bhm_output2d_t**) realloc(context->outputs, context->outputs_count * sizeof(bhm_output2d_t*));
+    if (context->outputs == NULL) {
+        return BHM_ERROR_FAILED_ALLOC;
+    }
+
+    context->outputs[context->outputs_count - 1] = output;
+
+    return BHM_ERROR_NONE;
+}
 // ##########################################
 // ##########################################
 
