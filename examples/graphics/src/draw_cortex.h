@@ -6,18 +6,18 @@ bhm_error_code_t draw_cortex(
     int window_width,
     int window_height
 ) {
-    const int cell_width = 6;
-    const int cell_height = 6;
+    const int cell_width = 4;
+    const int cell_height = 4;
 
     const int starting_x = window_width - cortex->width * cell_width;
     const int starting_y = 0;
 
     // ClearBackground(BLACK);
 
-    for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
-        for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
+    for (bhm_cortex_size_t j = 0; j < cortex->height; j++) {
+        for (bhm_cortex_size_t i = 0; i < cortex->width; i++) {
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(i, j, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
 
@@ -45,13 +45,14 @@ bhm_error_code_t draw_cortex(
                 }
             }
 
-            DrawRectangle(
-                starting_x + j * cell_width,
-                starting_y + i * cell_height,
-                cell_width,
-                cell_height,
-                neuron_color
-            );
+            DrawPixel(i, j, neuron_color);
+            // DrawRectangle(
+            //     starting_x + j * cell_width,
+            //     starting_y + i * cell_height,
+            //     cell_width,
+            //     cell_height,
+            //     neuron_color
+            // );
         }
     }
 

@@ -7,12 +7,12 @@
 // For reference:
 // https://github.com/wysaid/CameraCapture/blob/main/examples/desktop/2-capture_grab_c.c
 
-#define CORTEX_WIDTH 256
-#define CORTEX_HEIGHT 128
+#define CORTEX_WIDTH 1024
+#define CORTEX_HEIGHT 256
 #define CORTEX_NH_RADIUS 2
 
-#define WINDOW_WIDTH 1280u
-#define WINDOW_HEIGHT 720u
+#define WINDOW_WIDTH CORTEX_WIDTH
+#define WINDOW_HEIGHT CORTEX_HEIGHT
 
 int clamp(int d, int min, int max) {
    const int t = d < min ? min : d;
@@ -68,7 +68,9 @@ int main(int argc, char** argv) {
         BHM_DEFAULT_EXC_VALUE * 2,
         BHM_PULSE_MAPPING_FPROP
     );
-    ctx2d_add_input(bhm_ctx, left_eye);
+    ctx2d_add_input(bhm_ctx, right_eye);
+
+    printf("INPUTS COUNT: %d\n", bhm_ctx->inputs_count);
 
     bhm_cortex_size_t eye_width = left_eye->x1 - left_eye->x0;
 
@@ -109,7 +111,7 @@ int main(int argc, char** argv) {
 
     SetTargetFPS(960);
 
-    while (true) {
+    while (!WindowShouldClose()) {
         // ################# Fetch input #################
         if (sample_step > sampling_bound) {
             CcapVideoFrame* frame = ccap_provider_grab(provider, 3000);
