@@ -8,8 +8,8 @@
 void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
-            yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
+            xNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
+            yNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
         }
     }
 }
@@ -27,7 +27,7 @@ void drawNeurons(
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[BHM_IDX2D(j, i, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
 
@@ -43,7 +43,7 @@ void drawNeurons(
                 neuronSpot.setFillColor(sf::Color(0, 127, 255, 31 + 224 * neuronValue));
             }
             
-            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.height);
+            neuronSpot.setPosition(xNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * videoMode.height);
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
@@ -56,7 +56,7 @@ void drawNeurons(
 void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
-            bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            bhm_cortex_size_t neuronIndex = BHM_IDX2D(j, i, cortex->width);
             bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
             bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
@@ -77,9 +77,9 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        bhm_cortex_size_t neighborIndex = IDX2D(
-                            WRAP(j + (l - cortex->nh_radius), cortex->width),
-                            WRAP(i + (k - cortex->nh_radius), cortex->height),
+                        bhm_cortex_size_t neighborIndex = BHM_IDX2D(
+                            BHM_WRAP(j + (l - cortex->nh_radius), cortex->width),
+                            BHM_WRAP(i + (k - cortex->nh_radius), cortex->height),
                             cortex->width
                         );
 
@@ -132,12 +132,12 @@ void highlightNeuron(
     int xFocus,
     int yFocus
 ) {
-    passedNeurons[*passedNeuronsSize] = IDX2D(xFocus, yFocus, cortex->width);
+    passedNeurons[*passedNeuronsSize] = BHM_IDX2D(xFocus, yFocus, cortex->width);
     (*passedNeuronsSize)++;
 
     bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
 
-    int neuronIndex = IDX2D(xFocus, yFocus, cortex->width);
+    int neuronIndex = BHM_IDX2D(xFocus, yFocus, cortex->width);
 
     bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
@@ -151,8 +151,8 @@ void highlightNeuron(
             // Also exclude wrapping.
             if (!(x == cortex->nh_radius && y == cortex->nh_radius)) {
                 // Fetch the current neighbor.
-                bhm_cortex_size_t neighborIndex = IDX2D(WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
-                                                    WRAP(yFocus + (y - cortex->nh_radius), cortex->height),
+                bhm_cortex_size_t neighborIndex = BHM_IDX2D(BHM_WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                                                    BHM_WRAP(yFocus + (y - cortex->nh_radius), cortex->height),
                                                     cortex->width);
 
                 bool passed = false;
@@ -190,8 +190,8 @@ void highlightNeuron(
                         passedNeuronsSize,
                         xNeuronPositions,
                         yNeuronPositions,
-                        WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
-                        WRAP(yFocus + (y - cortex->nh_radius), cortex->height)
+                        BHM_WRAP(xFocus + (x - cortex->nh_radius), cortex->width),
+                        BHM_WRAP(yFocus + (y - cortex->nh_radius), cortex->height)
                     );
                     // return;
                 }

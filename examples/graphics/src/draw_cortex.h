@@ -17,7 +17,7 @@ bhm_error_code_t draw_cortex(
     for (bhm_cortex_size_t j = 0; j < cortex->height; j++) {
         for (bhm_cortex_size_t i = 0; i < cortex->width; i++) {
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(i, j, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[BHM_IDX2D(i, j, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
 
@@ -46,13 +46,6 @@ bhm_error_code_t draw_cortex(
             }
 
             DrawPixel(i, j, neuron_color);
-            // DrawRectangle(
-            //     starting_x + j * cell_width,
-            //     starting_y + i * cell_height,
-            //     cell_width,
-            //     cell_height,
-            //     neuron_color
-            // );
         }
     }
 

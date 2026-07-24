@@ -2,53 +2,57 @@
 #include <ccap_c.h>
 #include <ccap_utils_c.h>
 #include <behema/behema.h>
+
 #include "draw_cortex.h"
 
-// For reference:
+// CCAP reference:
 // https://github.com/wysaid/CameraCapture/blob/main/examples/desktop/2-capture_grab_c.c
 
-#define CORTEX_WIDTH 1024
-#define CORTEX_HEIGHT 256
+#define CORTEX_WIDTH 200
+#define CORTEX_HEIGHT 120
 #define CORTEX_NH_RADIUS 2
+#define SAMPLE_WINDOW BHM_SAMPLE_WINDOW_MID
 
-#define WINDOW_WIDTH CORTEX_WIDTH
-#define WINDOW_HEIGHT CORTEX_HEIGHT
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
 int clamp(int d, int min, int max) {
    const int t = d < min ? min : d;
    return t > max ? max : t;
 }
 
-int main(int argc, char** argv) {
-    bhm_ticks_count_t sample_window = BHM_SAMPLE_WINDOW_MID;
+bhm_error_code_t bhm_context_setup(
+    bhm_context2d_t** context,
+    bhm_input2d_t** left_eye,
+    bhm_input2d_t** right_eye
+) {
+    bhm_error_code_t error = BHM_ERROR_NONE;
 
-    bhm_error_code_t error;
-
-    // ####################### Behema setup #######################
-    // Cortex init.
-    bhm_context2d_t* bhm_ctx;
-    error = ctx2d_create(&bhm_ctx, CORTEX_WIDTH, CORTEX_HEIGHT, CORTEX_NH_RADIUS);
-    if (error != BHM_ERROR_NONE) {
-        printf("There was an error initializing the context %d\n", error);
-        return 1;
-    }
+    // Create the context.
+    error = bhm_ctx2d_create(context, CORTEX_WIDTH, CORTEX_HEIGHT, CORTEX_NH_RADIUS);
+    if (error != BHM_ERROR_NONE) return error;
+    printf("Created context\n");
 
     // Customize cortex properties.
-    ctx2d_set_sample_window(bhm_ctx, sample_window);
-    ctx2d_set_evol_step(bhm_ctx, 0x01U);
-    ctx2d_set_pulse_mapping(bhm_ctx, BHM_PULSE_MAPPING_RPROP);
-    ctx2d_set_max_syn_count(bhm_ctx, 24);
+    error = bhm_ctx2d_set_sample_window(*context, SAMPLE_WINDOW);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_ctx2d_set_evol_step(*context, 0x01U);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_ctx2d_set_pulse_mapping(*context, BHM_PULSE_MAPPING_RPROP);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_ctx2d_set_max_syn_count(*context, 24);
+    if (error != BHM_ERROR_NONE) return error;
     char touch_file_name[40];
     char inhexc_file_mame[40];
     sprintf(touch_file_name, "./res/%d_%d_touch.pgm", CORTEX_WIDTH, CORTEX_HEIGHT);
     sprintf(inhexc_file_mame, "./res/%d_%d_inhexc.pgm", CORTEX_WIDTH, CORTEX_HEIGHT);
-    ctx2d_touch_from_map(bhm_ctx, touch_file_name);
-    ctx2d_inhexc_from_map(bhm_ctx, inhexc_file_mame);
+    ctx2d_touch_from_map(*context, touch_file_name);
+    ctx2d_inhexc_from_map(*context, inhexc_file_mame);
+    printf("Updated context\n");
 
-    // Inputs.
-    bhm_input2d_t* left_eye;
-    i2d_init(
-        &left_eye,
+    // Setup inputs.
+    error = bhm_i2d_create(
+        left_eye,
         0,
         0,
         (CORTEX_WIDTH / 10) * 3,
@@ -56,11 +60,11 @@ int main(int argc, char** argv) {
         BHM_DEFAULT_EXC_VALUE * 2,
         BHM_PULSE_MAPPING_FPROP
     );
-    ctx2d_add_input(bhm_ctx, left_eye);
+    if (error != BHM_ERROR_NONE) return error;
+    printf("Created left eye\n");
 
-    bhm_input2d_t* right_eye;
-    i2d_init(
-        &right_eye,
+    error = bhm_i2d_create(
+        right_eye,
         (CORTEX_WIDTH / 10) * 7,
         0,
         CORTEX_WIDTH,
@@ -68,13 +72,36 @@ int main(int argc, char** argv) {
         BHM_DEFAULT_EXC_VALUE * 2,
         BHM_PULSE_MAPPING_FPROP
     );
-    ctx2d_add_input(bhm_ctx, right_eye);
+    if (error != BHM_ERROR_NONE) return error;
+    printf("Created right eye\n");
 
-    printf("INPUTS COUNT: %d\n", bhm_ctx->inputs_count);
+    // Add inputs to the context.
+    error = bhm_ctx2d_add_input(*context, *left_eye);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_ctx2d_add_input(*context, *right_eye);
+    if (error != BHM_ERROR_NONE) return error;
+    printf("Added inputs to context\n");
+
+    return error;
+}
+
+int main(int argc, char** argv) {
+    bhm_error_code_t error;
+
+    // ####################### Behema setup #######################
+    // Cortex init.
+    bhm_context2d_t* bhm_ctx;
+    bhm_input2d_t* left_eye;
+    bhm_input2d_t* right_eye;
+    error = bhm_context_setup(&bhm_ctx, &left_eye, &right_eye);
+    if (error != BHM_ERROR_NONE) {
+        printf("There was an error initializing the context %d\n", error);
+        return 1;
+    }
 
     bhm_cortex_size_t eye_width = left_eye->x1 - left_eye->x0;
 
-    // ####################### CCAP setup #######################
+    // ################################## CCAP setup ##################################
     // Create provider.
     CcapProvider* provider = ccap_provider_create();
     if (provider == NULL) return -1;
@@ -100,19 +127,29 @@ int main(int argc, char** argv) {
     // Start capture
     if (!ccap_provider_start(provider)) return 1;
 
-    bhm_ticks_count_t sampling_bound = sample_window - 1;
+    bhm_ticks_count_t sampling_bound = SAMPLE_WINDOW - 1;
     bhm_ticks_count_t sample_step = sampling_bound;
 
+    // ################################## Raylib setup ##################################
     InitWindow(
         WINDOW_WIDTH,
         WINDOW_HEIGHT,
-        "BHM SNAKE"
+        "Camera example"
     );
+
+    const int canvas_width = CORTEX_WIDTH;
+    const int canvas_height = CORTEX_HEIGHT;
+    RenderTexture2D canvas = LoadRenderTexture(
+        canvas_width,
+        canvas_height
+    );
+    SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
 
     SetTargetFPS(960);
 
+    // ################################## Main loop ##################################
     while (!WindowShouldClose()) {
-        // ################# Fetch input #################
+        // ################################## Fetch input ##################################
         if (sample_step > sampling_bound) {
             CcapVideoFrame* frame = ccap_provider_grab(provider, 3000);
             if (frame == NULL) {
@@ -167,24 +204,67 @@ int main(int argc, char** argv) {
 
         sample_step++;
 
-        // ################# Draw #################
-        BeginDrawing();
+        // ################################## Draw ##################################
+        BeginTextureMode(canvas);
             ClearBackground(BLACK);
             draw_cortex(
                 bhm_ctx->even_cortex,
                 WINDOW_WIDTH,
                 WINDOW_HEIGHT
             );
+        EndTextureMode();
+
+        BeginDrawing();
+            ClearBackground(BLACK);
+
+            // Source rectangle: The entire canvas texture. 
+            // The negative height flips the texture upright.
+            Rectangle source_rec = { 
+                0.0f, 
+                0.0f, 
+                (float) canvas.texture.width, 
+                -(float) canvas.texture.height 
+            };
+
+            // Destination rectangle: Where on the screen to draw it and how big.
+            // We set it to the screen width and height to scale it.
+            Rectangle dest_rec = { 
+                0.0f, 
+                0.0f, 
+                (float) WINDOW_WIDTH, 
+                -(float) WINDOW_HEIGHT
+            };
+
+            // Origin is the rotation pivot point (top-left is 0,0).
+            Vector2 origin = {0.0f, 0.0f};
+
+            // Draw the texture scaled to destRec.
+            DrawTexturePro(
+                canvas.texture,
+                source_rec,
+                dest_rec,
+                origin,
+                0.0f,
+                WHITE
+            );
+
+            DrawFPS(10, 10);
         EndDrawing();
 
-        // ################# Tick the cortex #################
+        // ################################## Tick the cortex ##################################
         ctx2d_tick(bhm_ctx);
     }
 
+    // ################################## Raylib cleanup ##################################
     CloseWindow();
 
+    // ################################## CCAP cleanup ##################################
     ccap_provider_stop(provider);
     ccap_provider_close(provider);
     ccap_provider_destroy(provider);
+
+    // ################################## Behema cleanup ##################################
+    bhm_ctx2d_destroy(bhm_ctx);
+
     return 0;
 }

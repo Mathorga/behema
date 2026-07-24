@@ -53,7 +53,7 @@ bhm_error_code_t pgm_read(pgm_content_t* pgm, const char* filename) {
         // Plain data.
         for (uint32_t y = 0; y < pgm->height; y++) {
             for (uint32_t x = 0; x < pgm->width; x++) {
-                fscanf(pgmfile, "%hhu", &(pgm->data[IDX2D(x, y, pgm->width)]));
+                fscanf(pgmfile, "%hhu", &(pgm->data[BHM_IDX2D(x, y, pgm->width)]));
             }
         }
     } else if (!strcmp(pgm->pgmType, "P5")) {
@@ -230,7 +230,7 @@ bhm_error_code_t c2d_to_file(
     // Write all neurons.
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            fwrite(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
+            fwrite(&(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, out_file);
         }
     }
 
@@ -279,7 +279,7 @@ bhm_error_code_t c2d_from_file(
     cortex->neurons = (bhm_neuron_t*) malloc(cortex->width * cortex->height * sizeof(bhm_neuron_t));
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            fread(&(cortex->neurons[IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, in_file);
+            fread(&(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]), sizeof(bhm_neuron_t), 1, in_file);
         }
     }
 

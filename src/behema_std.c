@@ -13,7 +13,7 @@ void crx2d_feed2d(
                 cortex->sample_window,
                 ticks_count % cortex->sample_window,
                 input->values[
-                    IDX2D(
+                    BHM_IDX2D(
                         x - input->x0,
                         y - input->y0,
                         input->x1 - input->x0
@@ -23,7 +23,7 @@ void crx2d_feed2d(
             );
 
             if (excite) {
-                cortex->neurons[IDX2D(x, y, cortex->width)].value += input->exc_value;
+                cortex->neurons[BHM_IDX2D(x, y, cortex->width)].value += input->exc_value;
             }
         }
     }
@@ -34,13 +34,13 @@ void crx2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
     for (bhm_cortex_size_t y = output->y0; y < output->y1; y++) {
         for (bhm_cortex_size_t x = output->x0; x < output->x1; x++) {
             output->values[
-                IDX2D(
+                BHM_IDX2D(
                     x - output->x0,
                     y - output->y0,
                     output->x1 - output->x0
                 )
             ] = cortex->neurons[
-                IDX2D(
+                BHM_IDX2D(
                     x,
                     y,
                     cortex->width
@@ -59,7 +59,7 @@ void crx2d_tick(
     for (bhm_cortex_size_t y = 0; y < prev_cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < prev_cortex->width; x++) {
             // Retrieve the involved neurons.
-            bhm_cortex_size_t neuron_index = IDX2D(x, y, prev_cortex->width);
+            bhm_cortex_size_t neuron_index = BHM_IDX2D(x, y, prev_cortex->width);
             bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
             bhm_neuron_t* next_neuron = &(next_cortex->neurons[neuron_index]);
 
@@ -79,7 +79,7 @@ void crx2d_tick(
               |             |
               +-|-|-|-|-|-|-+
             */
-            bhm_cortex_size_t nh_diameter = NH_DIAM_2D(prev_cortex->nh_radius);
+            bhm_cortex_size_t nh_diameter = BHM_NH_DIAM_2D(prev_cortex->nh_radius);
 
             bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
             bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
@@ -97,10 +97,10 @@ void crx2d_tick(
                     if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
                         (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
                         // The index of the current neighbor in the current neuron's neighborhood.
-                        bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                        bhm_cortex_size_t neighbor_index = IDX2D(
-                            WRAP(neighbor_x, prev_cortex->width),
-                            WRAP(neighbor_y, prev_cortex->height),
+                        bhm_cortex_size_t neighbor_nh_index = BHM_IDX2D(i, j, nh_diameter);
+                        bhm_cortex_size_t neighbor_index = BHM_IDX2D(
+                            BHM_WRAP(neighbor_x, prev_cortex->width),
+                            BHM_WRAP(neighbor_y, prev_cortex->height),
                             prev_cortex->width
                         );
 
@@ -130,7 +130,7 @@ void crx2d_tick(
                         // Perform the evolution phase if allowed.
                         if (evolve) {
                             // Pick a random number for each neighbor, capped to the max uint16 value.
-                            next_neuron->rand_state = xorshf32(next_neuron->rand_state);
+                            next_neuron->rand_state = bhm_xorshf32(next_neuron->rand_state);
 
                             // Here capping to the max uint16 value is performed by discarding bytes in positions bigger than the biggest wanted value.
                             bhm_chance_t random = next_neuron->rand_state & 0xFFFFU;

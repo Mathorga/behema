@@ -111,7 +111,7 @@ int main(int argc, char **argv) {
 
     // Input init.
     bhm_input2d_t* input;
-    i2d_init(
+    bhm_i2d_create(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
     c2d_destroy(odd_cortex);
     c2d_device_destroy(d_even_cortex);
     c2d_device_destroy(d_odd_cortex);
-    i2d_destroy(input);
+    bhm_i2d_destroy(input);
     i2d_device_destroy(d_input);
 
     return 0;

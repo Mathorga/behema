@@ -38,16 +38,16 @@ int main(int argc, char **argv) {
 
     // Cortex init.
     bhm_context2d_t* bhm_ctx;
-    error = ctx2d_create(&bhm_ctx, cortex_width, cortex_height, nh_radius);
+    error = bhm_ctx2d_create(&bhm_ctx, cortex_width, cortex_height, nh_radius);
     if (error != BHM_ERROR_NONE) {
         printf("There was an error initializing the context %d\n", error);
         return 1;
     }
 
     // Cortex setup.
-    ctx2d_set_evol_step(bhm_ctx, 0x01U);
-    ctx2d_set_pulse_mapping(bhm_ctx, BHM_PULSE_MAPPING_RPROP);
-    ctx2d_set_max_syn_count(bhm_ctx, 24);
+    bhm_ctx2d_set_evol_step(bhm_ctx, 0x01U);
+    bhm_ctx2d_set_pulse_mapping(bhm_ctx, BHM_PULSE_MAPPING_RPROP);
+    bhm_ctx2d_set_max_syn_count(bhm_ctx, 24);
     char touchFileName[40];
     char inhexcFileName[40];
     snprintf(touchFileName, 40, "./res/%d_%d_touch.pgm", cortex_width, cortex_height);
@@ -57,12 +57,12 @@ int main(int argc, char **argv) {
 
     // Print the cortex out.
     char cortex_string[100];
-    crx2d_to_string(bhm_ctx->even_cortex, cortex_string);
+    bhm_crx2d_to_string(bhm_ctx->even_cortex, cortex_string);
     printf("%s", cortex_string);
 
     // Input init.
     bhm_input2d_t* input;
-    error = i2d_init(
+    error = bhm_i2d_create(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
@@ -100,7 +100,7 @@ int main(int argc, char **argv) {
     // crx2d_to_file(even_cortex, (char*) "out/test.c2d");
 
     // Cleanup.
-    error = ctx2d_destroy(bhm_ctx);
+    error = bhm_ctx2d_destroy(bhm_ctx);
     if (error != BHM_ERROR_NONE) {
         printf("There was an error destroying the context: %d\n", error);
         return 1;

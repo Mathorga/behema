@@ -17,8 +17,8 @@ void initPositions(
 ) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
-            yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
+            xNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
+            yNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
         }
     }
 }
@@ -37,7 +37,7 @@ void drawNeurons(
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
             sf::CircleShape neuronSpot;
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[IDX2D(j, i, cortex->width)]);
+            bhm_neuron_t* currentNeuron = &(cortex->neurons[BHM_IDX2D(j, i, cortex->width)]);
 
             float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
             // float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold);
@@ -58,14 +58,14 @@ void drawNeurons(
                 }
             }
             
-            neuronSpot.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[IDX2D(j, i, cortex->width)] * videoMode.height);
+            neuronSpot.setPosition(xNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * videoMode.width, yNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * videoMode.height);
 
             // Center the spot.
             neuronSpot.setOrigin(radius, radius);
 
             if (drawInfo) {
                 sf::Text pulseText;
-                pulseText.setPosition(xNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
+                pulseText.setPosition(xNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * desktopMode.width + 6.0f, yNeuronPositions[BHM_IDX2D(j, i, cortex->width)] * desktopMode.height + 6.0f);
                 pulseText.setString(std::to_string(neuronValue));
                 pulseText.setFont(font);
                 pulseText.setCharacterSize(8);
@@ -83,7 +83,7 @@ void drawNeurons(
 void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMode videoMode, float* xNeuronPositions, float* yNeuronPositions) {
     for (bhm_cortex_size_t i = 0; i < cortex->height; i++) {
         for (bhm_cortex_size_t j = 0; j < cortex->width; j++) {
-            bhm_cortex_size_t neuronIndex = IDX2D(j, i, cortex->width);
+            bhm_cortex_size_t neuronIndex = BHM_IDX2D(j, i, cortex->width);
             bhm_neuron_t* currentNeuron = &(cortex->neurons[neuronIndex]);
 
             bhm_cortex_size_t nh_diameter = 2 * cortex->nh_radius + 1;
@@ -104,8 +104,8 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        bhm_cortex_size_t neighborIndex = IDX2D(WRAP(j + (l - cortex->nh_radius), cortex->width),
-                                                            WRAP(i + (k - cortex->nh_radius), cortex->height),
+                        bhm_cortex_size_t neighborIndex = BHM_IDX2D(BHM_WRAP(j + (l - cortex->nh_radius), cortex->width),
+                                                            BHM_WRAP(i + (k - cortex->nh_radius), cortex->height),
                                                             cortex->width);
 
                         // Compute the current synapse strength.
@@ -235,10 +235,10 @@ int main(int argc, char** argv) {
 
     // Inputs.
     bhm_input2d_t* leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
+    bhm_i2d_create(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
 
     bhm_input2d_t* rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
+    bhm_i2d_create(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 2, BHM_PULSE_MAPPING_FPROP);
 
     cv::Size eyeSize = cv::Size(leftEye->x1 - leftEye->x0, leftEye->y1 - leftEye->y0);
 
@@ -329,10 +329,10 @@ int main(int argc, char** argv) {
                 for (bhm_cortex_size_t y = 0; y < eyeSize.height; y++) {
                     for (bhm_cortex_size_t x = 0; x < eyeSize.width; x++) {
                         cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                        leftEye->values[IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
+                        leftEye->values[BHM_IDX2D(eyeSize.width - 1 - x, y, eyeSize.width)] = fmap(val[2],
                                                                                                0, 255,
                                                                                                0, samplingBound);
-                        rightEye->values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
+                        rightEye->values[BHM_IDX2D(x, y, eyeSize.width)] = fmap(val[0],
                                                                             0, 255,
                                                                             0, samplingBound);
                     }
