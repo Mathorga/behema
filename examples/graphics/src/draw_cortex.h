@@ -3,8 +3,7 @@
 
 typedef enum {
     BHM_SPIKES = 0x00u,
-    BHM_EXC_SYN = 0x01u,
-    BHM_INH_SYN = 0x02u,
+    BHM_SYNAPSES = 0x01u,
     BHM_RENDER_MODES_COUNT
 } bhm_render_mode;
 
@@ -35,8 +34,6 @@ bhm_error_code_t draw_cortex(
             Color neuron_color = BLACK;
 
             float syn_count_value = ((float) current_neuron->syn_count) / nh_count;
-            int syn_type = 0;
-            float syn_type_value = 0.0f;
             switch (render_mode) {
                 case BHM_SPIKES:
                     if (fired) {
@@ -59,30 +56,21 @@ bhm_error_code_t draw_cortex(
                         }
                     }
                     break;
-                case BHM_EXC_SYN:
+                case BHM_SYNAPSES:
+                    bhm_syn_count_t exc_count = 0;
+                    bhm_syn_count_t inh_count = 0;
                     for (bhm_cortex_size_t k = 0; k < BHM_NH_DIAM_2D(cortex->nh_radius); k++) {
-                        syn_type += ((current_neuron->synex_mask << k) & 0x01u);
+                        exc_count += ((current_neuron->synex_mask >> k) & 0x01u);
+                        inh_count += (~(current_neuron->synex_mask >> k)) & 0x01u;
                     }
-                    syn_type_value = ((float) syn_type) / nh_count;
-                    // printf("%.6f\n", syn_type_value);
+                    float exc_val = ((float) exc_count) / ((float) current_neuron->syn_count);
+                    float inh_val = ((float) inh_count) / ((float) current_neuron->syn_count);
+
                     neuron_color = (Color) {
-                        0xFFu * syn_type_value * 10.0,
-                        0xFFu * syn_type_value,
-                        0xFFu * syn_type_value,
-                        0xFFu * 1.0,
-                    };
-                    break;
-                case BHM_INH_SYN:
-                    for (bhm_cortex_size_t k = 0; k < BHM_NH_DIAM_2D(cortex->nh_radius); k++) {
-                        syn_type += ~((current_neuron->synex_mask << k) & 0x01u);
-                    }
-                    syn_type_value = ((float) syn_type) / nh_count;
-                    // printf("%.6f\n", syn_type_value);
-                    neuron_color = (Color) {
-                        0xFFu * syn_type_value * 10.0,
-                        0xFFu * syn_type_value,
-                        0xFFu * syn_type_value,
-                        0xFFu * 1.0,
+                        0xFFu * inh_val,
+                        0xFFu * exc_val,
+                        0xFFu * exc_val,
+                        0xFFu * syn_count_value,
                     };
                     break;
                 default:
