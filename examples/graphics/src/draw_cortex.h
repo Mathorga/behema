@@ -1,8 +1,16 @@
 #include <raylib.h>
 #include <behema/behema.h>
 
+typedef enum {
+    BHM_SPIKES = 0x00u,
+    BHM_EXC_SYN = 0x01u,
+    BHM_INH_SYN = 0x02u,
+    BHM_RENDER_MODES_COUNT
+} bhm_render_mode;
+
 bhm_error_code_t draw_cortex(
     bhm_cortex2d_t* cortex,
+    bhm_render_mode render_mode,
     int window_width,
     int window_height
 ) {
@@ -12,37 +20,73 @@ bhm_error_code_t draw_cortex(
     const int starting_x = window_width - cortex->width * cell_width;
     const int starting_y = 0;
 
+    float nh_count = ((float) BHM_NH_COUNT_2D(BHM_NH_DIAM_2D(cortex->nh_radius)));
     // ClearBackground(BLACK);
 
     for (bhm_cortex_size_t j = 0; j < cortex->height; j++) {
         for (bhm_cortex_size_t i = 0; i < cortex->width; i++) {
 
-            bhm_neuron_t* currentNeuron = &(cortex->neurons[BHM_IDX2D(i, j, cortex->width)]);
+            bhm_neuron_t* current_neuron = &(cortex->neurons[BHM_IDX2D(i, j, cortex->width)]);
 
-            float neuronValue = ((float) currentNeuron->value) / ((float) cortex->fire_threshold + (float) (currentNeuron->pulse));
+            float neuron_value = ((float) current_neuron->value) / ((float) cortex->fire_threshold + (float) (current_neuron->pulse));
 
-            bool fired = currentNeuron->pulse_mask & 0x01U;
+            bool fired = current_neuron->pulse_mask & 0x01U;
 
             Color neuron_color = BLACK;
 
-            if (fired) {
-                neuron_color = WHITE;
-            } else {
-                if (neuronValue < 0) {
+            float syn_count_value = ((float) current_neuron->syn_count) / nh_count;
+            int syn_type = 0;
+            float syn_type_value = 0.0f;
+            switch (render_mode) {
+                case BHM_SPIKES:
+                    if (fired) {
+                        neuron_color = WHITE;
+                    } else {
+                        if (neuron_value < 0) {
+                            neuron_color = (Color) {
+                                0x00,
+                                127,
+                                255,
+                                31 - 31 * neuron_value
+                            };
+                        } else {
+                            neuron_color = (Color) {
+                                0x00,
+                                127,
+                                255,
+                                31 + 224 * neuron_value
+                            };
+                        }
+                    }
+                    break;
+                case BHM_EXC_SYN:
+                    for (bhm_cortex_size_t k = 0; k < BHM_NH_DIAM_2D(cortex->nh_radius); k++) {
+                        syn_type += ((current_neuron->synex_mask << k) & 0x01u);
+                    }
+                    syn_type_value = ((float) syn_type) / nh_count;
+                    // printf("%.6f\n", syn_type_value);
                     neuron_color = (Color) {
-                        0x00,
-                        127,
-                        255,
-                        31 - 31 * neuronValue
+                        0xFFu * syn_type_value * 10.0,
+                        0xFFu * syn_type_value,
+                        0xFFu * syn_type_value,
+                        0xFFu * 1.0,
                     };
-                } else {
+                    break;
+                case BHM_INH_SYN:
+                    for (bhm_cortex_size_t k = 0; k < BHM_NH_DIAM_2D(cortex->nh_radius); k++) {
+                        syn_type += ~((current_neuron->synex_mask << k) & 0x01u);
+                    }
+                    syn_type_value = ((float) syn_type) / nh_count;
+                    // printf("%.6f\n", syn_type_value);
                     neuron_color = (Color) {
-                        0x00,
-                        127,
-                        255,
-                        31 + 224 * neuronValue
+                        0xFFu * syn_type_value * 10.0,
+                        0xFFu * syn_type_value,
+                        0xFFu * syn_type_value,
+                        0xFFu * 1.0,
                     };
-                }
+                    break;
+                default:
+                    break;
             }
 
             DrawPixel(i, j, neuron_color);

@@ -147,9 +147,14 @@ int main(int argc, char** argv) {
 
     SetTargetFPS(960);
 
+    bhm_render_mode render_mode = BHM_SPIKES;
+
     // ################################## Main loop ##################################
     while (!WindowShouldClose()) {
-        // ################################## Fetch input ##################################
+        // ################################## Handle user input ##################################
+        if (IsKeyPressed(KEY_SPACE)) render_mode = (render_mode + 0x01u) % BHM_RENDER_MODES_COUNT;
+
+        // ################################## Fetch cortex input ##################################
         if (sample_step > sampling_bound) {
             CcapVideoFrame* frame = ccap_provider_grab(provider, 3000);
             if (frame == NULL) {
@@ -209,6 +214,7 @@ int main(int argc, char** argv) {
             ClearBackground(BLACK);
             draw_cortex(
                 bhm_ctx->even_cortex,
+                render_mode,
                 WINDOW_WIDTH,
                 WINDOW_HEIGHT
             );

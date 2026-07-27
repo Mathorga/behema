@@ -104,9 +104,10 @@ void drawSynapses(bhm_cortex2d_t* cortex, sf::RenderWindow* window, sf::VideoMod
                         (i + (k - cortex->nh_radius)) >= 0 &&
                         (i + (k - cortex->nh_radius)) < cortex->height) {
                         // Fetch the current neighbor.
-                        bhm_cortex_size_t neighborIndex = BHM_IDX2D(BHM_WRAP(j + (l - cortex->nh_radius), cortex->width),
-                                                            BHM_WRAP(i + (k - cortex->nh_radius), cortex->height),
-                                                            cortex->width);
+                        bhm_cortex_size_t neighborIndex = BHM_IDX2D(
+                            BHM_WRAP(j + (l - cortex->nh_radius), cortex->width),
+                            BHM_WRAP(i + (k - cortex->nh_radius), cortex->height),
+                            cortex->width);
 
                         // Compute the current synapse strength.
                         bhm_syn_strength_t syn_strength = (str_mask_a & 0x01U) |
