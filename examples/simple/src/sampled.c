@@ -7,7 +7,7 @@
 void print(bhm_cortex2d_t* cortex) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            bhm_neuron_t currentNeuron = cortex->neurons[IDX2D(x, y, cortex->width)];
+            bhm_neuron_t currentNeuron = cortex->neurons[BHM_IDX2D(x, y, cortex->width)];
             printf("%c ", currentNeuron.value >= cortex->fire_threshold ? '@' : '.');
         }
         printf("\n");
@@ -74,13 +74,13 @@ int main(int argc, char **argv) {
             // Fetch input.
             for (bhm_cortex_size_t y = lInputsCoords[1]; y < lInputsCoords[3]; y++) {
                 for (bhm_cortex_size_t x = lInputsCoords[0]; x < lInputsCoords[2]; x++) {
-                    lInputs[IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (samplingBound));
+                    lInputs[BHM_IDX2D(x - lInputsCoords[0], y - lInputsCoords[1], lInputsCoords[2] - lInputsCoords[0])] = (rand() % (samplingBound));
                 }
             }
 
             for (bhm_cortex_size_t y = rInputsCoords[1]; y < rInputsCoords[3]; y++) {
                 for (bhm_cortex_size_t x = rInputsCoords[0]; x < rInputsCoords[2]; x++) {
-                    rInputs[IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (samplingBound));
+                    rInputs[BHM_IDX2D(x - rInputsCoords[0], y - rInputsCoords[1], rInputsCoords[2] - rInputsCoords[0])] = (rand() % (samplingBound));
                 }
             }
 

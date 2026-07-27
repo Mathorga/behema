@@ -191,7 +191,7 @@ __global__ void c2d_feed2d(
         cortex->sample_window,
         ticks_count % cortex->sample_window,
         input->values[
-            IDX2D(
+            BHM_IDX2D(
                 x,
                 y,
                 input->x1 - input->x0
@@ -201,7 +201,7 @@ __global__ void c2d_feed2d(
     );
 
     if (excite) {
-        cortex->neurons[IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
+        cortex->neurons[BHM_IDX2D(x + input->x0, y + input->y0, cortex->width)].value += input->exc_value;
     }
 }
 
@@ -233,7 +233,7 @@ __global__ void c2d_tick(
     if (x >= cortex_width || y >= cortex_height) return;
 
     // Retrieve the involved neurons.
-    bhm_cortex_size_t neuron_index = IDX2D(x, y, cortex_width);
+    bhm_cortex_size_t neuron_index = BHM_IDX2D(x, y, cortex_width);
 
     // Compute the neighborhood diameter:
     // d = 7
@@ -248,7 +248,7 @@ __global__ void c2d_tick(
     // |             |
     // +-|-|-|-|-|-|-+
     bhm_cortex_size_t nh_radius = prev_cortex->nh_radius;
-    bhm_cortex_size_t nh_diameter = NH_DIAM_2D(nh_radius);
+    bhm_cortex_size_t nh_diameter = BHM_NH_DIAM_2D(nh_radius);
 
     // bhm_neuron_t prev_neuron = local_neurons[local_index];
     bhm_neuron_t prev_neuron = prev_cortex->neurons[neuron_index];
@@ -291,16 +291,16 @@ __global__ void c2d_tick(
             if ((j != nh_radius || i != nh_radius) &&
                 (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < cortex_width && neighbor_y < cortex_height)) {
                 // The index of the current neighbor in the current neuron's neighborhood.
-                bhm_cortex_size_t neighbor_nh_index = IDX2D(i, j, nh_diameter);
-                bhm_cortex_size_t neighbor_index = IDX2D(
-                    WRAP(neighbor_x, cortex_width),
-                    WRAP(neighbor_y, cortex_height),
+                bhm_cortex_size_t neighbor_nh_index = BHM_IDX2D(i, j, nh_diameter);
+                bhm_cortex_size_t neighbor_index = BHM_IDX2D(
+                    BHM_WRAP(neighbor_x, cortex_width),
+                    BHM_WRAP(neighbor_y, cortex_height),
                     cortex_width
                 );
 
                 // Fetch the current neighbor.
                 bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
-                // bhm_neuron_t neighbor = local_neurons[IDX2D(neighbor_shared_mem_x, neighbor_shared_mem_y, shared_mem_width)];
+                // bhm_neuron_t neighbor = local_neurons[BHM_IDX2D(neighbor_shared_mem_x, neighbor_shared_mem_y, shared_mem_width)];
 
                 // Compute the current synapse strength.
                 bhm_syn_strength_t syn_strength = (

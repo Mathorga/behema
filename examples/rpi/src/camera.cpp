@@ -71,10 +71,10 @@ int main(int argc, char **argv) {
 
     // Inputs.
     bhm_input2d_t leftEye;
-    i2d_init(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
+    bhm_i2d_create(&leftEye, 0, 0, (cortex_width / 10) * 3, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
 
     bhm_input2d_t rightEye;
-    i2d_init(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
+    bhm_i2d_create(&rightEye, (cortex_width / 10) * 7, 0, cortex_width, 1, BHM_DEFAULT_EXC_VALUE * 4, BHM_PULSE_MAPPING_FPROP);
 
     cv::Size eyeSize = cv::Size(leftEye.x1 - leftEye.x0, leftEye.y1 - leftEye.y0);
 
@@ -120,10 +120,10 @@ int main(int argc, char **argv) {
             for (bhm_cortex_size_t y = 0; y < eyeSize.height; y++) {
                 for (bhm_cortex_size_t x = 0; x < eyeSize.width; x++) {
                     cv::Vec3b val = resized.at<cv::Vec3b>(cv::Point(x, y));
-                    leftEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[2],
+                    leftEye.values[BHM_IDX2D(x, y, eyeSize.width)] = fmap(val[2],
                                                                          0, 255,
                                                                          0, samplingBound);
-                    rightEye.values[IDX2D(x, y, eyeSize.width)] = fmap(val[0],
+                    rightEye.values[BHM_IDX2D(x, y, eyeSize.width)] = fmap(val[0],
                                                                          0, 255,
                                                                          0, samplingBound);
                 }

@@ -108,12 +108,12 @@ cuda: create cuda-build
 
 # Builds all library files.
 # NOTE: We use $(LDFLAGS_LIB) instead of hardcoded -shared
-std-build: cortex.o utils.o population.o behema_std.o
+std-build: cortex.o input.o utils.o population.o behema_std.o
 	$(CCOMP) $(CLINK_FLAGS) $(LDFLAGS_LIB) $(OBJS) $(STD_LIBS) -o $(BLD_DIR)/libbehema$(LIB_EXT)
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"
 
-cuda-build: cortex.o utils.o population.o behema_cuda.o
+cuda-build: cortex.o input.o utils.o population.o behema_cuda.o
 	$(NVCOMP) $(NVLINK_FLAGS) $(NV_LDFLAGS_LIB) $(OBJS) $(CUDA_STD_LIBS) -o $(BLD_DIR)/libbehema$(LIB_EXT)
 	$(ARC) $(ARC_FLAGS) $(BLD_DIR)/libbehema.a $(OBJS)
 	@printf "\nCompiled $@!\n"

@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
     // Input init.
     bhm_input2d_t* input;
-    error = i2d_init(
+    error = bhm_i2d_create(
         &input,
         (cortex_width / 2) - (input_width / 2),
         0,
@@ -68,7 +68,7 @@ int main(int argc, char **argv) {
 
     // Output init.
     bhm_output2d_t* output;
-    error = o2d_init(
+    error = bhm_o2d_init(
         &output,
         (cortex_width / 2) - (output_width / 2),
         cortex_height - 1 - output_height,
@@ -104,7 +104,7 @@ int main(int argc, char **argv) {
             c2d_read2d(prev_cortex, output);
 
             // Compute output mean.
-            o2d_mean(output, &mean_output);
+            bhm_o2d_mean(output, &mean_output);
 
             printf("\rPerformed %d iterations - mean output: %d", i + 1, mean_output);
             fflush(stdout);
@@ -119,8 +119,8 @@ int main(int argc, char **argv) {
     // Cleanup.
     c2d_destroy(even_cortex);
     c2d_destroy(odd_cortex);
-    i2d_destroy(input);
-    o2d_destroy(output);
+    bhm_i2d_destroy(input);
+    bhm_o2d_destroy(output);
 
     return 0;
 }

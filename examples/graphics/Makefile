@@ -1,19 +1,8 @@
 CCOMP=gcc
-CPPCOMP=g++
-NVCOMP=nvcc
 
-STD_CCOMP_FLAGS=-std=c++11 -Wall -pedantic -g
+STD_CCOMP_FLAGS=-std=c11 -Wall -pedantic -g
 CCOMP_FLAGS=$(STD_CCOMP_FLAGS) -I/usr/local/include
 CLINK_FLAGS=-Wall
-
-ifdef CUDA_ARCH
-CUDA_ARCH_FLAG=-arch=$(CUDA_ARCH)
-else
-CUDA_ARCH_FLAG=
-endif
-
-NVCOMP_FLAGS=-std=c++11 -G $(CUDA_ARCH_FLAG)
-NVLINK_FLAGS=$(CUDA_ARCH_FLAG)
 
 STD_LIBS=-lm
 SFML_LIBS=-lsfml-graphics -lsfml-window -lsfml-system
@@ -39,13 +28,32 @@ UNAME_S=$(shell uname -s)
 
 # The curren OS is Linux.
 ifeq ($(UNAME_S),Linux)
-	STD_LIBS+=-lrt
+    STD_LIBS+=-lrt
+
+    # Statically add raylib.
+    RAYLIB_DIR=../libs/raylib/raylib-6.0_linux_amd64
+    CCOMP_FLAGS+=-I$(RAYLIB_DIR)/include
+    CLINK_FLAGS+=$(RAYLIB_DIR)/lib/libraylib.a
 endif
 
 # The current OS is MacOS.
 ifeq ($(UNAME_S),Darwin)
-	CCOMP_FLAGS+=-I/usr/local/include -I/opt/homebrew/Cellar/sfml/2.6.1/include
-	CLINK_FLAGS+=-L/usr/local/lib -L/opt/homebrew/Cellar/sfml/2.6.1/lib
+    CCOMP_FLAGS+=-I/usr/local/include
+
+    # Make sure libraries are found during linking (-L) and embedded in the binary (-rpath).
+    CLINK_FLAGS+=-L/usr/local/lib -Wl,-rpath,/usr/local/lib
+
+    # Statically add raylib.
+    RAYLIB_DIR=../../libs/raylib/raylib-6.0_macos
+    CCOMP_FLAGS+=-I$(RAYLIB_DIR)/include
+    CLINK_FLAGS+=$(RAYLIB_DIR)/lib/libraylib.a
+    CLINK_FLAGS+=-framework CoreVideo -framework IOKit -framework Cocoa -framework GLUT -framework OpenGL
+
+    # Statically add ccap.
+    CCAP_DIR=../../libs/ccap/ccap-macos-universal-static
+    CCOMP_FLAGS+=-I$(CCAP_DIR)/include
+    CLINK_FLAGS+=$(CCAP_DIR)/lib/libccap.a
+    CLINK_FLAGS+=-framework AVFoundation -framework CoreMedia -framework CoreVideo -framework Accelerate -framework Foundation -lc++
 endif
 
 all: clean camera inspect
@@ -56,10 +64,10 @@ camera: create
 	$(CPPCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
-cuda_camera: create
+c_camera: create
 	@printf "\n"
-	$(NVCOMP) $(NVCOMP_FLAGS) -c $(SRC_DIR)/$@.cu -o $(BLD_DIR)/$@.o -I/usr/include/opencv4
-	$(NVCOMP) $(NVLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(CUDA_STD_LIBS) $(OPENCV_LIBS) $(SFML_LIBS) $(BEHEMA_LIBS)
+	$(CCOMP) $(CCOMP_FLAGS) -c $(SRC_DIR)/$@.c -o $(BLD_DIR)/$@.o
+	$(CCOMP) $(CLINK_FLAGS) $(OBJS) -o $(BIN_DIR)/$@ $(STD_LIBS) $(BEHEMA_LIBS)
 	@printf "\nCreated $@!\n"
 
 inspect: create

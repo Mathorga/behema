@@ -12,8 +12,8 @@ uint32_t map(uint32_t input, uint32_t input_start, uint32_t input_end, uint32_t 
 void initPositions(bhm_cortex2d_t* cortex, float* xNeuronPositions, float* yNeuronPositions) {
     for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
-            xNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
-            yNeuronPositions[IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
+            xNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) x) + 0.5f) / (float) cortex->width;
+            yNeuronPositions[BHM_IDX2D(x, y, cortex->width)] = (((float) y) + 0.5f) / (float) cortex->height;
         }
     }
 }
