@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     );
     SetTextureFilter(canvas.texture, TEXTURE_FILTER_POINT);
 
-    SetTargetFPS(960);
+    SetTargetFPS(0);
 
     bhm_render_mode render_mode = BHM_SPIKES;
 
