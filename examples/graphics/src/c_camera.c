@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
 
     SetTargetFPS(0);
 
-    bhm_render_mode render_mode = BHM_SPIKES;
+    bhm_render_mode render_mode = BHM_ACTIVATION_AND_SPIKES;
 
     // ################################## Main loop ##################################
     while (!WindowShouldClose()) {

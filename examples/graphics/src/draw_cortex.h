@@ -6,6 +6,8 @@ typedef enum {
     BHM_ACTIVATION = 0x01u,
     BHM_ACTIVATION_AND_SPIKES = 0x02u,
     BHM_SYNAPSES = 0x03u,
+
+    // Used to tell the number of values in the enum.
     BHM_RENDER_MODES_COUNT
 } bhm_render_mode;
 
