@@ -54,6 +54,7 @@ STD_LIBS=-lm $(STD_LIBS_EXTRA)
 CUDA_STD_LIBS=-lcudart
 
 SRC_DIR=./src
+TEST_DIR=./tests
 BLD_DIR=./bld
 BIN_DIR=./bin
 
@@ -125,6 +126,13 @@ cuda-build: cortex.o input.o utils.o population.o behema_cuda.o
 
 %.o: $(SRC_DIR)/%.cu
 	$(NVCOMP) $(NVCOMP_FLAGS) -c $^ -o $(BLD_DIR)/$@
+
+
+# Builds and runs all tests against the freshly built static library (no installation needed).
+test: std
+	$(CCOMP) $(CCOMP_FLAGS) -I$(SRC_DIR) $(TEST_DIR)/*.c $(BLD_DIR)/libbehema.a $(STD_LIBS) $(CLINK_FLAGS) -o $(BIN_DIR)/run_tests
+	@printf "\nRunning tests...\n\n"
+	$(BIN_DIR)/run_tests
 
 
 # Creates temporary working directories.
