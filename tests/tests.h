@@ -47,4 +47,12 @@ int test_syn_count_matches_synac_mask();
 /// @return 0 if the test passed, 1 otherwise.
 int test_tot_syn_strength_matches_masks();
 
+/// @brief Checks that no neuron has more synapses than its max_syn_count.
+/// @return 0 if the test passed, 1 otherwise.
+int test_syn_count_within_max();
+
+/// @brief Checks that no neuron has a tot_syn_strength above the cortex' max_tot_strength.
+/// @return 0 if the test passed, 1 otherwise.
+int test_tot_syn_strength_within_max();
+
 #endif

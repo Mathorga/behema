@@ -138,7 +138,8 @@ void crx2d_tick(
                             // Structural plasticity: create or destroy a synapse.
                             if (
                                 !(prev_ac_mask & 0x01U) &&
-                                prev_neuron.syn_count < next_neuron->max_syn_count &&
+                                // Use the running count, so that the max holds even when multiple synapses are added in the same tick.
+                                next_neuron->syn_count < next_neuron->max_syn_count &&
                                 // Frequency component.
                                 random < prev_cortex->syngen_chance * (bhm_chance_t) neighbor.pulse
                             ) {
@@ -178,7 +179,8 @@ void crx2d_tick(
                             if ((prev_ac_mask & 0x01U) && ((next_neuron->synac_mask >> neighbor_nh_index) & 0x01U)) {
                                 if (
                                     syn_strength < BHM_MAX_SYN_STRENGTH &&
-                                    prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
+                                    // Use the running total, so that the max holds even when multiple synapses are strengthened in the same tick.
+                                    next_neuron->tot_syn_strength < prev_cortex->max_tot_strength &&
                                     random < prev_cortex->synstr_chance * (bhm_chance_t) neighbor.pulse * (bhm_chance_t) strength_diff
                                 ) {
                                     syn_strength++;

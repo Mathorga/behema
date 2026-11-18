@@ -151,3 +151,45 @@ int test_tot_syn_strength_matches_masks() {
 
     return 0;
 }
+
+int test_syn_count_within_max() {
+    bhm_context2d_t* context;
+    bhm_input2d_t* input;
+
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+
+    bhm_cortex2d_t* cortex = current_cortex(context);
+
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_neuron_t* neuron = &(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]);
+
+            BHM_ASSERT(neuron->syn_count <= neuron->max_syn_count);
+        }
+    }
+
+    bhm_ctx2d_destroy(context);
+
+    return 0;
+}
+
+int test_tot_syn_strength_within_max() {
+    bhm_context2d_t* context;
+    bhm_input2d_t* input;
+
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+
+    bhm_cortex2d_t* cortex = current_cortex(context);
+
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_neuron_t* neuron = &(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]);
+
+            BHM_ASSERT(neuron->tot_syn_strength <= cortex->max_tot_strength);
+        }
+    }
+
+    bhm_ctx2d_destroy(context);
+
+    return 0;
+}

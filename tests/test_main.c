@@ -9,6 +9,8 @@ int main(int argc, char **argv) {
     bhm_test_t tests[] = {
         {"syn_count matches synac_mask", test_syn_count_matches_synac_mask},
         {"tot_syn_strength matches strength masks", test_tot_syn_strength_matches_masks},
+        {"syn_count within max_syn_count", test_syn_count_within_max},
+        {"tot_syn_strength within max_tot_strength", test_tot_syn_strength_within_max},
     };
     uint32_t tests_count = sizeof(tests) / sizeof(bhm_test_t);
     uint32_t failed_count = 0;
