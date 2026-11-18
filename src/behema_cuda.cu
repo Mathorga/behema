@@ -366,24 +366,25 @@ __global__ void c2d_tick(
                     }
 
                     // Functional plasticity: strengthen or weaken a synapse.
-                    if (prev_ac_mask & 0x01U) {
+                    // Only synapses that existed before this tick and were not deleted during it are affected.
+                    if ((prev_ac_mask & 0x01U) && ((next_neuron->synac_mask >> neighbor_nh_index) & 0x01U)) {
                         if (syn_strength < BHM_MAX_SYN_STRENGTH &&
                             prev_neuron.tot_syn_strength < prev_cortex->max_tot_strength &&
                             // TODO Make sure there's no overflow.
                             random < prev_cortex->synstr_chance * (bhm_chance_t) neighbor.pulse * (bhm_chance_t) strength_diff) {
                             syn_strength++;
-                            next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                            next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                            next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
 
                             next_neuron->tot_syn_strength++;
                         } else if (syn_strength > 0x00U &&
                                     // TODO Make sure there's no overflow.
                                     random < prev_cortex->synstr_chance / (neighbor.pulse + syn_strength + 1)) {
                             syn_strength--;
-                            next_neuron->synstr_mask_a = (prev_neuron.synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                            next_neuron->synstr_mask_b = (prev_neuron.synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                            next_neuron->synstr_mask_c = (prev_neuron.synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
 
                             next_neuron->tot_syn_strength--;
                         }
