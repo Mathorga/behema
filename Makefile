@@ -134,6 +134,11 @@ test: std
 	@printf "\nRunning tests...\n\n"
 	$(BIN_DIR)/run_tests
 
+# Builds and runs the loop-order bias diagnostic (not a pass/fail test).
+bias: std
+	$(CCOMP) $(CCOMP_FLAGS) -I$(SRC_DIR) $(TEST_DIR)/bias/bias.c $(BLD_DIR)/libbehema.a $(STD_LIBS) $(CLINK_FLAGS) -o $(BIN_DIR)/bias
+	$(BIN_DIR)/bias
+
 
 # Creates temporary working directories.
 create:
