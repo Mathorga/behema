@@ -254,7 +254,9 @@ bhm_error_code_t bhm_ctx2d_create(
 
     // Finally setup inputs and outputs counts.
     (*context)->inputs_count = 0;
+    (*context)->inputs = NULL;
     (*context)->outputs_count = 0;
+    (*context)->outputs = NULL;
 
     return error;
 }
