@@ -334,9 +334,13 @@ __global__ void c2d_tick(
                     if (!(prev_ac_mask & 0x01U) &&
                         // Use the running count, so that the max holds even when multiple synapses are added in the same tick.
                         next_neuron->syn_count < next_neuron->max_syn_count &&
-                        // Frequency component.
-                        // TODO Make sure there's no overflow.
-                        random < prev_cortex->syngen_chance * (bhm_chance_t) neighbor.pulse) {
+                        // Frequency component, scaled by the fraction of room left below max_syn_count (resource-limited growth):
+                        // the closer the neuron is to its max, the less likely it is to grow a new synapse.
+                        // Computed on 64 bits to avoid overflows. The check above guarantees max_syn_count > 0.
+                        random < ((uint64_t) prev_cortex->syngen_chance *
+                                  (uint64_t) neighbor.pulse *
+                                  (uint64_t) (next_neuron->max_syn_count - next_neuron->syn_count)) /
+                                 next_neuron->max_syn_count) {
                         // Add synapse.
                         next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
 
@@ -372,8 +376,14 @@ __global__ void c2d_tick(
                         if (syn_strength < BHM_MAX_SYN_STRENGTH &&
                             // Use the running total, so that the max holds even when multiple synapses are strengthened in the same tick.
                             next_neuron->tot_syn_strength < prev_cortex->max_tot_strength &&
-                            // TODO Make sure there's no overflow.
-                            random < prev_cortex->synstr_chance * (bhm_chance_t) neighbor.pulse * (bhm_chance_t) strength_diff) {
+                            // Frequency component, scaled by the fraction of room left below max_tot_strength (resource-limited growth):
+                            // the closer the neuron is to its max, the less likely it is to strengthen a synapse.
+                            // Computed on 64 bits to avoid overflows. The check above guarantees max_tot_strength > 0.
+                            random < ((uint64_t) prev_cortex->synstr_chance *
+                                      (uint64_t) neighbor.pulse *
+                                      (uint64_t) strength_diff *
+                                      (uint64_t) (prev_cortex->max_tot_strength - next_neuron->tot_syn_strength)) /
+                                     prev_cortex->max_tot_strength) {
                             syn_strength++;
                             next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
                             next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
