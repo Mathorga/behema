@@ -7,6 +7,15 @@
 // [n] is the size over which to wrap.
 #define BHM_WRAP(i, n) ((i) >= 0 ? ((i) % (n)) : ((n) + ((i) % (n))))
 
+// Rotates the lowest [size] bits of [mask] right by [shift] positions: bits shifted out on the right re-enter on the left of the [size] bits.
+// Bits above [size] are cleared.
+// Example with size = 5 and shift = 2: ---edcba -> ---baedc.
+// WARNING: [shift] must be smaller than [size], and [size] must be smaller than the number of bits in [mask] (64 for bhm_nh_mask_t).
+// [mask] is the mask to rotate.
+// [shift] is the number of positions to rotate by.
+// [size] is the number of bits to rotate within.
+#define BHM_ROTR_MASK(mask, shift, size) ((shift) == 0 ? (mask) : ((((mask) >> (shift)) | ((mask) << ((size) - (shift)))) & ((0x01ULL << (size)) - 1)))
+
 // Computes the diameter of a square neighborhood given its radius.
 #define BHM_NH_DIAM_2D(r) (2 * (r) + 1)
 

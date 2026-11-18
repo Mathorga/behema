@@ -36,6 +36,15 @@ Copyright (C) 2026 Luka Micheletti
 
 
 // ##########################################
+// Macros tests.
+// ##########################################
+
+/// @brief Checks that BHM_ROTR_MASK rotates masks correctly.
+/// @return 0 if the test passed, 1 otherwise.
+int test_rotr_mask();
+
+
+// ##########################################
 // Plasticity tests.
 // ##########################################
 

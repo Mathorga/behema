@@ -81,147 +81,175 @@ void crx2d_tick(
             */
             bhm_cortex_size_t nh_diameter = BHM_NH_DIAM_2D(prev_cortex->nh_radius);
 
-            bhm_nh_mask_t prev_ac_mask = prev_neuron.synac_mask;
-            bhm_nh_mask_t prev_exc_mask = prev_neuron.synex_mask;
-            bhm_nh_mask_t prev_str_mask_a = prev_neuron.synstr_mask_a;
-            bhm_nh_mask_t prev_str_mask_b = prev_neuron.synstr_mask_b;
-            bhm_nh_mask_t prev_str_mask_c = prev_neuron.synstr_mask_c;
+            // Number of cells in the neighborhood, central neuron included.
+            bhm_cortex_size_t nh_cells = nh_diameter * nh_diameter;
+
+            // Pick the neighborhood cell to start visiting neighbors from.
+            // During evolution, neighbors compete for limited resources in the same tick (free synapse slots below max_syn_count, free
+            // strength below max_tot_strength), and the ones visited first win. With a fixed starting cell, the same positions (top-left)
+            // would always win, slowly biasing connectivity towards them (measured with tests/bias/bias.c).
+            // Starting from a random cell gives every position the same chance of being visited first over time.
+            // The upper 16 bits of the random state are used, since the lower 16 are already used as chance values during evolution.
+            // Ticks without evolution keep the fixed starting cell (0): there is no competition there, and a random visiting order
+            // makes memory accesses less predictable, which made ticks about 30% slower in benchmarks with default parameters.
+            bhm_cortex_size_t nh_start = evolve ? (next_neuron->rand_state >> 0x10U) % nh_cells : 0;
+
+            // Rotate the masks so that the starting cell's bits are the last ones.
+            // The loop then only needs to read the last bit of each mask and shift the masks by one at the end of each iteration,
+            // exactly as if the neighborhood started at nh_start. Rotating once here is cheaper than shifting by a different amount for each neighbor.
+            bhm_nh_mask_t prev_ac_mask = BHM_ROTR_MASK(prev_neuron.synac_mask, nh_start, nh_cells);
+            bhm_nh_mask_t prev_exc_mask = BHM_ROTR_MASK(prev_neuron.synex_mask, nh_start, nh_cells);
+            bhm_nh_mask_t prev_str_mask_a = BHM_ROTR_MASK(prev_neuron.synstr_mask_a, nh_start, nh_cells);
+            bhm_nh_mask_t prev_str_mask_b = BHM_ROTR_MASK(prev_neuron.synstr_mask_b, nh_start, nh_cells);
+            bhm_nh_mask_t prev_str_mask_c = BHM_ROTR_MASK(prev_neuron.synstr_mask_c, nh_start, nh_cells);
+
+            // Coordinates of the current cell inside the neighborhood.
+            bhm_cortex_size_t i = nh_start % nh_diameter;
+            bhm_cortex_size_t j = nh_start / nh_diameter;
 
             // Increment the current neuron value by reading its connected neighbors.
-            for (bhm_nh_radius_t j = 0; j < nh_diameter; j++) {
-                for (bhm_nh_radius_t i = 0; i < nh_diameter; i++) {
-                    bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
-                    bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
+            // Every neighborhood cell is visited exactly once, starting from nh_start and wrapping around at the end of the neighborhood.
+            for (bhm_cortex_size_t k = 0; k < nh_cells; k++) {
+                // The index of the current neighbor in the current neuron's neighborhood (not rotated): used to edit next_neuron's masks.
+                bhm_cortex_size_t neighbor_nh_index = BHM_IDX2D(i, j, nh_diameter);
 
-                    // Exclude the central neuron from the list of neighbors.
-                    if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
-                        (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
-                        // The index of the current neighbor in the current neuron's neighborhood.
-                        bhm_cortex_size_t neighbor_nh_index = BHM_IDX2D(i, j, nh_diameter);
-                        bhm_cortex_size_t neighbor_index = BHM_IDX2D(
-                            BHM_WRAP(neighbor_x, prev_cortex->width),
-                            BHM_WRAP(neighbor_y, prev_cortex->height),
-                            prev_cortex->width
-                        );
+                bhm_cortex_size_t neighbor_x = x + (i - prev_cortex->nh_radius);
+                bhm_cortex_size_t neighbor_y = y + (j - prev_cortex->nh_radius);
 
-                        // Fetch the current neighbor.
-                        bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
+                // Exclude the central neuron from the list of neighbors.
+                if ((j != prev_cortex->nh_radius || i != prev_cortex->nh_radius) &&
+                    (neighbor_x >= 0 && neighbor_y >= 0 && neighbor_x < prev_cortex->width && neighbor_y < prev_cortex->height)) {
+                    bhm_cortex_size_t neighbor_index = BHM_IDX2D(
+                        BHM_WRAP(neighbor_x, prev_cortex->width),
+                        BHM_WRAP(neighbor_y, prev_cortex->height),
+                        prev_cortex->width
+                    );
 
-                        // Compute the current synapse strength.
-                        bhm_syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
-                                                      ((prev_str_mask_b & 0x01U) << 0x01U) |
-                                                      ((prev_str_mask_c & 0x01U) << 0x02U);
+                    // Fetch the current neighbor.
+                    bhm_neuron_t neighbor = prev_cortex->neurons[neighbor_index];
 
-                        // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
-                        bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
+                    // Compute the current synapse strength.
+                    bhm_syn_strength_t syn_strength = (prev_str_mask_a & 0x01U) |
+                                                  ((prev_str_mask_b & 0x01U) << 0x01U) |
+                                                  ((prev_str_mask_c & 0x01U) << 0x02U);
 
-                        // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
-                        if (prev_ac_mask & 0x01U) {
-                            bhm_neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
-                            if (neighbor.value > prev_cortex->fire_threshold) {
-                                if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
-                                    next_neuron->value = prev_cortex->recovery_value;
-                                } else {
-                                    next_neuron->value += neighbor_influence;
-                                }
-                            }
-                        }
+                    // Inverse of the current synapse strength, useful when computing depression probability (synapse deletion and weakening).
+                    bhm_syn_strength_t strength_diff = BHM_MAX_SYN_STRENGTH - syn_strength;
 
-                        // Perform the evolution phase if allowed.
-                        if (evolve) {
-                            // Pick a random number for each neighbor, capped to the max uint16 value.
-                            next_neuron->rand_state = bhm_xorshf32(next_neuron->rand_state);
-
-                            // Here capping to the max uint16 value is performed by discarding bytes in positions bigger than the biggest wanted value.
-                            bhm_chance_t random = next_neuron->rand_state & 0xFFFFU;
-
-                            // Structural plasticity: create or destroy a synapse.
-                            if (
-                                !(prev_ac_mask & 0x01U) &&
-                                // Use the running count, so that the max holds even when multiple synapses are added in the same tick.
-                                next_neuron->syn_count < next_neuron->max_syn_count &&
-                                // Frequency component, scaled by the fraction of room left below max_syn_count (resource-limited growth):
-                                // the closer the neuron is to its max, the less likely it is to grow a new synapse.
-                                // Computed on 64 bits to avoid overflows. The check above guarantees max_syn_count > 0.
-                                random < ((uint64_t) prev_cortex->syngen_chance *
-                                          (uint64_t) neighbor.pulse *
-                                          (uint64_t) (next_neuron->max_syn_count - next_neuron->syn_count)) /
-                                         next_neuron->max_syn_count
-                            ) {
-                                // Add synapse.
-                                next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
-
-                                // Set the new synapse's strength to 0.
-                                next_neuron->synstr_mask_a &= ~(0x01UL << neighbor_nh_index);
-                                next_neuron->synstr_mask_b &= ~(0x01UL << neighbor_nh_index);
-                                next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
-
-                                // Define whether the new synapse is excitatory or inhibitory.
-                                if ((random % next_cortex->inhexc_range) < next_neuron->inhexc_ratio) {
-                                    // Inhibitory.
-                                    next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
-                                } else {
-                                    // Excitatory.
-                                    next_neuron->synex_mask |= (0x01UL << neighbor_nh_index);
-                                }
-
-                                next_neuron->syn_count++;
-                            } else if (
-                                prev_ac_mask & 0x01U &&
-                                // Only 0-strength synapses can be deleted.
-                                syn_strength <= 0x00U &&
-                                // Frequency component.
-                                random < (prev_cortex->syngen_chance / (neighbor.pulse + 1))
-                            ) {
-                                // Delete synapse.
-                                next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
-
-                                next_neuron->syn_count--;
-                            }
-
-                            // Functional plasticity: strengthen or weaken a synapse.
-                            // Only synapses that existed before this tick and were not deleted during it are affected.
-                            if ((prev_ac_mask & 0x01U) && ((next_neuron->synac_mask >> neighbor_nh_index) & 0x01U)) {
-                                if (
-                                    syn_strength < BHM_MAX_SYN_STRENGTH &&
-                                    // Use the running total, so that the max holds even when multiple synapses are strengthened in the same tick.
-                                    next_neuron->tot_syn_strength < prev_cortex->max_tot_strength &&
-                                    // Frequency component, scaled by the fraction of room left below max_tot_strength (resource-limited growth):
-                                    // the closer the neuron is to its max, the less likely it is to strengthen a synapse.
-                                    // Computed on 64 bits to avoid overflows. The check above guarantees max_tot_strength > 0.
-                                    random < ((uint64_t) prev_cortex->synstr_chance *
-                                              (uint64_t) neighbor.pulse *
-                                              (uint64_t) strength_diff *
-                                              (uint64_t) (prev_cortex->max_tot_strength - next_neuron->tot_syn_strength)) /
-                                             prev_cortex->max_tot_strength
-                                ) {
-                                    syn_strength++;
-                                    next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                                    next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                                    next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
-
-                                    next_neuron->tot_syn_strength++;
-                                } else if (
-                                    syn_strength > 0x00U &&
-                                    random < prev_cortex->synstr_chance / (neighbor.pulse + syn_strength + 1)
-                                ) {
-                                    syn_strength--;
-                                    next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
-                                    next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
-                                    next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
-
-                                    next_neuron->tot_syn_strength--;
-                                }
+                    // Check if the last bit of the mask is 1 or 0: 1 = active synapse, 0 = inactive synapse.
+                    if (prev_ac_mask & 0x01U) {
+                        bhm_neuron_value_t neighbor_influence = (prev_exc_mask & 0x01U ? prev_cortex->exc_value : -prev_cortex->exc_value) * ((syn_strength / 4) + 1);
+                        if (neighbor.value > prev_cortex->fire_threshold) {
+                            if (next_neuron->value + neighbor_influence < prev_cortex->recovery_value) {
+                                next_neuron->value = prev_cortex->recovery_value;
+                            } else {
+                                next_neuron->value += neighbor_influence;
                             }
                         }
                     }
 
-                    // Shift the masks to check for the next neighbor.
-                    prev_ac_mask >>= 0x01U;
-                    prev_exc_mask >>= 0x01U;
-                    prev_str_mask_a >>= 0x01U;
-                    prev_str_mask_b >>= 0x01U;
-                    prev_str_mask_c >>= 0x01U;
+                    // Perform the evolution phase if allowed.
+                    if (evolve) {
+                        // Pick a random number for each neighbor, capped to the max uint16 value.
+                        next_neuron->rand_state = bhm_xorshf32(next_neuron->rand_state);
+
+                        // Here capping to the max uint16 value is performed by discarding bytes in positions bigger than the biggest wanted value.
+                        bhm_chance_t random = next_neuron->rand_state & 0xFFFFU;
+
+                        // Structural plasticity: create or destroy a synapse.
+                        if (
+                            !(prev_ac_mask & 0x01U) &&
+                            // Use the running count, so that the max holds even when multiple synapses are added in the same tick.
+                            next_neuron->syn_count < next_neuron->max_syn_count &&
+                            // Frequency component, scaled by the fraction of room left below max_syn_count (resource-limited growth):
+                            // the closer the neuron is to its max, the less likely it is to grow a new synapse.
+                            // Computed on 64 bits to avoid overflows. The check above guarantees max_syn_count > 0.
+                            random < ((uint64_t) prev_cortex->syngen_chance *
+                                      (uint64_t) neighbor.pulse *
+                                      (uint64_t) (next_neuron->max_syn_count - next_neuron->syn_count)) /
+                                     next_neuron->max_syn_count
+                        ) {
+                            // Add synapse.
+                            next_neuron->synac_mask |= (0x01UL << neighbor_nh_index);
+
+                            // Set the new synapse's strength to 0.
+                            next_neuron->synstr_mask_a &= ~(0x01UL << neighbor_nh_index);
+                            next_neuron->synstr_mask_b &= ~(0x01UL << neighbor_nh_index);
+                            next_neuron->synstr_mask_c &= ~(0x01UL << neighbor_nh_index);
+
+                            // Define whether the new synapse is excitatory or inhibitory.
+                            if ((random % next_cortex->inhexc_range) < next_neuron->inhexc_ratio) {
+                                // Inhibitory.
+                                next_neuron->synex_mask &= ~(0x01UL << neighbor_nh_index);
+                            } else {
+                                // Excitatory.
+                                next_neuron->synex_mask |= (0x01UL << neighbor_nh_index);
+                            }
+
+                            next_neuron->syn_count++;
+                        } else if (
+                            prev_ac_mask & 0x01U &&
+                            // Only 0-strength synapses can be deleted.
+                            syn_strength <= 0x00U &&
+                            // Frequency component.
+                            random < (prev_cortex->syngen_chance / (neighbor.pulse + 1))
+                        ) {
+                            // Delete synapse.
+                            next_neuron->synac_mask &= ~(0x01UL << neighbor_nh_index);
+
+                            next_neuron->syn_count--;
+                        }
+
+                        // Functional plasticity: strengthen or weaken a synapse.
+                        // Only synapses that existed before this tick and were not deleted during it are affected.
+                        if ((prev_ac_mask & 0x01U) && ((next_neuron->synac_mask >> neighbor_nh_index) & 0x01U)) {
+                            if (
+                                syn_strength < BHM_MAX_SYN_STRENGTH &&
+                                // Use the running total, so that the max holds even when multiple synapses are strengthened in the same tick.
+                                next_neuron->tot_syn_strength < prev_cortex->max_tot_strength &&
+                                // Frequency component, scaled by the fraction of room left below max_tot_strength (resource-limited growth):
+                                // the closer the neuron is to its max, the less likely it is to strengthen a synapse.
+                                // Computed on 64 bits to avoid overflows. The check above guarantees max_tot_strength > 0.
+                                random < ((uint64_t) prev_cortex->synstr_chance *
+                                          (uint64_t) neighbor.pulse *
+                                          (uint64_t) strength_diff *
+                                          (uint64_t) (prev_cortex->max_tot_strength - next_neuron->tot_syn_strength)) /
+                                         prev_cortex->max_tot_strength
+                            ) {
+                                syn_strength++;
+                                next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+
+                                next_neuron->tot_syn_strength++;
+                            } else if (
+                                syn_strength > 0x00U &&
+                                random < prev_cortex->synstr_chance / (neighbor.pulse + syn_strength + 1)
+                            ) {
+                                syn_strength--;
+                                next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                                next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                                next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+
+                                next_neuron->tot_syn_strength--;
+                            }
+                        }
+                    }
+                }
+
+                // Shift the masks to check for the next neighbor.
+                prev_ac_mask >>= 0x01U;
+                prev_exc_mask >>= 0x01U;
+                prev_str_mask_a >>= 0x01U;
+                prev_str_mask_b >>= 0x01U;
+                prev_str_mask_c >>= 0x01U;
+
+                // Move to the next neighborhood cell: wrap to the next row at the end of each row, and back to the first row at the end of the neighborhood.
+                i++;
+                if (i >= nh_diameter) {
+                    i = 0;
+                    j++;
+                    if (j >= nh_diameter) j = 0;
                 }
             }
 
