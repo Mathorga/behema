@@ -326,17 +326,21 @@ bhm_error_code_t bhm_ctx2d_destroy(
     error = bhm_crx2d_destroy(context->odd_cortex);
     if (error != BHM_ERROR_NONE) return error;
 
-    // Free inputs.
+    // Free inputs: the context owns the inputs added to it, so both their values and the inputs themselves are freed.
     for (bhm_cortex_size_t i = 0; i < context->inputs_count; i++) {
-        free(context->inputs[i]->values);
+        bhm_i2d_destroy(context->inputs[i]);
     }
     free(context->inputs);
 
-    // Free outputs.
+    // Free outputs, same as inputs.
     for (bhm_cortex_size_t i = 0; i < context->outputs_count; i++) {
-        free(context->outputs[i]->values);
+        bhm_o2d_destroy(context->outputs[i]);
     }
     free(context->outputs);
+
+    // Free counters and the context itself.
+    free(context->counts);
+    free(context);
 
     return error;
 }

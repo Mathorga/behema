@@ -348,6 +348,7 @@ bhm_error_code_t bhm_crx2d_destroy(
 );
 
 /// @brief Destroys the provided context and frees memory for it and its content.
+/// This includes the inputs and outputs added to it: they must not be used or destroyed again afterwards.
 /// @param context The context to destroy.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t bhm_ctx2d_destroy(

@@ -158,10 +158,8 @@ static bhm_error_code_t run(
     bhm_cortex2d_t* cortex = context->counts->ticks_count % 2 ? context->odd_cortex : context->even_cortex;
     *result = region_mean_strength(cortex, inputs[0]) - region_mean_strength(cortex, inputs[1]);
 
-    // The context frees the inputs' values, but not the inputs themselves.
+    // The context owns its inputs, so destroying it frees them too.
     bhm_ctx2d_destroy(context);
-    free(inputs[0]);
-    free(inputs[1]);
 
     return BHM_ERROR_NONE;
 }
