@@ -146,6 +146,12 @@ reward: std
 	OMP_NUM_THREADS=1 $(BIN_DIR)/reward
 
 
+# Builds and runs the phototaxis experiment: evolves cortices that steer a simulated robot towards a light.
+phototaxis: std
+	$(CCOMP) $(CCOMP_FLAGS) -I$(SRC_DIR) ./experiments/phototaxis/phototaxis.c $(BLD_DIR)/libbehema.a $(STD_LIBS) $(CLINK_FLAGS) -o $(BIN_DIR)/phototaxis
+	$(BIN_DIR)/phototaxis
+
+
 # Creates temporary working directories.
 create:
 	$(MKDIR) $(BLD_DIR)
