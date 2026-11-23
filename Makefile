@@ -139,6 +139,12 @@ bias: std
 	$(CCOMP) $(CCOMP_FLAGS) -I$(SRC_DIR) $(TEST_DIR)/bias/bias.c $(BLD_DIR)/libbehema.a $(STD_LIBS) $(CLINK_FLAGS) -o $(BIN_DIR)/bias
 	$(BIN_DIR)/bias
 
+# Builds and runs the delayed-reward diagnostic (not a pass/fail test).
+reward: std
+	$(CCOMP) $(CCOMP_FLAGS) -I$(SRC_DIR) $(TEST_DIR)/reward/reward.c $(BLD_DIR)/libbehema.a $(STD_LIBS) $(CLINK_FLAGS) -o $(BIN_DIR)/reward
+	# The cortex is small, so a single thread is much faster: with many threads most time goes into OpenMP synchronization.
+	OMP_NUM_THREADS=1 $(BIN_DIR)/reward
+
 
 # Creates temporary working directories.
 create:
