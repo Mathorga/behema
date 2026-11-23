@@ -12,6 +12,28 @@ uint32_t bhm_xorshf32(
     return x;
 }
 
+uint32_t bhm_mutate_value(
+    uint32_t value,
+    uint32_t min,
+    uint32_t max,
+    bhm_rand_state_t rand_state
+) {
+    // The step is proportional to the value, so that both small and large values change meaningfully:
+    // +-1 would be invisible on a chance out of 0xFFFF, while a fixed large step would wipe out small values.
+    uint32_t step = value / 8 > 0 ? value / 8 : 1;
+
+    // Bit 16 decides the direction: the lower 16 bits are used by callers to decide whether to mutate at all.
+    if ((rand_state >> 0x10U) & 0x01U) {
+        // Decrease, without going below min (and without wrapping around below 0).
+        value = value > min + step ? value - step : min;
+    } else {
+        // Increase, without going above max.
+        value = value + step < max ? value + step : max;
+    }
+
+    return value;
+}
+
 
 // ##########################################
 // Initialization functions.
@@ -575,6 +597,11 @@ bhm_error_code_t bhm_crx2d_set_max_syn_count(
 ) {
     cortex->max_syn_count = syn_count;
 
+    // The tick reads each neuron's own max, not the cortex', so neurons need to be updated too.
+    for (bhm_cortex_size_t i = 0; i < cortex->width * cortex->height; i++) {
+        cortex->neurons[i].max_syn_count = syn_count;
+    }
+
     return BHM_ERROR_NONE;
 }
 
@@ -676,7 +703,7 @@ bhm_error_code_t bhm_crx2d_mutate_shape(
 ) {
     // Mutate the cortex height.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
         // Decide the index at which to insert/delete the row.
         bhm_cortex_size_t row_index = cortex->rand_state % cortex->height;
 
@@ -690,7 +717,7 @@ bhm_error_code_t bhm_crx2d_mutate_shape(
 
     // Mutate the cortex width.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
         // Decide the index at which to insert/delete the column.
         bhm_cortex_size_t column_index = cortex->rand_state % cortex->width;
 
@@ -720,39 +747,55 @@ bhm_error_code_t bhm_crx2d_mutate(
         }
     }
 
-    // Mutate pulse window.
+    // Each property is mutated independently: for each of them a new random number is drawn, and the property is mutated
+    // if the number's lower 16 bits are below mut_chance (chances are out of 0xFFFF). bhm_mutate_value then uses the upper 16 bits.
+
+    // Mutate pulse window. It's used to read the pulse masks, so it must stay below their size in bits.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the pulse window.
-        cortex->pulse_window += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->pulse_window = bhm_mutate_value(cortex->pulse_window, 0x01U, (sizeof(bhm_pulse_mask_t) * 8) - 1, cortex->rand_state);
+    }
+
+    // Mutate fire threshold.
+    cortex->rand_state = bhm_xorshf32(cortex->rand_state);
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->fire_threshold = bhm_mutate_value(cortex->fire_threshold, 0x01U, BHM_MAX_THRESHOLD, cortex->rand_state);
     }
 
     // Mutate syngen chance.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the syngen chance.
-        cortex->syngen_chance += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->syngen_chance = bhm_mutate_value(cortex->syngen_chance, 0x00U, BHM_MAX_SYNGEN_CHANCE, cortex->rand_state);
     }
 
     // Mutate synstr chance.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the synstr chance.
-        cortex->synstr_chance += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->synstr_chance = bhm_mutate_value(cortex->synstr_chance, 0x00U, BHM_MAX_SYNSTR_CHANCE, cortex->rand_state);
+    }
+
+    // Mutate modstr chance.
+    cortex->rand_state = bhm_xorshf32(cortex->rand_state);
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->modstr_chance = bhm_mutate_value(cortex->modstr_chance, 0x00U, BHM_MAX_MODSTR_CHANCE, cortex->rand_state);
+    }
+
+    // Mutate eligibility window.
+    cortex->rand_state = bhm_xorshf32(cortex->rand_state);
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->elig_window = bhm_mutate_value(cortex->elig_window, 0x01U, BHM_MAX_ELIG_WINDOW, cortex->rand_state);
     }
 
     // Mutate max tot strength.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the value.
-        cortex->max_tot_strength += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->max_tot_strength = bhm_mutate_value(cortex->max_tot_strength, 0x01U, BHM_MAX_MAX_TOT_STRENGTH, cortex->rand_state);
     }
 
-    // Mutate max synapses count
+    // Mutate max synapses count. A max above the number of neighbors makes no difference, so it's capped there.
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
-    if (cortex->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the value.
-        cortex->max_syn_count += (cortex->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((cortex->rand_state & 0xFFFFU) < mut_chance) {
+        cortex->max_syn_count = bhm_mutate_value(cortex->max_syn_count, 0x00U, BHM_NH_COUNT_2D(BHM_NH_DIAM_2D(cortex->nh_radius)), cortex->rand_state);
     }
 
     // Mutate neurons.
@@ -769,18 +812,18 @@ bhm_error_code_t bhm_n2d_mutate(
     bhm_neuron_t* neuron,
     bhm_chance_t mut_chance
 ) {
-    // Mutate max syn count.
+    // Same scheme as bhm_crx2d_mutate: lower 16 bits decide whether to mutate, upper 16 bits decide how.
+
+    // Mutate max syn count. A neuron can't have more synapses than bits in its masks.
     neuron->rand_state = bhm_xorshf32(neuron->rand_state);
-    if (neuron->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the max syn count.
-        neuron->max_syn_count += (neuron->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((neuron->rand_state & 0xFFFFU) < mut_chance) {
+        neuron->max_syn_count = bhm_mutate_value(neuron->max_syn_count, 0x00U, sizeof(bhm_nh_mask_t) * 8, neuron->rand_state);
     }
 
     // Mutate inhexc ratio.
     neuron->rand_state = bhm_xorshf32(neuron->rand_state);
-    if (neuron->rand_state < mut_chance) {
-        // Decide whether to increase or decrease the inhexc ratio.
-        neuron->inhexc_ratio += (neuron->rand_state & 0x01) == 0x00 ? 1 : -1;
+    if ((neuron->rand_state & 0xFFFFU) < mut_chance) {
+        neuron->inhexc_ratio = bhm_mutate_value(neuron->inhexc_ratio, 0x00U, BHM_MAX_INHEXC_RANGE, neuron->rand_state);
     }
 
     return BHM_ERROR_NONE;

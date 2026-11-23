@@ -17,6 +17,10 @@ int main(int argc, char **argv) {
         {"modulation punishes eligible synapse", test_modulation_punishes_eligible_synapse},
         {"modulation ignores non-eligible synapses", test_modulation_ignores_non_eligible_synapses},
         {"modulation is summed, clamped and reset", test_modulation_add_clamps},
+        {"bhm_mutate_value steps and clamps", test_mutate_value},
+        {"mutation happens and stays in range", test_mutation_happens_and_stays_in_range},
+        {"breed inherits from the right parents' fields", test_breed_inherits_from_parents},
+        {"set max syn count reaches neurons", test_set_max_syn_count_reaches_neurons},
     };
     uint32_t tests_count = sizeof(tests) / sizeof(bhm_test_t);
     uint32_t failed_count = 0;

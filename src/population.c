@@ -29,7 +29,7 @@ bhm_error_code_t p2d_init(
     bhm_error_code_t (*eval_function)(bhm_cortex2d_t* cortex, bhm_cortex_fitness_t* fitness)
 ) {
     // Allocate the population.
-    (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_cortex2d_t));
+    (*population) = (bhm_population2d_t *) malloc(sizeof(bhm_population2d_t));
     if ((*population) == NULL) return BHM_ERROR_FAILED_ALLOC;
 
     // Make sure the selection pool size does not exceed the total population size
@@ -161,17 +161,27 @@ bhm_error_code_t p2d_set_eval_function(bhm_population2d_t* population, bhm_error
 // ##########################################
 
 bhm_error_code_t p2d_evaluate(bhm_population2d_t* population) {
+    bhm_error_code_t error = BHM_ERROR_NONE;
+
     // Loop through all cortices to evaluate each of them.
+    // Evaluations are independent, so they run in parallel: this is much faster than parallelizing inside each cortex' tick
+    // when cortices are small. Nested parallelism is disabled by default in OpenMP, so ticks inside the evaluation function run
+    // on a single thread. The evaluation function must therefore be thread-safe.
+    // Dynamic scheduling, because evaluations can take different times.
+    #pragma omp parallel for schedule(dynamic)
     for (bhm_population_size_t i = 0; i < population->size; i++) {
         // Evaluate the current cortex by using the population evaluation function.
         // The computed fitness is stored in the population itself.
-        bhm_error_code_t error = population->eval_function(&(population->cortices[i]), &(population->cortices_fitness[i]));
-        if (error != BHM_ERROR_NONE) {
-            return error;
+        bhm_error_code_t eval_error = population->eval_function(&(population->cortices[i]), &(population->cortices_fitness[i]));
+
+        // Can't return from inside a parallel loop: keep the error and return it at the end.
+        if (eval_error != BHM_ERROR_NONE) {
+            #pragma omp critical
+            error = eval_error;
         }
     }
 
-    return BHM_ERROR_NONE;
+    return error;
 }
 
 bhm_error_code_t p2d_select(bhm_population2d_t* population) {
@@ -200,6 +210,10 @@ bhm_error_code_t p2d_select(bhm_population2d_t* population) {
 }
 
 bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** child) {
+    // Parents must be distinct individuals from the selection pool, so there must be at least as many as needed:
+    // otherwise the loop picking them below would never end.
+    if (population->parents_count > population->selection_pool_size) return BHM_ERROR_SIZE_WRONG;
+
     // Allocate parents.
     bhm_cortex2d_t* parents = (bhm_cortex2d_t*) malloc(population->parents_count * sizeof(bhm_cortex2d_t));
     if (parents == NULL) return BHM_ERROR_FAILED_ALLOC;
@@ -274,12 +288,27 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     error = bhm_crx2d_set_synstr_chance(*child, parents[winner_parent_index].synstr_chance);
     if (error != BHM_ERROR_NONE) return error;
 
-    // TODO Set max tot strength.
+    // Pick modstr chance from a random parent.
+    population->rand_state = bhm_xorshf32(population->rand_state);
+    winner_parent_index = population->rand_state % population->parents_count;
+    error = bhm_crx2d_set_modstr_chance(*child, parents[winner_parent_index].modstr_chance);
+    if (error != BHM_ERROR_NONE) return error;
+
+    // Pick eligibility window from a random parent.
+    population->rand_state = bhm_xorshf32(population->rand_state);
+    winner_parent_index = population->rand_state % population->parents_count;
+    error = bhm_crx2d_set_elig_window(*child, parents[winner_parent_index].elig_window);
+    if (error != BHM_ERROR_NONE) return error;
+
+    // Pick max tot strength from a random parent.
+    population->rand_state = bhm_xorshf32(population->rand_state);
+    winner_parent_index = population->rand_state % population->parents_count;
+    (*child)->max_tot_strength = parents[winner_parent_index].max_tot_strength;
 
     // Pick max syn count from a random parent.
     population->rand_state = bhm_xorshf32(population->rand_state);
     winner_parent_index = population->rand_state % population->parents_count;
-    error = bhm_crx2d_set_max_syn_count(*child, parents[winner_parent_index].max_tot_strength);
+    error = bhm_crx2d_set_max_syn_count(*child, parents[winner_parent_index].max_syn_count);
     if (error != BHM_ERROR_NONE) return error;
 
     // Pick inhexc range from a random parent.
@@ -311,10 +340,18 @@ bhm_error_code_t p2d_breed(bhm_population2d_t* population, bhm_cortex2d_t** chil
     bhm_cortex2d_t inhexc_parent = parents[winner_parent_index];
 
     // Pick neuron values from parents.
+    // The child's width and height may come from different parents, so a parent can be smaller than the child in either direction:
+    // only copy neurons that exist in the parent (indexed with the parent's own width), the others keep their default values.
     for (bhm_cortex_size_t y = 0; y < (*child)->height; y++) {
         for (bhm_cortex_size_t x = 0; x < (*child)->width; x++) {
-            (*child)->neurons[BHM_IDX2D(x, y, (*child)->width)].max_syn_count = msc_parent.neurons[BHM_IDX2D(x, y, (*child)->width)].max_syn_count;
-            (*child)->neurons[BHM_IDX2D(x, y, (*child)->width)].inhexc_ratio = inhexc_parent.neurons[BHM_IDX2D(x, y, (*child)->width)].inhexc_ratio;
+            bhm_neuron_t* child_neuron = &((*child)->neurons[BHM_IDX2D(x, y, (*child)->width)]);
+
+            if (x < msc_parent.width && y < msc_parent.height) {
+                child_neuron->max_syn_count = msc_parent.neurons[BHM_IDX2D(x, y, msc_parent.width)].max_syn_count;
+            }
+            if (x < inhexc_parent.width && y < inhexc_parent.height) {
+                child_neuron->inhexc_ratio = inhexc_parent.neurons[BHM_IDX2D(x, y, inhexc_parent.width)].inhexc_ratio;
+            }
         }
     }
 
@@ -352,7 +389,10 @@ bhm_error_code_t p2d_crossover(
         }
 
         // Store the produced child.
+        // The child's struct is copied into the offspring array (its neurons are not copied, only their pointer), so the struct
+        // allocated by p2d_breed can be freed right away.
         offspring[i] = *child;
+        free(child);
     }
 
     // Replace the old generation with the new one by destroying the current one and pointing to the new one.

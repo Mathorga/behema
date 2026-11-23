@@ -242,6 +242,19 @@ typedef struct {
 /// Marsiglia's xorshift pseudo-random number generator with period 2^32-1.
 uint32_t bhm_xorshf32(uint32_t state);
 
+/// @brief Mutates the given value by increasing or decreasing it by about 1/8 of itself (at least 1), keeping it between [min] and [max].
+/// @param value The value to mutate.
+/// @param min The minimum allowed value.
+/// @param max The maximum allowed value.
+/// @param rand_state A random state: bit 16 decides whether to increase (0) or decrease (1) the value.
+/// @return The mutated value.
+uint32_t bhm_mutate_value(
+    uint32_t value,
+    uint32_t min,
+    uint32_t max,
+    bhm_rand_state_t rand_state
+);
+
 
 // ##########################################
 // Initialization functions.

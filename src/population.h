@@ -164,6 +164,7 @@ bhm_error_code_t p2d_set_eval_function(bhm_population2d_t* population, bhm_error
 // ##########################################
 
 /// @brief Evaluates the provided population by individually evaluating each cortex and then populating their fitnes values.
+/// Cortices are evaluated in parallel, so the population's evaluation function must be thread-safe.
 /// @param population The population to evaluate.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 bhm_error_code_t p2d_evaluate(bhm_population2d_t* population);

@@ -90,4 +90,25 @@ int test_modulation_ignores_non_eligible_synapses();
 /// @return 0 if the test passed, 1 otherwise.
 int test_modulation_add_clamps();
 
+
+// ##########################################
+// Genetic algorithm tests.
+// ##########################################
+
+/// @brief Checks that bhm_mutate_value steps proportionally to the value and respects its limits.
+/// @return 0 if the test passed, 1 otherwise.
+int test_mutate_value();
+
+/// @brief Checks that mutation never happens with a 0 chance, does happen with a high chance, and keeps all properties in range.
+/// @return 0 if the test passed, 1 otherwise.
+int test_mutation_happens_and_stays_in_range();
+
+/// @brief Checks that children inherit each property from one of the selected parents, from the right field.
+/// @return 0 if the test passed, 1 otherwise.
+int test_breed_inherits_from_parents();
+
+/// @brief Checks that setting a context's max syn count updates its neurons too.
+/// @return 0 if the test passed, 1 otherwise.
+int test_set_max_syn_count_reaches_neurons();
+
 #endif
