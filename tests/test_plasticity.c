@@ -9,6 +9,11 @@
 // Raised from the default (0x00A0U) so that many synapses change strength in the same tick, which is where the bookkeeping can go wrong.
 #define TEST_SYNSTR_CHANCE 0x0800U
 
+// High enough that reward-modulated plasticity changes many synapses, when enabled.
+#define TEST_MODSTR_CHANCE 0x8000U
+// Ticks between switches from reward to punishment and back, when reward-modulated plasticity is enabled.
+#define TEST_MODULATION_PERIOD 50
+
 /// @brief Computes the actual sum of the strengths of all active synapses of the given neuron, by reading its masks.
 /// @param neuron The neuron to read.
 /// @return The sum of the strengths of all active synapses.
@@ -48,10 +53,13 @@ static uint32_t count_set_bits(
 /// @brief Creates a small context with a constantly active input patch in its center, then runs it for [TEST_TICKS_COUNT] ticks, evolving at every tick.
 /// @param context The context to create and run.
 /// @param input The input to create, feeding the context.
+/// @param modulated Whether to also enable reward-modulated plasticity, with a modulation switching between max reward and max punishment
+/// every [TEST_MODULATION_PERIOD] ticks.
 /// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
 static bhm_error_code_t run_evolving_context(
     bhm_context2d_t** context,
-    bhm_input2d_t** input
+    bhm_input2d_t** input,
+    bhm_bool_t modulated
 ) {
     bhm_error_code_t error;
 
@@ -63,6 +71,9 @@ static bhm_error_code_t run_evolving_context(
     bhm_ctx2d_set_evol_step(*context, 0x00U);
     (*context)->even_cortex->synstr_chance = TEST_SYNSTR_CHANCE;
     (*context)->odd_cortex->synstr_chance = TEST_SYNSTR_CHANCE;
+    if (modulated) {
+        bhm_ctx2d_set_modstr_chance(*context, TEST_MODSTR_CHANCE);
+    }
 
     // Input init: a square patch in the center of the cortex.
     error = bhm_i2d_create(
@@ -86,6 +97,11 @@ static bhm_error_code_t run_evolving_context(
 
     // Run.
     for (uint32_t i = 0; i < TEST_TICKS_COUNT; i++) {
+        if (modulated) {
+            // Alternate between periods of reward and periods of punishment, so that synapses are both strengthened and weakened.
+            bhm_ctx2d_add_modulation(*context, (i / TEST_MODULATION_PERIOD) % 2 ? -BHM_MAX_MODULATION : BHM_MAX_MODULATION);
+        }
+
         error = ctx2d_tick(*context);
         if (error != BHM_ERROR_NONE) return error;
     }
@@ -107,7 +123,7 @@ int test_syn_count_matches_synac_mask() {
     bhm_context2d_t* context;
     bhm_input2d_t* input;
 
-    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input, BHM_FALSE), BHM_ERROR_NONE);
 
     bhm_cortex2d_t* cortex = current_cortex(context);
 
@@ -128,7 +144,7 @@ int test_tot_syn_strength_matches_masks() {
     bhm_context2d_t* context;
     bhm_input2d_t* input;
 
-    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input, BHM_FALSE), BHM_ERROR_NONE);
 
     bhm_cortex2d_t* cortex = current_cortex(context);
 
@@ -156,7 +172,7 @@ int test_syn_count_within_max() {
     bhm_context2d_t* context;
     bhm_input2d_t* input;
 
-    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input, BHM_FALSE), BHM_ERROR_NONE);
 
     bhm_cortex2d_t* cortex = current_cortex(context);
 
@@ -177,7 +193,7 @@ int test_tot_syn_strength_within_max() {
     bhm_context2d_t* context;
     bhm_input2d_t* input;
 
-    BHM_ASSERT_EQ(run_evolving_context(&context, &input), BHM_ERROR_NONE);
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input, BHM_FALSE), BHM_ERROR_NONE);
 
     bhm_cortex2d_t* cortex = current_cortex(context);
 
@@ -185,6 +201,31 @@ int test_tot_syn_strength_within_max() {
         for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
             bhm_neuron_t* neuron = &(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]);
 
+            BHM_ASSERT(neuron->tot_syn_strength <= cortex->max_tot_strength);
+        }
+    }
+
+    bhm_ctx2d_destroy(context);
+
+    return 0;
+}
+
+int test_modulation_keeps_bookkeeping() {
+    bhm_context2d_t* context;
+    bhm_input2d_t* input;
+
+    BHM_ASSERT_EQ(run_evolving_context(&context, &input, BHM_TRUE), BHM_ERROR_NONE);
+
+    bhm_cortex2d_t* cortex = current_cortex(context);
+
+    // Same invariants as the tests above, all checked on a run with reward-modulated plasticity enabled.
+    for (bhm_cortex_size_t y = 0; y < cortex->height; y++) {
+        for (bhm_cortex_size_t x = 0; x < cortex->width; x++) {
+            bhm_neuron_t* neuron = &(cortex->neurons[BHM_IDX2D(x, y, cortex->width)]);
+
+            BHM_ASSERT_EQ(neuron->syn_count, count_set_bits(neuron->synac_mask));
+            BHM_ASSERT_EQ(neuron->tot_syn_strength, real_tot_syn_strength(neuron));
+            BHM_ASSERT(neuron->syn_count <= neuron->max_syn_count);
             BHM_ASSERT(neuron->tot_syn_strength <= cortex->max_tot_strength);
         }
     }

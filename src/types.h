@@ -35,6 +35,8 @@ typedef uint32_t bhm_evol_step_t;
 typedef uint64_t bhm_pulse_mask_t;
 typedef uint32_t bhm_chance_t;
 typedef uint32_t bhm_rand_state_t;
+// Signed neuromodulation (reward) signal: positive values reward, negative values punish.
+typedef int16_t bhm_modulation_t;
 
 typedef int32_t bhm_cortex_size_t;
 

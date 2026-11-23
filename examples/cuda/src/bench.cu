@@ -162,7 +162,9 @@ int main(int argc, char **argv) {
         c2d_tick<<<cortex_grid_size, cortex_block_size>>>(
             prev_cortex,
             next_cortex,
-            evolve
+            evolve,
+            // No modulation (reward) in this benchmark.
+            0x00
         );
         cudaCheckError();
         cudaDeviceSynchronize();

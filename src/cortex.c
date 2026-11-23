@@ -88,6 +88,8 @@ bhm_error_code_t bhm_crx2d_init(
     cortex->rand_state = BHM_RAND_OFFSET;
     cortex->syngen_chance = BHM_DEFAULT_SYNGEN_CHANCE;
     cortex->synstr_chance = BHM_DEFAULT_SYNSTR_CHANCE;
+    cortex->modstr_chance = BHM_DEFAULT_MODSTR_CHANCE;
+    cortex->elig_window = BHM_DEFAULT_ELIG_WINDOW;
     cortex->max_tot_strength = BHM_DEFAULT_MAX_TOT_STRENGTH;
     cortex->max_syn_count = BHM_DEFAULT_MAX_TOUCH * BHM_NH_COUNT_2D(BHM_NH_DIAM_2D(nh_radius));
     cortex->inhexc_range = BHM_DEFAULT_INHEXC_RANGE;
@@ -160,6 +162,10 @@ bhm_error_code_t bhm_crx2d_rand_init(
     cortex->syngen_chance = cortex->rand_state % BHM_MAX_SYNGEN_CHANCE;
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
     cortex->synstr_chance = cortex->rand_state % BHM_MAX_SYNSTR_CHANCE;
+    // Reward-modulated plasticity starts with default values instead of random ones, without drawing new random numbers,
+    // so that all the other random values stay the same as before it was introduced.
+    cortex->modstr_chance = BHM_DEFAULT_MODSTR_CHANCE;
+    cortex->elig_window = BHM_DEFAULT_ELIG_WINDOW;
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
     cortex->max_tot_strength = cortex->rand_state % BHM_MAX_MAX_TOT_STRENGTH;
     cortex->rand_state = bhm_xorshf32(cortex->rand_state);
@@ -258,6 +264,9 @@ bhm_error_code_t bhm_ctx2d_create(
     (*context)->outputs_count = 0;
     (*context)->outputs = NULL;
 
+    // No modulation until some is added.
+    (*context)->modulation = 0x00;
+
     return error;
 }
 
@@ -326,6 +335,8 @@ bhm_error_code_t bhm_crx2d_copy(
     to->decay_value = from->decay_value;
     to->syngen_chance = from->syngen_chance;
     to->synstr_chance = from->synstr_chance;
+    to->modstr_chance = from->modstr_chance;
+    to->elig_window = from->elig_window;
     to->max_tot_strength = from->max_tot_strength;
     to->max_syn_count = from->max_syn_count;
     to->inhexc_range = from->inhexc_range;
@@ -502,6 +513,58 @@ bhm_error_code_t bhm_crx2d_set_synstr_chance(
 ) {
     // TODO Check for max value.
     cortex->synstr_chance = synstr_chance;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t bhm_crx2d_set_modstr_chance(
+    bhm_cortex2d_t* cortex,
+    bhm_chance_t modstr_chance
+) {
+    // Chances are compared with 16-bit random numbers, so higher values would make no difference.
+    if (modstr_chance > BHM_MAX_MODSTR_CHANCE) return BHM_ERROR_SIZE_WRONG;
+
+    cortex->modstr_chance = modstr_chance;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t bhm_ctx2d_set_modstr_chance(
+    bhm_context2d_t* context,
+    bhm_chance_t modstr_chance
+) {
+    bhm_error_code_t error;
+
+    error = bhm_crx2d_set_modstr_chance(context->even_cortex, modstr_chance);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_crx2d_set_modstr_chance(context->odd_cortex, modstr_chance);
+    if (error != BHM_ERROR_NONE) return error;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t bhm_crx2d_set_elig_window(
+    bhm_cortex2d_t* cortex,
+    bhm_ticks_count_t elig_window
+) {
+    // A 0 window would make no synapse eligible, and windows above BHM_MAX_ELIG_WINDOW don't fit in the pulse masks.
+    if (elig_window < 0x01U || elig_window > BHM_MAX_ELIG_WINDOW) return BHM_ERROR_SIZE_WRONG;
+
+    cortex->elig_window = elig_window;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t bhm_ctx2d_set_elig_window(
+    bhm_context2d_t* context,
+    bhm_ticks_count_t elig_window
+) {
+    bhm_error_code_t error;
+
+    error = bhm_crx2d_set_elig_window(context->even_cortex, elig_window);
+    if (error != BHM_ERROR_NONE) return error;
+    error = bhm_crx2d_set_elig_window(context->odd_cortex, elig_window);
+    if (error != BHM_ERROR_NONE) return error;
 
     return BHM_ERROR_NONE;
 }
@@ -753,6 +816,21 @@ bhm_error_code_t bhm_ctx2d_add_output(
     }
 
     context->outputs[context->outputs_count - 1] = output;
+
+    return BHM_ERROR_NONE;
+}
+
+bhm_error_code_t bhm_ctx2d_add_modulation(
+    bhm_context2d_t* context,
+    bhm_modulation_t modulation
+) {
+    // Sum on 32 bits, so that the sum can't overflow before being clamped.
+    int32_t sum = (int32_t) context->modulation + (int32_t) modulation;
+
+    if (sum > BHM_MAX_MODULATION) sum = BHM_MAX_MODULATION;
+    if (sum < -BHM_MAX_MODULATION) sum = -BHM_MAX_MODULATION;
+
+    context->modulation = (bhm_modulation_t) sum;
 
     return BHM_ERROR_NONE;
 }

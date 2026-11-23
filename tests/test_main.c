@@ -12,6 +12,11 @@ int main(int argc, char **argv) {
         {"tot_syn_strength matches strength masks", test_tot_syn_strength_matches_masks},
         {"syn_count within max_syn_count", test_syn_count_within_max},
         {"tot_syn_strength within max_tot_strength", test_tot_syn_strength_within_max},
+        {"modulation keeps bookkeeping consistent", test_modulation_keeps_bookkeeping},
+        {"modulation rewards eligible synapse", test_modulation_rewards_eligible_synapse},
+        {"modulation punishes eligible synapse", test_modulation_punishes_eligible_synapse},
+        {"modulation ignores non-eligible synapses", test_modulation_ignores_non_eligible_synapses},
+        {"modulation is summed, clamped and reset", test_modulation_add_clamps},
     };
     uint32_t tests_count = sizeof(tests) / sizeof(bhm_test_t);
     uint32_t failed_count = 0;

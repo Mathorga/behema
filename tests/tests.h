@@ -64,4 +64,30 @@ int test_syn_count_within_max();
 /// @return 0 if the test passed, 1 otherwise.
 int test_tot_syn_strength_within_max();
 
+/// @brief Checks all the bookkeeping invariants above on a run with reward-modulated plasticity enabled.
+/// @return 0 if the test passed, 1 otherwise.
+int test_modulation_keeps_bookkeeping();
+
+
+// ##########################################
+// Reward-modulated plasticity tests.
+// ##########################################
+
+/// @brief Checks that a positive modulation strengthens a synapse whose input neuron fired right before its output neuron.
+/// @return 0 if the test passed, 1 otherwise.
+int test_modulation_rewards_eligible_synapse();
+
+/// @brief Checks that a negative modulation weakens a synapse whose input neuron fired right before its output neuron.
+/// @return 0 if the test passed, 1 otherwise.
+int test_modulation_punishes_eligible_synapse();
+
+/// @brief Checks that synapses are left unchanged without modulation, with the wrong firing order, with simultaneous firing,
+/// and when the coincidence is older than the eligibility window.
+/// @return 0 if the test passed, 1 otherwise.
+int test_modulation_ignores_non_eligible_synapses();
+
+/// @brief Checks that bhm_ctx2d_add_modulation sums and clamps values, and that the modulation is reset after an evolution.
+/// @return 0 if the test passed, 1 otherwise.
+int test_modulation_add_clamps();
+
 #endif

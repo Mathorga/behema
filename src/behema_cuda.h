@@ -100,11 +100,14 @@ __global__ void c2d_read2d(
 /// @param prev_cortex The cortex at its current state.
 /// @param next_cortex The cortex that will be updated by the tick cycle.
 /// @param evolve Whether the cortex should update its internal structure or not.
+/// @param modulation The modulation (reward) signal to apply to eligible synapses, between -BHM_MAX_MODULATION and BHM_MAX_MODULATION.
+/// Only used when evolving, pass 0 for no modulation.
 /// @warning prev_cortex and next_cortex should contain the same data (aka be copies one of the other), otherwise this operation may lead to unexpected behavior.
 __global__ void c2d_tick(
     bhm_cortex2d_t* prev_cortex,
     bhm_cortex2d_t* next_cortex,
-    bool evolve
+    bool evolve,
+    bhm_modulation_t modulation
 );
 
 

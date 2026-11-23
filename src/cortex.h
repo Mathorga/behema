@@ -57,6 +57,9 @@ extern "C" {
 #define BHM_DEFAULT_MAX_TOT_STRENGTH 0x20U
 #define BHM_DEFAULT_SYNGEN_CHANCE 0x02A0U
 #define BHM_DEFAULT_SYNSTR_CHANCE 0x00A0U
+// Reward-modulated plasticity is disabled by default, so that cortices behave exactly as before unless explicitly enabled.
+#define BHM_DEFAULT_MODSTR_CHANCE 0x0000U
+#define BHM_DEFAULT_ELIG_WINDOW 0x20U
 
 #define BHM_MAX_EVOL_STEP BHM_EVOL_STEP_NEVER
 #define BHM_MAX_PULSE_WINDOW 0xFFU
@@ -67,6 +70,11 @@ extern "C" {
 #define BHM_MAX_DECAY_RATE 0xFFU
 #define BHM_MAX_SYNGEN_CHANCE 0xFFFFU
 #define BHM_MAX_SYNSTR_CHANCE 0xFFFFU
+#define BHM_MAX_MODSTR_CHANCE 0xFFFFU
+// The eligibility window is read from the neurons' pulse masks (64 bits), and coincidences are checked between a bit and the next one.
+#define BHM_MAX_ELIG_WINDOW 0x3FU
+// Max absolute value of the modulation signal applied at each evolution.
+#define BHM_MAX_MODULATION 0xFF
 #define BHM_MAX_MAX_TOT_STRENGTH 0xFFU
 #define BHM_MAX_MAX_TOUCH 0xFFU
 #define BHM_MAX_INHEXC_RANGE 0xFFU
@@ -175,6 +183,14 @@ typedef struct {
     // Chance (out of 0xFFFFU) of synapse strengthening or weakening (functional plasticity).
     //* Mutable.
     bhm_chance_t synstr_chance;
+    // Chance (out of 0xFFFFU) of reward-modulated synapse strengthening or weakening (three-factor plasticity), applied to a fully
+    // eligible synapse when the modulation signal is at its max (BHM_MAX_MODULATION). 0 disables reward-modulated plasticity.
+    //* Mutable.
+    bhm_chance_t modstr_chance;
+    // Length (in ticks) of the eligibility window: a synapse is eligible for reward-modulated plasticity if its input neuron fired
+    // right before its output neuron at most elig_window ticks ago. Eligibility decays linearly with the age of the last such event.
+    // Must not exceed BHM_MAX_ELIG_WINDOW.
+    bhm_ticks_count_t elig_window;
 
 
     // Max strength available for a single neuron, meaning the strength of all the synapses coming to each neuron cannot be more than this.
@@ -217,6 +233,9 @@ typedef struct {
     bhm_input2d_t** inputs;
     bhm_cortex_size_t outputs_count;
     bhm_output2d_t** outputs;
+    // Modulation (reward) signal accumulated since the last evolution: it is applied at the next evolution and then reset.
+    // See bhm_ctx2d_add_modulation.
+    bhm_modulation_t modulation;
 } bhm_context2d_t;
 
 
@@ -437,6 +456,43 @@ bhm_error_code_t bhm_crx2d_set_synstr_chance(
     bhm_chance_t synstr_chance
 );
 
+/// @brief Sets the modstr chance for the cortex. Modstr chance defines the probability for reward-modulated synapse strengthening and weakening,
+/// for a fully eligible synapse and a modulation at its max. Setting it to 0 disables reward-modulated plasticity.
+/// @param cortex The cortex to edit.
+/// @param modstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t bhm_crx2d_set_modstr_chance(
+    bhm_cortex2d_t* cortex,
+    bhm_chance_t modstr_chance
+);
+
+/// @brief Sets the modstr chance for both cortices of the context. See bhm_crx2d_set_modstr_chance.
+/// @param context The context whose cortices to apply changes to.
+/// @param modstr_chance The chance to apply (must be between 0x0000U and 0xFFFFU).
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t bhm_ctx2d_set_modstr_chance(
+    bhm_context2d_t* context,
+    bhm_chance_t modstr_chance
+);
+
+/// @brief Sets the eligibility window for the cortex: how many ticks back a synapse can still be rewarded for helping its neuron fire.
+/// @param cortex The cortex to edit.
+/// @param elig_window The window to apply, in ticks (must be between 1 and BHM_MAX_ELIG_WINDOW).
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t bhm_crx2d_set_elig_window(
+    bhm_cortex2d_t* cortex,
+    bhm_ticks_count_t elig_window
+);
+
+/// @brief Sets the eligibility window for both cortices of the context. See bhm_crx2d_set_elig_window.
+/// @param context The context whose cortices to apply changes to.
+/// @param elig_window The window to apply, in ticks (must be between 1 and BHM_MAX_ELIG_WINDOW).
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t bhm_ctx2d_set_elig_window(
+    bhm_context2d_t* context,
+    bhm_ticks_count_t elig_window
+);
+
 /// @brief Sets the maximum number of (input) synapses for the neurons of the cortex.
 /// @param cortex The cortex to edit.
 /// @param syn_count The max number of allowable synapses.
@@ -547,6 +603,19 @@ bhm_error_code_t bhm_ctx2d_add_input(
 bhm_error_code_t bhm_ctx2d_add_output(
     bhm_context2d_t* context,
     bhm_output2d_t* output
+);
+
+/// @brief Adds the provided value to the context's modulation (reward) signal, which is applied at the next evolution and then reset.
+/// Positive values reward recently eligible synapses (they get strengthened), negative values punish them (they get weakened),
+/// like dopamine bursts and dips in biological brains. Values added between two evolutions are summed, and the sum is clamped
+/// between -BHM_MAX_MODULATION and BHM_MAX_MODULATION.
+/// Only has an effect if the cortices' modstr chance is greater than 0.
+/// @param context The context to add the modulation to.
+/// @param modulation The value to add.
+/// @return The code for the occurred error, [BHM_ERROR_NONE] if none.
+bhm_error_code_t bhm_ctx2d_add_modulation(
+    bhm_context2d_t* context,
+    bhm_modulation_t modulation
 );
 
 // ##########################################

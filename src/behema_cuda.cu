@@ -220,7 +220,8 @@ __global__ void c2d_read2d(bhm_cortex2d_t* cortex, bhm_output2d_t* output) {
 __global__ void c2d_tick(
     bhm_cortex2d_t* prev_cortex,
     bhm_cortex2d_t* next_cortex,
-    bool evolve
+    bool evolve,
+    bhm_modulation_t modulation
 ) {
     bhm_cortex_size_t x = threadIdx.x + blockIdx.x * blockDim.x;
     bhm_cortex_size_t y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -420,6 +421,71 @@ __global__ void c2d_tick(
                         next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
 
                         next_neuron->tot_syn_strength--;
+                    }
+                }
+
+                // Reward-modulated plasticity (three-factor rule): strengthen or weaken eligible synapses according to the
+                // modulation signal, like dopamine does in biological brains. The three factors are the input neuron's activity,
+                // the output neuron's activity (together they make the eligibility) and the modulation.
+                // Only synapses that existed before this tick and were not deleted during it are affected.
+                if (modulation != 0x00 &&
+                    (prev_ac_mask & 0x01U) &&
+                    ((next_neuron->synac_mask >> neighbor_nh_index) & 0x01U)) {
+                    // Eligibility trace, computed from the pulse masks instead of being stored for each synapse:
+                    // a synapse is eligible if its input neuron (the neighbor) fired one tick before its output neuron (the current one),
+                    // meaning the input may have contributed to the output's firing.
+                    // In pulse masks bit 0 is the last tick and bit k is k ticks ago, so the neighbor's bit k + 1 lines up with the
+                    // current neuron's bit k: shifting the neighbor's mask by one and and-ing the two finds all such coincidences.
+                    // Only the last elig_window ticks are considered.
+                    bhm_pulse_mask_t coincidences = (neighbor.pulse_mask >> 0x01U) &
+                                                    prev_neuron.pulse_mask &
+                                                    ((0x01ULL << prev_cortex->elig_window) - 1);
+
+                    if (coincidences != 0x00U) {
+                        // Age (in ticks) of the most recent coincidence: the position of the lowest set bit.
+                        // __ffsll returns the 1-based position of the lowest set bit (__builtin_ctzll is not available in device code).
+                        bhm_ticks_count_t age = __ffsll(coincidences) - 1;
+
+                        // Eligibility decays linearly with age: elig_window for a coincidence at the last tick, down to 1 for the oldest one.
+                        bhm_ticks_count_t eligibility = prev_cortex->elig_window - age;
+
+                        // Use the upper 16 bits of the current random state as a second random number: the lower 16 are used by
+                        // structural and functional plasticity above, so this keeps the decisions independent without drawing a new number.
+                        bhm_chance_t mod_random = rand_state >> 0x10U;
+
+                        // The sign of the modulation decides between strengthening and weakening, its absolute value scales the chance.
+                        bhm_chance_t modulation_abs = modulation > 0x00 ? modulation : -modulation;
+
+                        // Chance of change: modstr_chance scaled by eligibility (relative to the window) and by modulation (relative to its max).
+                        // Computed on 64 bits to avoid overflows. elig_window is guaranteed to be > 0 by its setter.
+                        uint64_t mod_chance = ((uint64_t) prev_cortex->modstr_chance * (uint64_t) eligibility * (uint64_t) modulation_abs) /
+                                              ((uint64_t) prev_cortex->elig_window * (uint64_t) BHM_MAX_MODULATION);
+
+                        if (modulation > 0x00 &&
+                            syn_strength < BHM_MAX_SYN_STRENGTH &&
+                            // Use the running total, so that the max holds even when multiple synapses are strengthened in the same tick.
+                            next_neuron->tot_syn_strength < prev_cortex->max_tot_strength &&
+                            // Scaled by the room left below max_tot_strength, like functional plasticity (resource-limited growth).
+                            mod_random < (mod_chance * (uint64_t) (prev_cortex->max_tot_strength - next_neuron->tot_syn_strength)) /
+                                         prev_cortex->max_tot_strength) {
+                            // Reward: strengthen.
+                            syn_strength++;
+                            next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+
+                            next_neuron->tot_syn_strength++;
+                        } else if (modulation < 0x00 &&
+                                   syn_strength > 0x00U &&
+                                   mod_random < mod_chance) {
+                            // Punishment: weaken.
+                            syn_strength--;
+                            next_neuron->synstr_mask_a = (next_neuron->synstr_mask_a & ~(0x01UL << neighbor_nh_index)) | ((syn_strength & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_b = (next_neuron->synstr_mask_b & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x01U) & 0x01U) << neighbor_nh_index);
+                            next_neuron->synstr_mask_c = (next_neuron->synstr_mask_c & ~(0x01UL << neighbor_nh_index)) | (((syn_strength >> 0x02U) & 0x01U) << neighbor_nh_index);
+
+                            next_neuron->tot_syn_strength--;
+                        }
                     }
                 }
             }
